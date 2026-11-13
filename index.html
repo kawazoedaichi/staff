@@ -971,14 +971,32 @@
 
   function classifyCandidateTab(c) {
     var now = new Date();
+    var todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     var finalSt = getColBFinalStatus(c);
     var st = String(c.status || '');
     var attendD = parseDateSafe(c.attendDate || c.contactDate);
     var applyD = parseDateSafe(c.applyDate);
     var startD = parseDateSafe(c.startDate);
 
+    // 本日から就業開始希望日までの日数（空欄・即日希望は null）
+    var daysFromTodayToStart = null;
+    if (startD) {
+      var startDayOnly = new Date(startD.getFullYear(), startD.getMonth(), startD.getDate());
+      daysFromTodayToStart = Math.round((startDayOnly.getTime() - todayStart.getTime()) / (1000 * 60 * 60 * 24));
+      if (daysFromTodayToStart >= 0) {
+        c.daysUntilStart = daysFromTodayToStart;
+      }
+    }
+
+    // パターンB: 就業開始希望日が本日から46日以上先の人は「未来人材」へ振り分け
+    if (daysFromTodayToStart !== null && daysFromTodayToStart >= 46) {
+      return 'future';
+    }
+
+    // 1. 3日以内 未FIX人材 / 2. 未FIX人材（B列＝FIX待ち かつ 就業開始希望日が本日から45日以内 or 空欄・即日）
     if (finalSt.indexOf('FIX待ち') !== -1) {
-      if (attendD) {
+      var isWithin45DaysOrImmediate = (daysFromTodayToStart === null || daysFromTodayToStart <= 45);
+      if (isWithin45DaysOrImmediate && attendD) {
         var diffHours = (now.getTime() - attendD.getTime()) / (1000 * 60 * 60);
         if (diffHours >= 12 && diffHours <= 72) {
           return 'within3days';
@@ -991,6 +1009,7 @@
       return 'other_fix_wait';
     }
 
+    // 3. 激熱掘起（職見済・激熱・アテンド後11日〜44日経過）
     if (finalSt.indexOf('激熱') !== -1 || st.indexOf('職見済') !== -1 || finalSt.indexOf('職見済') !== -1) {
       return 'hot';
     }
@@ -999,15 +1018,13 @@
       if (hDays > 10 && hDays < 45) return 'hot';
     }
 
-    if (startD) {
-      var diffDays = Math.ceil((startD.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-      if (diffDays >= 0 && diffDays <= 45) {
-        c.daysUntilStart = diffDays;
-        return 'future';
-      }
-    }
+    // 4. 未来人材（B列・ステータスが未来人材、または就業開始希望日が設定済みの待機層）
     if (finalSt.indexOf('未来') !== -1 || st.indexOf('未来') !== -1) return 'future';
+    if (daysFromTodayToStart !== null && daysFromTodayToStart >= 0 && daysFromTodayToStart <= 45) {
+      return 'future';
+    }
 
+    // 5. 通常掘起（応募から45日以上経過）
     if (applyD) {
       var applyDays = (now.getTime() - applyD.getTime()) / (1000 * 60 * 60 * 24);
       if (applyDays >= 45) return 'normal';
@@ -1294,11 +1311,11 @@
     var map = {
       within3days: {
         title: '【3日以内 未FIX人材】の抽出基準・アプローチ設計を見る',
-        desc: 'CSVのB列（最終ステータス）＝「FIX待ち」かつ、アテンド・接触から12時間以上〜3日（72時間）以内の対象者のみを抽出。自宅住所から直線5km以内の派遣BOを自動計算して提案します。'
+        desc: 'CSVのB列（最終ステータス）＝「FIX待ち」かつ、就業開始希望日が「本日から45日以内（または空欄・即日希望）」で、アテンド・接触から12時間以上〜3日（72時間）以内の対象者のみを抽出します。'
       },
       unfixed: {
         title: '【未FIX人材】の抽出基準・アプローチ設計を見る',
-        desc: 'CSVのB列（最終ステータス）＝「FIX待ち」かつ、アテンド・接触から7〜10日経過した対象者のみを抽出。自宅5km圏内派遣BO（新着順3件）と2km圏内紹介フックで再アプローチします。'
+        desc: 'CSVのB列（最終ステータス）＝「FIX待ち」かつ、就業開始希望日が「本日から45日以内（または空欄・即日希望）」で、アテンド・接触から7〜10日経過した対象者のみを抽出します。'
       },
       hot: {
         title: '【激熱掘起】の抽出基準・アプローチ設計を見る',
@@ -1306,7 +1323,7 @@
       },
       future: {
         title: '【未来人材】の抽出基準・アプローチ設計を見る',
-        desc: '就業開始希望日が本日から45日以内（またはB列が未来人材）の対象者を抽出。希望時期が近づいたタイミングで自宅周辺5km案件を案内します。'
+        desc: '就業開始希望日が本日から46日以上先の対象者（FIX待ち含む）、またはB列が未来人材の対象者を抽出。希望時期が近づいたタイミングで自宅周辺5km案件を案内します。'
       },
       normal: {
         title: '【通常掘起】の抽出基準・アプローチ設計を見る',
