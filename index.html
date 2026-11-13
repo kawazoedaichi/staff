@@ -988,49 +988,44 @@
       }
     }
 
-    // パターンB: 就業開始希望日が本日から46日以上先の人は「未来人材」へ振り分け
-    if (daysFromTodayToStart !== null && daysFromTodayToStart >= 46) {
-      return 'future';
-    }
+    var isFixWait = (finalSt.indexOf('FIX待ち') !== -1);
+    var isStartUnder30OrEmpty = (daysFromTodayToStart === null || daysFromTodayToStart <= 29);
+    var isStart30OrMore = (daysFromTodayToStart !== null && daysFromTodayToStart >= 30);
 
-    // 1. 3日以内 未FIX人材 / 2. 未FIX人材（B列＝FIX待ち かつ 就業開始希望日が本日から45日以内 or 空欄・即日）
-    if (finalSt.indexOf('FIX待ち') !== -1) {
-      var isWithin45DaysOrImmediate = (daysFromTodayToStart === null || daysFromTodayToStart <= 45);
-      if (isWithin45DaysOrImmediate && attendD) {
-        var diffHours = (now.getTime() - attendD.getTime()) / (1000 * 60 * 60);
-        if (diffHours >= 12 && diffHours <= 72) {
-          return 'within3days';
-        }
-        var dDays = (now.getTime() - attendD.getTime()) / (1000 * 60 * 60 * 24);
-        if (dDays >= 7 && dDays <= 10) {
-          return 'unfixed';
-        }
+    // ① 3日以内 未FIX人材（最優先：B列＝FIX待ち ＋ 就業開始希望日が本日から29日以内 or 空欄・即日 ＋ アテンド・接触から12時間以上〜72時間以内）
+    if (isFixWait && isStartUnder30OrEmpty && attendD) {
+      var diffHours = (now.getTime() - attendD.getTime()) / (1000 * 60 * 60);
+      if (diffHours >= 12 && diffHours <= 72) {
+        return 'within3days';
       }
-      return 'other_fix_wait';
+      // ② 未FIX人材（①に該当しない場合のみ判定：B列＝FIX待ち ＋ 就業開始希望日が本日から29日以内 or 空欄・即日 ＋ アテンド・接触から73時間以上〜10日以内）
+      if (diffHours >= 73 && diffHours <= 240) {
+        return 'unfixed';
+      }
     }
 
-    // 3. 激熱掘起（職見済・激熱・アテンド後11日〜44日経過）
-    if (finalSt.indexOf('激熱') !== -1 || st.indexOf('職見済') !== -1 || finalSt.indexOf('職見済') !== -1) {
-      return 'hot';
-    }
-    if (attendD && finalSt.indexOf('NG') === -1 && finalSt.indexOf('辞退') === -1) {
-      var hDays = (now.getTime() - attendD.getTime()) / (1000 * 60 * 60 * 24);
-      if (hDays > 10 && hDays < 45) return 'hot';
+    // ③ 激熱掘起（①②に該当しない場合のみ判定：B列＝FIX待ち ＋ 就業開始希望日が本日から29日以内 or 空欄・即日 ＋ 応募日から2カ月（60日）以上経過）
+    if (isFixWait && isStartUnder30OrEmpty && applyD) {
+      var applyDaysForHot = (now.getTime() - applyD.getTime()) / (1000 * 60 * 60 * 24);
+      if (applyDaysForHot >= 60) {
+        return 'hot';
+      }
     }
 
-    // 4. 未来人材（B列・ステータスが未来人材、または就業開始希望日が設定済みの待機層）
-    if (finalSt.indexOf('未来') !== -1 || st.indexOf('未来') !== -1) return 'future';
-    if (daysFromTodayToStart !== null && daysFromTodayToStart >= 0 && daysFromTodayToStart <= 45) {
+    // ④ 未来人材（①〜③に該当しない場合のみ判定：就業開始希望日が本日から30日以上先（FIX待ち含む）、またはB列・ステータスが未来）
+    if (isStart30OrMore || finalSt.indexOf('未来') !== -1 || st.indexOf('未来') !== -1) {
       return 'future';
     }
 
-    // 5. 通常掘起（応募から45日以上経過）
-    if (applyD) {
+    // ⑤ 通常掘起（①〜④のいずれにも該当せず、B列＝FIX待ちの他日数枠を除外した上で、応募日から45日以上経過）
+    if (!isFixWait && applyD) {
       var applyDays = (now.getTime() - applyD.getTime()) / (1000 * 60 * 60 * 24);
-      if (applyDays >= 45) return 'normal';
+      if (applyDays >= 45) {
+        return 'normal';
+      }
     }
 
-    return 'normal';
+    return 'excluded_other';
   }
 
   function extractSafeSalutation(c) {
@@ -1044,7 +1039,22 @@
     return { text: fullName + '様', mode: 'フルネーム安全表記' };
   }
 
-  // 求職者の自宅座標から searchOrder 全案件との直線距離を計算し、5km以内（派遣BO）・2km以内（紹介）を抽出
+  function normalizeFacilityForDedup(name) {
+    return String(name || '').normalize('NFKC')
+      .replace(/[\s\u3000・･．.（）()【】\[\]「」『』<>＜＞\-－―ー−_＿/／]+/g, '')
+      .replace(/株式会社|\(株\)|（株）|有限会社|\(有\)|（有）|社会福祉法人|\(福\)|（福）|医療法人社団|医療法人財団|医療法人|\(医\)|（医）|一般社団法人|合同会社/g, '')
+      .toLowerCase();
+  }
+
+  function normalizeAddressForDedup(addr) {
+    return String(addr || '').normalize('NFKC')
+      .replace(/[\s\u3000]+/g, '')
+      .replace(/[‐‑‒–—―ー−]/g, '-')
+      .replace(/ヶ/g, 'ケ').replace(/之/g, 'ノ').replace(/ッ/g, 'ツ')
+      .toLowerCase();
+  }
+
+  // 求職者の自宅座標から searchOrder 全案件との直線距離を計算し、同一施設名・同一住所をスキップして5km以内（派遣BO）・2km以内（紹介）を抽出
   function getMatchedJobs(c) {
     if (!state.searchOrderJobs || state.searchOrderJobs.length === 0) {
       return { dispatch: [], direct: [], status: 'loading' };
@@ -1056,8 +1066,8 @@
     var cType = String(c.jobType || '介護');
     var isNurse = cType.indexOf('看護') !== -1;
 
-    var dispList = [];
-    var dirList = [];
+    var rawDispList = [];
+    var rawDirList = [];
 
     for (var i = 0; i < state.searchOrderJobs.length; i++) {
       var j = state.searchOrderJobs[i];
@@ -1074,7 +1084,7 @@
       var isDispatch = empList.indexOf('派遣') !== -1 || empList.indexOf('紹介予定派遣') !== -1;
 
       if (isDispatch && dKm <= 5.0) {
-        dispList.push({
+        rawDispList.push({
           name: j.name,
           address: j.address,
           distKm: Number(dKm.toFixed(1)),
@@ -1084,7 +1094,7 @@
         });
       }
       if (isDirect && dKm <= 2.0) {
-        dirList.push({
+        rawDirList.push({
           name: j.name,
           address: j.address,
           distKm: Number(dKm.toFixed(1)),
@@ -1095,17 +1105,47 @@
     }
 
     // BO取得日時が新しい順（同時なら近い順）にソート
-    dispList.sort(function(a, b) {
+    rawDispList.sort(function(a, b) {
       if ((b.timestamp || 0) !== (a.timestamp || 0)) return (b.timestamp || 0) - (a.timestamp || 0);
       return a.distKm - b.distKm;
     });
-    dirList.sort(function(a, b) { return a.distKm - b.distKm; });
+    rawDirList.sort(function(a, b) {
+      if ((b.timestamp || 0) !== (a.timestamp || 0)) return (b.timestamp || 0) - (a.timestamp || 0);
+      return a.distKm - b.distKm;
+    });
+
+    // 同一施設名・同一住所の案件は選択せずスキップ（ユニーク施設のみ抽出）
+    var uniqueDispList = [];
+    var seenDispNames = new Set();
+    var seenDispAddrs = new Set();
+    for (var dIdx = 0; dIdx < rawDispList.length; dIdx++) {
+      var dj = rawDispList[dIdx];
+      var nName = normalizeFacilityForDedup(dj.name);
+      var nAddr = normalizeAddressForDedup(dj.address);
+      if ((nName && seenDispNames.has(nName)) || (nAddr && seenDispAddrs.has(nAddr))) continue;
+      if (nName) seenDispNames.add(nName);
+      if (nAddr) seenDispAddrs.add(nAddr);
+      uniqueDispList.push(dj);
+    }
+
+    var uniqueDirList = [];
+    var seenDirNames = new Set();
+    var seenDirAddrs = new Set();
+    for (var rIdx = 0; rIdx < rawDirList.length; rIdx++) {
+      var rj = rawDirList[rIdx];
+      var rName = normalizeFacilityForDedup(rj.name);
+      var rAddr = normalizeAddressForDedup(rj.address);
+      if ((rName && seenDirNames.has(rName)) || (rAddr && seenDirAddrs.has(rAddr))) continue;
+      if (rName) seenDirNames.add(rName);
+      if (rAddr) seenDirAddrs.add(rAddr);
+      uniqueDirList.push(rj);
+    }
 
     return {
-      dispatch: dispList.slice(0, 3),
-      direct: dirList.slice(0, 2),
-      totalDispCount: dispList.length,
-      totalDirCount: dirList.length,
+      dispatch: uniqueDispList.slice(0, 3),
+      direct: uniqueDirList.slice(0, 2),
+      totalDispCount: uniqueDispList.length,
+      totalDirCount: uniqueDirList.length,
       status: 'ok'
     };
   }
@@ -1130,9 +1170,9 @@
       var reason = reasonOverride || state.slideReasons[state.currentReasonIdx % state.slideReasons.length];
       return [
         sal.text, '',
-        'お世話になっております。ビースタイルの' + (c.staff || '担当') + 'です。',
+        'お世話になっております。',
         '先日お話しさせていただいた件につきまして、実は先ほど確認したところ、ご希望いただいていた求人が【' + reason + '】という状況になってしまいました。', '',
-        'せっかくお時間をいただいたのに申し訳ございません！',
+        '力不足で大変申し訳ございません。',
         '代わりにご自宅から通いやすい近隣エリアで、条件に合う新着求人をピックアップいたしました。', '',
         bodyJobs, '',
         'もし気になるものがございましたら、すぐ詳細をお送りしますのでお気軽にご返信ください！'
@@ -1142,7 +1182,7 @@
     if (tab === 'future') {
       return [
         sal.text, '',
-        'お世話になっております。ビースタイルの' + (c.staff || '担当') + 'です。',
+        'お世話になっております。',
         'ご就業希望時期（' + (c.startDate || '近日中') + '）が近づいてまいりましたので、最新の募集状況のご案内です！', '',
         '現在、ご自宅周辺で以下の好条件案件が出ております。', '',
         bodyJobs, '',
@@ -1153,7 +1193,7 @@
     if (tab === 'unfixed') {
       return [
         sal.text, '',
-        'お世話になっております。ビースタイルの' + (c.staff || '担当') + 'です。',
+        'お世話になっております。',
         '先日ご提案させていただきました件、その後ご状況はいかがでしょうか？', '',
         '現在もご自宅から5km圏内で以下の求人が募集中となっております。', '',
         bodyJobs, '',
@@ -1165,14 +1205,14 @@
       if (log && log.status === 'reminded') {
         return [
           sal.text, '',
-          '度々のご連絡失礼いたします。ビースタイルの' + (c.staff || '担当') + 'です！',
+          '度々のご連絡失礼いたします。',
           '昨日お送りさせていただきました近隣の募集案件ですが、枠が埋まりやすくなっているため念のためリマインドさせていただきました。', '',
           'お忙しいところ恐縮ですが、もし少しでもご興味があれば「詳細希望」とだけご返信ください！'
         ].join(LF);
       }
       return [
         sal.text, '',
-        'ご無沙汰しております！ビースタイルの' + (c.staff || '担当') + 'です。',
+        'ご無沙汰しております！',
         '以前お話しさせていただいたご希望条件にぴったりの新着案件が入りましたので、優先的にご連絡いたしました！', '',
         bodyJobs, '',
         '今すぐのご転職でなくても情報収集だけでも大歓迎ですので、ぜひお気軽にご返信ください！'
@@ -1181,7 +1221,7 @@
 
     return [
       sal.text, '',
-      'お世話になっております。ビースタイルの' + (c.staff || '担当') + 'です。',
+      'お世話になっております。',
       'その後、お仕事のご状況はいかがでしょうか？', '',
       '現在、お住まいのエリア周辺で新しい募集枠が複数出ておりますのでご案内いたします。', '',
       bodyJobs, '',
@@ -1311,23 +1351,23 @@
     var map = {
       within3days: {
         title: '【3日以内 未FIX人材】の抽出基準・アプローチ設計を見る',
-        desc: 'CSVのB列（最終ステータス）＝「FIX待ち」かつ、就業開始希望日が「本日から45日以内（または空欄・即日希望）」で、アテンド・接触から12時間以上〜3日（72時間）以内の対象者のみを抽出します。'
+        desc: '①最優先判定：CSVのB列（最終ステータス）＝「FIX待ち」＋ 就業開始希望日が「本日から29日以内（または空欄・即日）」＋ アテンド・接触から12時間〜72時間以内の対象者のみを抽出します（該当者は②〜⑤をスキップ）。'
       },
       unfixed: {
         title: '【未FIX人材】の抽出基準・アプローチ設計を見る',
-        desc: 'CSVのB列（最終ステータス）＝「FIX待ち」かつ、就業開始希望日が「本日から45日以内（または空欄・即日希望）」で、アテンド・接触から7〜10日経過した対象者のみを抽出します。'
+        desc: '②判定：CSVのB列（最終ステータス）＝「FIX待ち」＋ 就業開始希望日が「本日から29日以内（または空欄・即日）」＋ アテンド・接触から73時間〜10日以内の対象者のみを抽出します（該当者は③〜⑤をスキップ）。'
       },
       hot: {
         title: '【激熱掘起】の抽出基準・アプローチ設計を見る',
-        desc: '職見済・激熱層を抽出。初回送信すると翌日に「🔔 翌日リマインド対象」として自動再浮上し専用文面に切り替わります。リマインド送信後は30日間自動でクールダウン（非表示）になります。'
+        desc: '③判定：CSVのB列（最終ステータス）＝「FIX待ち」＋ 就業開始希望日が「本日から29日以内（または空欄・即日）」＋ 応募日から2カ月（60日）以上経過した対象者を抽出します。初回送信の翌日にリマインド対象になります。'
       },
       future: {
         title: '【未来人材】の抽出基準・アプローチ設計を見る',
-        desc: '就業開始希望日が本日から46日以上先の対象者（FIX待ち含む）、またはB列が未来人材の対象者を抽出。希望時期が近づいたタイミングで自宅周辺5km案件を案内します。'
+        desc: '④判定：就業開始希望日が本日から30日以上先の対象者（FIX待ち含む）、またはB列・ステータスが未来人材の対象者を抽出します。'
       },
       normal: {
         title: '【通常掘起】の抽出基準・アプローチ設計を見る',
-        desc: '応募から45日以上経過した掘り起こし対象層を抽出。送信後は30日間自動でクールダウン（非表示）になります。'
+        desc: '⑤判定：①〜④に該当せず、応募から45日以上経過した掘り起こし対象層を抽出します。送信後は30日間自動でクールダウン（非表示）になります。'
       }
     };
     var info = map[state.currentTab] || map.within3days;
