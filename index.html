@@ -7,13 +7,14 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <!-- 外部data.jsがあれば自動読込（なくても内蔵データで即起動） -->
+  <script src="./data.js" onerror="console.info('外部data.js未検出のため内蔵データで起動します')"></script>
   <style>
-    /* 基本フォント・スクロールバー・細部調整 */
     body {
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif;
       background-color: #f1f5f9;
-      color: #0f172a;
+      color: #0f1115;
       -webkit-tap-highlight-color: transparent;
     }
     .no-scrollbar::-webkit-scrollbar {
@@ -29,23 +30,30 @@
     details > summary::-webkit-details-marker {
       display: none;
     }
+    @keyframes popIn {
+      0% { opacity: 0; transform: scale(0.92) translateY(8px); }
+      100% { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    .animate-pop-in {
+      animation: popIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
   </style>
 </head>
 <body class="pb-24 antialiased">
 
   <!-- ==================== 1. スティッキーヘッダー（ブラック＆ビビッドオレンジ） ==================== -->
-  <header class="sticky top-0 z-30 bg-[#0F172A] text-white border-b border-slate-800 shadow-lg">
+  <header class="sticky top-0 z-30 bg-[#0F1115] text-white border-b border-slate-800 shadow-lg">
     <div class="max-w-5xl mx-auto px-3 sm:px-4 pt-3">
       <!-- 上段：ブランド＆5つの常設ボタン -->
       <div class="flex flex-wrap items-center justify-between gap-2 pb-2.5">
         <div class="flex items-center gap-2.5 min-w-0">
-          <div class="w-8 h-8 rounded-lg bg-[#F97316] text-[#0F172A] font-black text-base flex items-center justify-center shrink-0 shadow">
+          <div class="w-8 h-8 rounded-lg bg-[#FF6B00] text-[#0F1115] font-black text-base flex items-center justify-center shrink-0 shadow">
             B
           </div>
           <h1 class="text-sm sm:text-base font-extrabold tracking-tight truncate">
             ビースタイル 追客・掘り起こし管理
           </h1>
-          <span id="dataSourceBadge" class="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-[#1E293B] text-slate-300 border border-slate-700 shrink-0">
+          <span id="dataSourceBadge" class="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-[#181B22] text-slate-300 border border-slate-700 shrink-0">
             デモデータ
           </span>
         </div>
@@ -53,23 +61,23 @@
         <!-- ヘッダー常設5ボタン -->
         <div class="flex flex-wrap items-center gap-1.5">
           <a href="https://refo.link/haken-oubo/applications" target="_blank" rel="noopener noreferrer"
-             class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-[#1E293B] hover:bg-slate-700 text-orange-300 border border-orange-500/40 transition">
+             class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-[#181B22] hover:bg-slate-800 text-[#FF8533] border border-[#FF6B00]/40 transition">
             Refo応募一覧 ↗
           </a>
           <a href="https://kawazoedaichi.github.io/searchOrder/" target="_blank" rel="noopener noreferrer"
-             class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-[#1E293B] hover:bg-slate-700 text-orange-300 border border-orange-500/40 transition">
+             class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-[#181B22] hover:bg-slate-800 text-[#FF8533] border border-[#FF6B00]/40 transition">
             案件詳細 ↗
           </a>
           <button type="button" onclick="openExportModal()"
-                  class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-[#1E293B] hover:bg-slate-700 text-slate-100 border border-slate-700 transition">
+                  class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-[#181B22] hover:bg-slate-800 text-slate-100 border border-slate-700 transition">
             CSV出力
           </button>
           <button type="button" onclick="openUrlModal()"
-                  class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-[#1E293B] hover:bg-slate-700 text-slate-100 border border-slate-700 transition">
+                  class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-[#181B22] hover:bg-slate-800 text-slate-100 border border-slate-700 transition">
             URL設定
           </button>
           <button type="button" onclick="openCsvModal()"
-                  class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-extrabold bg-[#F97316] hover:bg-[#EA580C] text-white shadow transition">
+                  class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-extrabold bg-[#FF6B00] hover:bg-[#FF8533] text-white shadow transition">
             CSV読込
           </button>
         </div>
@@ -89,7 +97,7 @@
     <details id="criteriaDetails" class="bg-white border border-slate-200 rounded-xl mb-3 overflow-hidden shadow-sm">
       <summary id="criteriaSummary" class="px-3.5 py-2.5 text-xs font-bold text-slate-700 cursor-pointer flex items-center justify-between hover:bg-slate-50 select-none">
         <span>抽出基準・アプローチ設計を見る</span>
-        <span class="text-[#F97316] font-extrabold text-[11px]">開閉 ▼</span>
+        <span class="text-[#FF6B00] font-extrabold text-[11px]">開閉 ▼</span>
       </summary>
       <div id="criteriaBody" class="px-4 py-3 border-t border-slate-200 bg-slate-50 text-xs text-slate-600 leading-relaxed">
         <!-- JSで描画 -->
@@ -120,13 +128,13 @@
 
       <!-- 2段目：都道府県・担当ユーザー・職種フィルタ -->
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-2">
-        <select id="filterPref" onchange="applyFilters()" class="w-full px-3 py-2 text-xs font-medium bg-white border border-slate-300 rounded-lg focus:outline-none focus:border-[#F97316]">
+        <select id="filterPref" onchange="applyFilters()" class="w-full px-3 py-2 text-xs font-medium bg-white border border-slate-300 rounded-lg focus:outline-none focus:border-[#FF6B00]">
           <option value="">都道府県：すべて</option>
         </select>
-        <select id="filterStaff" onchange="applyFilters()" class="w-full px-3 py-2 text-xs font-medium bg-white border border-slate-300 rounded-lg focus:outline-none focus:border-[#F97316]">
+        <select id="filterStaff" onchange="applyFilters()" class="w-full px-3 py-2 text-xs font-medium bg-white border border-slate-300 rounded-lg focus:outline-none focus:border-[#FF6B00]">
           <option value="">担当ユーザー：すべて</option>
         </select>
-        <select id="filterJobType" onchange="applyFilters()" class="w-full px-3 py-2 text-xs font-medium bg-white border border-slate-300 rounded-lg focus:outline-none focus:border-[#F97316]">
+        <select id="filterJobType" onchange="applyFilters()" class="w-full px-3 py-2 text-xs font-medium bg-white border border-slate-300 rounded-lg focus:outline-none focus:border-[#FF6B00]">
           <option value="">職種：すべて</option>
           <option value="介護">介護のみ</option>
           <option value="看護">看護のみ</option>
@@ -137,16 +145,16 @@
       <!-- 3段目：フリーワード検索＆トグルチェック -->
       <div class="flex flex-wrap items-center gap-2">
         <input type="text" id="filterKeyword" oninput="applyFilters()" placeholder="氏名・カナ・応募ID・市区町村・資格で検索..."
-               class="flex-1 min-w-[200px] px-3 py-2 text-xs bg-white border border-slate-300 rounded-lg focus:outline-none focus:border-[#F97316]">
+               class="flex-1 min-w-[200px] px-3 py-2 text-xs bg-white border border-slate-300 rounded-lg focus:outline-none focus:border-[#FF6B00]">
 
         <label class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-xs font-bold text-slate-700 cursor-pointer select-none">
-          <input type="checkbox" id="filterOnlyPending" checked onchange="applyFilters()" class="w-4 h-4 accent-[#F97316] rounded">
+          <input type="checkbox" id="filterOnlyPending" checked onchange="applyFilters()" class="w-4 h-4 accent-[#FF6B00] rounded">
           未対応のみ表示
         </label>
 
         <label class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-xs font-bold text-slate-700 cursor-pointer select-none">
-          <input type="checkbox" id="filterShowCooldown" onchange="applyFilters()" class="w-4 h-4 accent-[#F97316] rounded">
-          30日クールダウン中も表示
+          <input type="checkbox" id="filterShowCooldown" onchange="applyFilters()" class="w-4 h-4 accent-[#FF6B00] rounded">
+          送信後30日以内(クールダウン中)も表示
         </label>
       </div>
     </section>
@@ -164,7 +172,7 @@
           名寄せ・履歴内訳
         </button>
         <button type="button" onclick="exportCsvDirect('filtered')"
-                class="px-3 py-1.5 rounded-lg text-xs font-extrabold bg-[#0F172A] hover:bg-[#F97316] text-white transition shadow-sm">
+                class="px-3 py-1.5 rounded-lg text-xs font-extrabold bg-[#0F1115] hover:bg-[#FF6B00] text-white transition shadow-sm">
           表示中を即CSV出力
         </button>
       </div>
@@ -182,11 +190,38 @@
 
   </main>
 
-  <!-- ==================== 3. トースト通知 ==================== -->
-  <div id="toast" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 hidden bg-[#0F172A] text-white text-xs font-bold px-4 py-3 rounded-xl shadow-xl border border-orange-500/40 max-w-[92vw] text-center">
+  <!-- ==================== 3. トースト通知（軽量操作フィードバック用） ==================== -->
+  <div id="toast" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 hidden bg-[#0F1115] text-white text-xs font-bold px-4 py-3 rounded-xl shadow-xl border border-[#FF6B00]/50 max-w-[92vw] text-center">
   </div>
 
-  <!-- ==================== 4. モーダル群 ==================== -->
+  <!-- ==================== 4. 完了ポップアップモーダル（インポート／エクスポート共通） ==================== -->
+  <div id="completionPopupModal" class="fixed inset-0 z-[60] hidden bg-slate-950/70 backdrop-blur-[1px] items-center justify-center p-4">
+    <div class="bg-white w-full max-w-md rounded-2xl p-6 shadow-2xl border-2 border-[#FF6B00] text-center animate-pop-in">
+      <div class="w-14 h-14 rounded-full bg-orange-100 text-[#FF6B00] mx-auto mb-3 flex items-center justify-center shadow-inner">
+        <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path>
+        </svg>
+      </div>
+      <span id="completionPopupBadge" class="inline-block text-[11px] font-extrabold px-2.5 py-0.5 rounded-full bg-[#0F1115] text-[#FF8533] mb-1.5">
+        完了通知
+      </span>
+      <h2 id="completionPopupTitle" class="text-xl font-black text-slate-900 mb-2">
+        インポート完了！
+      </h2>
+      <p id="completionPopupDesc" class="text-xs text-slate-600 leading-relaxed mb-3">
+        データの処理が正常に完了しました。
+      </p>
+      <div id="completionPopupDetails" class="bg-slate-50 border border-slate-200 rounded-xl p-3 text-left text-xs text-slate-700 space-y-1.5 mb-5">
+        <!-- JSでファイル名・件数内訳を描画 -->
+      </div>
+      <button type="button" onclick="closeModal('completionPopupModal')"
+              class="w-full py-3 px-4 rounded-xl text-sm font-extrabold bg-[#FF6B00] hover:bg-[#FF8533] text-white shadow-md transition">
+        OK（確認して閉じる）
+      </button>
+    </div>
+  </div>
+
+  <!-- ==================== 5. 各種機能モーダル群 ==================== -->
 
   <!-- (A) 文面生成・確認モーダル -->
   <div id="composeModal" class="fixed inset-0 z-50 hidden bg-slate-900/60 items-end sm:items-center justify-center p-0 sm:p-4">
@@ -199,14 +234,14 @@
         <button type="button" onclick="closeModal('composeModal')" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold">✕</button>
       </div>
 
-      <!-- 3営業日以内 未FIX人材用：理由シャッフルバー -->
+      <!-- 3日以内 未FIX人材用：理由シャッフルバー -->
       <div id="shuffleBar" class="hidden mb-3 p-2.5 rounded-xl bg-orange-50 border border-orange-200 flex flex-wrap items-center justify-between gap-2">
         <div class="text-xs text-orange-900">
           <span class="font-bold">エントリー求人状況（ランダム挿入）：</span>
-          <span id="currentReasonLabel" class="font-extrabold underline">充足してしまった</span>
+          <span id="currentReasonLabel" class="font-extrabold underline">先方にて充足してしまった</span>
         </div>
         <button type="button" onclick="reshuffleReason()"
-                class="px-3 py-1.5 rounded-lg text-xs font-extrabold bg-[#F97316] hover:bg-[#EA580C] text-white transition">
+                class="px-3 py-1.5 rounded-lg text-xs font-extrabold bg-[#FF6B00] hover:bg-[#FF8533] text-white transition">
           理由を再抽選 ↻
         </button>
       </div>
@@ -220,7 +255,7 @@
         送信文面（自由に編集可能・コピーで自動記録されます）
       </label>
       <textarea id="composeTextarea" rows="12"
-                class="w-full p-3 text-xs sm:text-sm leading-relaxed bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:border-[#F97316] mb-3"></textarea>
+                class="w-full p-3 text-xs sm:text-sm leading-relaxed bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:border-[#FF6B00] mb-3"></textarea>
 
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
         <button type="button" onclick="copyMessageOnly()"
@@ -228,7 +263,7 @@
           文面だけコピー
         </button>
         <button type="button" onclick="copyAndRecordSent()"
-                class="py-3 px-4 rounded-xl text-xs sm:text-sm font-extrabold bg-[#F97316] hover:bg-[#EA580C] text-white shadow transition">
+                class="py-3 px-4 rounded-xl text-xs sm:text-sm font-extrabold bg-[#FF6B00] hover:bg-[#FF8533] text-white shadow transition">
           文面コピー＆送信記録をつける（完了）
         </button>
       </div>
@@ -237,74 +272,95 @@
 
   <!-- (B) CSVエクスポート＆履歴バックアップモーダル -->
   <div id="exportModal" class="fixed inset-0 z-50 hidden bg-slate-900/60 items-end sm:items-center justify-center p-0 sm:p-4">
-    <div class="bg-white w-full max-w-xl max-h-[92vh] rounded-t-2xl sm:rounded-2xl p-4 sm:p-5 overflow-y-auto shadow-2xl">
+    <div class="bg-white w-full max-w-2xl max-h-[92vh] rounded-t-2xl sm:rounded-2xl p-4 sm:p-5 overflow-y-auto shadow-2xl">
       <div class="flex items-center justify-between pb-3 mb-3 border-b border-slate-200">
-        <h2 class="text-base font-extrabold text-slate-900">CSVエクスポート＆進捗履歴バックアップ</h2>
+        <div>
+          <h2 class="text-base font-extrabold text-slate-900">Excel用CSV出力（ダウンロード）</h2>
+          <p class="text-[11px] text-slate-500">Excelで文字化けしない形式（BOM付きUTF-8）で保存されます</p>
+        </div>
         <button type="button" onclick="closeModal('exportModal')" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold">✕</button>
       </div>
 
       <!-- CSV出力オプション -->
       <div class="mb-4">
-        <div class="flex items-center justify-between mb-2">
-          <span class="text-xs font-extrabold text-slate-800">1. Excel対応CSV出力（BOM付きUTF-8 / 全23項目）</span>
-          <label class="inline-flex items-center gap-1.5 text-xs font-bold text-slate-700 bg-orange-50 border border-orange-200 px-2.5 py-1 rounded-lg cursor-pointer">
-            <input type="checkbox" id="exportOnlyPending" checked class="w-4 h-4 accent-[#F97316]">
-            未対応のみ出力する
-          </label>
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-2.5 bg-orange-50/70 p-2.5 rounded-xl border border-orange-200">
+          <span class="text-xs font-extrabold text-slate-800">出力オプション設定</span>
+          <div class="flex flex-wrap items-center gap-3">
+            <label class="inline-flex items-center gap-1.5 text-xs font-bold text-slate-800 cursor-pointer">
+              <input type="checkbox" id="exportOnlyPending" checked onchange="updateExportModalPreview()" class="w-4 h-4 accent-[#FF6B00]">
+              未対応のみ出力
+            </label>
+            <label class="inline-flex items-center gap-1.5 text-xs font-bold text-slate-800 cursor-pointer">
+              <input type="checkbox" id="exportIncludeRawCols" onchange="updateExportModalPreview()" class="w-4 h-4 accent-[#FF6B00]">
+              元のCSV全列も後ろに付ける
+            </label>
+          </div>
         </div>
 
-        <div class="space-y-2">
+        <!-- 3つの明確な出力ボタン -->
+        <div class="space-y-2 mb-3">
           <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-3">
-            <div>
-              <div class="text-xs font-extrabold text-slate-900">① 現在の表示条件でCSV出力（フィルタ反映）</div>
-              <div id="exportCountFiltered" class="text-[11px] text-slate-500">エリア・タブ・検索条件を反映して出力します</div>
+            <div class="min-w-0">
+              <div class="text-xs font-extrabold text-slate-900">① 今の画面に表示されている条件だけ出力</div>
+              <div id="exportCountFiltered" class="text-[11px] text-slate-600 truncate">対象：0件</div>
+              <div id="exportFileNameFiltered" class="text-[10px] font-mono text-orange-700 truncate">保存名：-</div>
             </div>
             <button type="button" onclick="exportCsvFromModal('filtered')"
-                    class="px-3.5 py-2 rounded-lg text-xs font-extrabold bg-[#F97316] hover:bg-[#EA580C] text-white shrink-0">
-              CSV出力
+                    class="px-4 py-2.5 rounded-lg text-xs font-extrabold bg-[#FF6B00] hover:bg-[#FF8533] text-white shrink-0 shadow-sm">
+              ダウンロード ⬇
             </button>
           </div>
 
           <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-3">
-            <div>
-              <div class="text-xs font-extrabold text-slate-900">② 現在のタブ全件をCSV出力</div>
-              <div id="exportCountTab" class="text-[11px] text-slate-500">選択中のタブ（エリア区分反映）の全件を出力します</div>
+            <div class="min-w-0">
+              <div class="text-xs font-extrabold text-slate-900">② 今開いているタブの全件を出力</div>
+              <div id="exportCountTab" class="text-[11px] text-slate-600 truncate">対象：0件</div>
+              <div id="exportFileNameTab" class="text-[10px] font-mono text-slate-500 truncate">保存名：-</div>
             </div>
             <button type="button" onclick="exportCsvFromModal('tab')"
-                    class="px-3.5 py-2 rounded-lg text-xs font-extrabold bg-[#0F172A] hover:bg-slate-800 text-white shrink-0">
-              CSV出力
+                    class="px-4 py-2.5 rounded-lg text-xs font-extrabold bg-[#0F1115] hover:bg-slate-800 text-white shrink-0">
+              ダウンロード ⬇
             </button>
           </div>
 
           <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-3">
-            <div>
-              <div class="text-xs font-extrabold text-slate-900">③ 全5タブ一括CSV出力</div>
-              <div id="exportCountAll" class="text-[11px] text-slate-500">全5区分（関東/全エリア選択反映）をまとめて出力します</div>
+            <div class="min-w-0">
+              <div class="text-xs font-extrabold text-slate-900">③ 全5タブまとめて一括出力</div>
+              <div id="exportCountAll" class="text-[11px] text-slate-600 truncate">対象：0件</div>
+              <div id="exportFileNameAll" class="text-[10px] font-mono text-slate-500 truncate">保存名：-</div>
             </div>
             <button type="button" onclick="exportCsvFromModal('all')"
-                    class="px-3.5 py-2 rounded-lg text-xs font-extrabold bg-[#0F172A] hover:bg-slate-800 text-white shrink-0">
-              一括出力
+                    class="px-4 py-2.5 rounded-lg text-xs font-extrabold bg-[#0F1115] hover:bg-slate-800 text-white shrink-0">
+              一括ダウンロード ⬇
             </button>
           </div>
         </div>
-        <p class="text-[11px] text-slate-500 mt-2">
-          ※ 出力項目：区分タブ / エリア区分 / アプローチフェーズ / 対応ステータス / 応募者ID / 統合ID一覧 / 氏名 / 宛名表記 / カナ / 年齢 / 都道府県 / 市区町村 / 職種 / 職種要確認フラグ / 保有資格 / 担当ユーザー / 担当支店 / 応募日 / アテンド日 / 就業希望時期 / 2km以内紹介特別枠 / 5km以内候補案件(最大3件) / 生成メッセージ文面
-        </p>
+
+        <!-- 出力されるCSVの中身プレビュー（Excelイメージ） -->
+        <div class="border border-slate-200 rounded-xl overflow-hidden">
+          <div class="bg-slate-100 px-3 py-1.5 text-[11px] font-extrabold text-slate-700 flex items-center justify-between">
+            <span>出力されるCSVの列構成プレビュー（先頭3件）</span>
+            <span class="text-[10px] font-normal text-slate-500">横スクロール可 →</span>
+          </div>
+          <div id="exportPreviewTableWrap" class="overflow-x-auto max-h-40 bg-white text-[11px]">
+            <!-- JSでプレビュー表を描画 -->
+          </div>
+        </div>
       </div>
 
       <!-- 独立ストレージ JSONバックアップ＆復元 -->
       <div class="pt-3 border-t border-slate-200">
-        <div class="text-xs font-extrabold text-slate-800 mb-1">2. 送信履歴・リマインド・30日クールダウンのバックアップ（JSON）</div>
-        <p class="text-[11px] text-slate-500 mb-2.5">
-          CSV再読込では消えない独立ストレージ内の対応履歴をJSONファイルで保存・別端末へ復元できます。
+        <div class="text-xs font-extrabold text-slate-800 mb-1">送信履歴・30日クールダウンの引き継ぎ（PC移行用バックアップ）</div>
+        <p class="text-[11px] text-slate-500 mb-2">
+          普段は自動保存されますが、別PCや別ブラウザへ履歴を移したい時に使います。
         </p>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
           <button type="button" onclick="downloadHistoryJson()"
-                  class="py-2.5 px-3 rounded-xl text-xs font-extrabold bg-slate-800 hover:bg-slate-900 text-white transition">
-            履歴データをJSON保存 ⬇
+                  class="py-2 px-3 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 transition">
+            履歴データを保存（JSON） ⬇
           </button>
-          <label class="py-2.5 px-3 rounded-xl text-xs font-extrabold bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 text-center cursor-pointer transition">
-            JSONファイルから復元 ⬆
+          <label class="py-2 px-3 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 text-center cursor-pointer transition">
+            履歴データを復元（JSON） ⬆
             <input type="file" id="jsonRestoreInput" accept=".json,application/json" onchange="restoreHistoryJson(event)" class="hidden">
           </label>
         </div>
@@ -312,35 +368,44 @@
     </div>
   </div>
 
-  <!-- (C) CSV読込モーダル -->
+  <!-- (C) CSV読込＆data.js書き出しモーダル -->
   <div id="csvModal" class="fixed inset-0 z-50 hidden bg-slate-900/60 items-end sm:items-center justify-center p-0 sm:p-4">
     <div class="bg-white w-full max-w-xl max-h-[92vh] rounded-t-2xl sm:rounded-2xl p-4 sm:p-5 overflow-y-auto shadow-2xl">
       <div class="flex items-center justify-between pb-3 mb-3 border-b border-slate-200">
-        <h2 class="text-base font-extrabold text-slate-900">CSV読込（125列対応・ブラウザ内完結）</h2>
+        <h2 class="text-base font-extrabold text-slate-900">全列CSV読込 ＆ 軽量データファイル(data.js)出力</h2>
         <button type="button" onclick="closeModal('csvModal')" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold">✕</button>
       </div>
 
       <!-- 上部：Refo応募一覧への直通誘導ボックス -->
       <div class="p-3 rounded-xl bg-orange-50 border border-orange-200 mb-3 flex flex-wrap items-center justify-between gap-2">
         <div class="text-xs text-orange-950">
-          <div class="font-extrabold">まずはRefoから最新CSVをダウンロード</div>
+          <div class="font-extrabold">STEP 1：Refoから最新CSVをダウンロード</div>
           <div class="text-[11px] text-orange-800">応募一覧画面からCSVを出力し、下の枠へドロップしてください</div>
         </div>
         <a href="https://refo.link/haken-oubo/applications" target="_blank" rel="noopener noreferrer"
-           class="px-3 py-2 rounded-lg text-xs font-extrabold bg-[#F97316] hover:bg-[#EA580C] text-white shadow-sm shrink-0">
+           class="px-3 py-2 rounded-lg text-xs font-extrabold bg-[#FF6B00] hover:bg-[#FF8533] text-white shadow-sm shrink-0">
           📥 CSV元データを取得（Refo応募一覧を開く） ↗
         </a>
       </div>
 
-      <p class="text-xs text-slate-600 mb-3">
-        UTF-8 / Shift-JIS（CP932）を自動判定します。データは外部サーバーへ一切送信されず、<strong>既存の送信履歴・翌日リマインド・30日クールダウンは消えずにそのまま引き継がれます。</strong>
-      </p>
-
       <div id="csvDropZone" onclick="document.getElementById('csvFileInput').click()"
-           class="border-2 border-dashed border-slate-300 hover:border-[#F97316] bg-slate-50 hover:bg-orange-50/40 rounded-xl p-7 text-center cursor-pointer transition mb-3">
+           class="border-2 border-dashed border-slate-300 hover:border-[#FF6B00] bg-slate-50 hover:bg-orange-50/40 rounded-xl p-6 text-center cursor-pointer transition mb-3">
+        <div class="text-xs font-bold text-[#FF6B00] mb-1">STEP 2：全列CSVを読み込む（列数制限なし）</div>
         <div class="text-sm font-extrabold text-slate-800 mb-1">クリックしてCSVファイルを選択</div>
-        <div class="text-xs text-slate-500">またはここに125列CSVファイルをドラッグ＆ドロップ</div>
+        <div class="text-xs text-slate-500">またはここにCSVファイルをドラッグ＆ドロップ（UTF-8 / Shift-JIS自動判定）</div>
         <input type="file" id="csvFileInput" accept=".csv,text/csv" onchange="handleCsvFile(event)" class="hidden">
+      </div>
+
+      <!-- 別ファイル（data.js）書き出しボックス -->
+      <div class="p-3 rounded-xl bg-[#0F1115] text-white mb-3">
+        <div class="text-xs font-extrabold text-[#FF8533] mb-1">STEP 3（配布・軽量化用）：別ファイル data.js に書き出し</div>
+        <p class="text-[11px] text-slate-300 mb-2.5 leading-relaxed">
+          読み込んだ全列CSVを軽量な外部データファイル（<code>data.js</code>）として保存します。別サイトや同じフォルダに置くだけで、メンバー全員がCSV読込なしで最新データを開けます。
+        </p>
+        <button type="button" onclick="exportDataJsFile()"
+                class="w-full py-2.5 px-3 rounded-lg text-xs font-extrabold bg-[#FF6B00] hover:bg-[#FF8533] text-white shadow transition">
+          📦 読込済CSV(全列)から最新 data.js を書き出し ⬇
+        </button>
       </div>
 
       <div class="grid grid-cols-2 gap-2">
@@ -349,7 +414,7 @@
           デモデータに戻す
         </button>
         <button type="button" onclick="closeModal('csvModal')"
-                class="py-2.5 px-3 rounded-xl text-xs font-bold bg-[#0F172A] text-white">
+                class="py-2.5 px-3 rounded-xl text-xs font-bold bg-[#181B22] text-white">
           閉じる
         </button>
       </div>
@@ -360,20 +425,27 @@
   <div id="urlModal" class="fixed inset-0 z-50 hidden bg-slate-900/60 items-end sm:items-center justify-center p-0 sm:p-4">
     <div class="bg-white w-full max-w-lg rounded-t-2xl sm:rounded-2xl p-4 sm:p-5 shadow-2xl">
       <div class="flex items-center justify-between pb-3 mb-3 border-b border-slate-200">
-        <h2 class="text-base font-extrabold text-slate-900">基幹システム修正URL設定</h2>
+        <h2 class="text-base font-extrabold text-slate-900">システムURL・外部データURL設定</h2>
         <button type="button" onclick="closeModal('urlModal')" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold">✕</button>
       </div>
-      <p class="text-xs text-slate-600 mb-3">
-        「希望日変更・修正 ↗」「元データ修正 ↗」ボタン押下時に開くURLです（押下時に応募者IDが自動でクリップボードにコピーされます）。
-      </p>
-      <label for="crmBaseUrlInput" class="block text-xs font-bold text-slate-700 mb-1">遷移先URL</label>
-      <input type="url" id="crmBaseUrlInput" class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg mb-3">
+      <div class="space-y-3 mb-4">
+        <div>
+          <label for="crmBaseUrlInput" class="block text-xs font-bold text-slate-700 mb-1">1. 基幹システム修正URL（希望日変更・元データ修正）</label>
+          <input type="url" id="crmBaseUrlInput" class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg">
+          <p class="text-[11px] text-slate-500 mt-1">押下時に応募者IDが自動でクリップボードにコピーされます。</p>
+        </div>
+        <div>
+          <label for="externalDataUrlInput" class="block text-xs font-bold text-slate-700 mb-1">2. 別サイト外部データURL（data.js / JSON）※任意</label>
+          <input type="url" id="externalDataUrlInput" placeholder="https://kawazoedaichi.github.io/staff-data/data.js" class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg">
+          <p class="text-[11px] text-slate-500 mt-1">別リポジトリ・別サイトに置いた <code>data.js</code> のURLを指定すると起動時に自動読込します。</p>
+        </div>
+      </div>
       <div class="flex justify-end gap-2">
-        <button type="button" onclick="resetCrmUrl()" class="px-3 py-2 rounded-lg text-xs font-bold bg-slate-100 text-slate-700 border border-slate-300">
+        <button type="button" onclick="resetUrls()" class="px-3 py-2 rounded-lg text-xs font-bold bg-slate-100 text-slate-700 border border-slate-300">
           初期値に戻す
         </button>
-        <button type="button" onclick="saveCrmUrl()" class="px-4 py-2 rounded-lg text-xs font-extrabold bg-[#F97316] text-white">
-          保存する
+        <button type="button" onclick="saveUrls()" class="px-4 py-2 rounded-lg text-xs font-extrabold bg-[#FF6B00] text-white">
+          保存して再読込
         </button>
       </div>
     </div>
@@ -392,71 +464,101 @@
     </div>
   </div>
 
-  <!-- ==================== 5. アプリケーションロジック ==================== -->
+  <!-- (F) 全列データ閲覧モーダル -->
+  <div id="rawColsModal" class="fixed inset-0 z-50 hidden bg-slate-900/60 items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="bg-white w-full max-w-2xl max-h-[90vh] rounded-t-2xl sm:rounded-2xl p-4 sm:p-5 overflow-y-auto shadow-2xl">
+      <div class="flex items-center justify-between pb-3 mb-3 border-b border-slate-200">
+        <div>
+          <h2 id="rawColsTitle" class="text-base font-extrabold text-slate-900">CSV全列データ詳細</h2>
+          <p id="rawColsSubtitle" class="text-[11px] text-slate-500">元CSVの全カラム情報</p>
+        </div>
+        <button type="button" onclick="closeModal('rawColsModal')" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold">✕</button>
+      </div>
+      <div class="mb-2.5 flex items-center justify-between gap-2">
+        <input type="text" id="rawColsSearch" oninput="renderRawColsTable()" placeholder="列名や値で絞り込み..."
+               class="flex-1 px-3 py-1.5 text-xs border border-slate-300 rounded-lg">
+        <label class="inline-flex items-center gap-1.5 text-xs font-bold text-slate-700 cursor-pointer">
+          <input type="checkbox" id="rawColsHideEmpty" checked onchange="renderRawColsTable()" class="w-4 h-4 accent-[#FF6B00]">
+          空欄を隠す
+        </label>
+      </div>
+      <div id="rawColsTableContainer" class="border border-slate-200 rounded-xl overflow-hidden">
+        <!-- JSで描画 -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 6. アプリケーションロジック ==================== -->
   <script>
     // ---------------------------------------------------------
     // 定数・ストレージキー（CSV再読込とは完全独立した永続領域）
     // ---------------------------------------------------------
-    const STORAGE_HISTORY_KEY = "bstyle_outreach_independent_history_v2";
+    const STORAGE_HISTORY_KEY = "bstyle_followup_independent_state_v2";
     const STORAGE_URL_KEY = "bstyle_crm_edit_url_v2";
+    const STORAGE_EXT_DATA_URL_KEY = "bstyle_ext_data_url_v2";
     const DEFAULT_CRM_URL = "https://b-style-20260516.duo.arrove.jp/";
     const SEARCH_ORDER_URL = "https://kawazoedaichi.github.io/searchOrder/";
     const KANTO_BRANCHES = ["東京東", "本社", "埼玉", "神奈川"];
 
     const TAB_DEFINITIONS = [
-      { id: "within3bd", label: "3営業日以内 未FIX人材" },
-      { id: "future", label: "未来人材" },
-      { id: "unfix", label: "未FIX人材" },
-      { id: "hotReactivate", label: "激熱掘起" },
-      { id: "normalReactivate", label: "通常掘起" }
+      { id: "within3d", label: "3日以内 未FIX人材", shortFile: "3日以内未FIX" },
+      { id: "future", label: "未来人材", shortFile: "未来人材" },
+      { id: "unfix", label: "未FIX人材", shortFile: "未FIX人材" },
+      { id: "hotReactivate", label: "激熱掘起", shortFile: "激熱掘起" },
+      { id: "normalReactivate", label: "通常掘起", shortFile: "通常掘起" }
     ];
 
     const ENTRY_STATUS_REASONS = [
-      "充足してしまった",
+      "先方にて充足してしまった",
       "他社で決定してしまった",
       "直接雇用で埋まってしまった",
       "エントリー選考外となってしまった"
     ];
 
-    // 日本の祝日リスト（営業日計算用：2025-2027年主要祝日）
-    const JP_HOLIDAYS = new Set([
-      "2025-01-01","2025-01-13","2025-02-11","2025-02-23","2025-02-24","2025-03-20",
-      "2025-04-29","2025-05-03","2025-05-04","2025-05-05","2025-05-06","2025-07-21",
-      "2025-08-11","2025-09-15","2025-09-23","2025-10-13","2025-11-03","2025-11-23","2025-11-24",
-      "2026-01-01","2026-01-12","2026-02-11","2026-02-23","2026-03-20","2026-04-29",
-      "2026-05-03","2026-05-04","2026-05-05","2026-05-06","2026-07-20","2026-08-11",
-      "2026-09-21","2026-09-22","2026-09-23","2026-10-12","2026-11-03","2026-11-23",
-      "2027-01-01","2027-01-11","2027-02-11","2027-02-23","2027-03-21","2027-03-22",
-      "2027-04-29","2027-05-03","2027-05-04","2027-05-05","2027-07-19","2027-08-11",
-      "2027-09-20","2027-09-23","2027-10-11","2027-11-03","2027-11-23"
-    ]);
-
     // ---------------------------------------------------------
     // アプリケーション状態
     // ---------------------------------------------------------
     let appState = {
-      activeTab: "within3bd",
+      activeTab: "within3d",
       areaFilter: "kanto", // 初期選択は「関東」
       rawRowCount: 0,
-      mergedCandidates: [],
+      mergedPersonCount: 0,
+      duplicateMergedCount: 0,
+      csvHeaders: [],
+      rawRecordsStore: [], // 全列生データ保持用
+      allCandidates: [],
       jobMaster: [],
-      filteredList: [],
       currentPage: 1,
       pageSize: 20,
-      isLiveCsv: false,
       currentComposeCandidate: null,
-      currentReasonIndex: 0
+      currentReasonIndex: 0,
+      currentRawColsCandidate: null
     };
 
     // ---------------------------------------------------------
-    // 独立ストレージ読み書き（CSV再読込でも消えない）
+    // 完了ポップアップモーダル表示関数（インポート・エクスポート共通）
+    // ---------------------------------------------------------
+    function showCompletionPopup({ badge, title, desc, rows }) {
+      document.getElementById("completionPopupBadge").textContent = badge || "完了通知";
+      document.getElementById("completionPopupTitle").textContent = title || "完了しました！";
+      document.getElementById("completionPopupDesc").textContent = desc || "";
+      const detailEl = document.getElementById("completionPopupDetails");
+      detailEl.innerHTML = (rows || []).map(r => `
+        <div class="flex items-start justify-between gap-2 py-1 border-b border-slate-200/70 last:border-b-0">
+          <span class="font-bold text-slate-500 shrink-0">${escapeHtml(r.label)}</span>
+          <span class="font-extrabold text-slate-900 text-right break-all">${escapeHtml(r.value)}</span>
+        </div>
+      `).join("");
+      openModal("completionPopupModal");
+    }
+
+    // ---------------------------------------------------------
+    // 独立ストレージ管理（送信履歴・翌日リマインド・30日クールダウン）
     // ---------------------------------------------------------
     function loadIndependentHistory() {
       try {
         const raw = localStorage.getItem(STORAGE_HISTORY_KEY);
-        if (!raw) return {};
-        const parsed = JSON.parse(raw);
-        return typeof parsed === "object" && parsed !== null ? parsed : {};
+        return raw ? JSON.parse(raw) : {};
       } catch (e) {
         console.error("履歴読込エラー:", e);
         return {};
@@ -468,269 +570,134 @@
         localStorage.setItem(STORAGE_HISTORY_KEY, JSON.stringify(historyMap));
       } catch (e) {
         console.error("履歴保存エラー:", e);
-        showToast("ブラウザ保存容量の上限に達しました。JSONバックアップを推奨します。");
+        showToast("ブラウザの保存容量上限に達しました。JSONバックアップをお勧めします");
       }
     }
 
-    function getCrmBaseUrl() {
-      return localStorage.getItem(STORAGE_URL_KEY) || DEFAULT_CRM_URL;
-    }
-
-    // ---------------------------------------------------------
-    // ユーティリティ関数（日付・営業日・名字安全抽出・クリップボード）
-    // ---------------------------------------------------------
-    function showToast(msg) {
-      const el = document.getElementById("toast");
-      el.textContent = msg;
-      el.classList.remove("hidden");
-      clearTimeout(window.__toastTimer);
-      window.__toastTimer = setTimeout(() => {
-        el.classList.add("hidden");
-      }, 3200);
-    }
-
-    function copyTextSafe(text) {
-      if (!text) return false;
-      const ta = document.createElement("textarea");
-      ta.value = text;
-      ta.style.position = "fixed";
-      ta.style.opacity = "0";
-      document.body.appendChild(ta);
-      ta.select();
-      let ok = false;
-      try {
-        ok = document.execCommand("copy");
-      } catch (e) {
-        ok = false;
+    function getCandidateKeys(candidate) {
+      const keys = [];
+      if (candidate.personKey) keys.push(`PERSON:${candidate.personKey}`);
+      if (candidate.id) keys.push(`ID:${candidate.id}`);
+      if (Array.isArray(candidate.mergedIds)) {
+        candidate.mergedIds.forEach(mid => {
+          if (mid) keys.push(`ID:${mid}`);
+        });
       }
-      document.body.removeChild(ta);
-      return ok;
+      return Array.from(new Set(keys));
     }
 
-    function openCrmWithIdCopy(applicantId, label) {
-      const copied = copyTextSafe(applicantId);
-      const url = getCrmBaseUrl();
-      window.open(url, "_blank", "noopener,noreferrer");
-      if (copied) {
-        showToast(`ID「${applicantId}」をコピーして${label}を開きました`);
-      } else {
-        showToast(`${label}を開きました（ID: ${applicantId}）`);
-      }
-    }
-
-    function parseDateFlexible(str) {
-      if (!str) return null;
-      const s = String(str).trim();
-      if (!s) return null;
-      const normalized = s.replace(/年|\//g, "-").replace(/月/g, "-").replace(/日/g, "");
-      const d = new Date(normalized);
-      if (!isNaN(d.getTime())) return d;
-      const m = s.match(/(\d{4})[-/](\d{1,2})[-/](\d{1,2})(?:\s+(\d{1,2}):(\d{1,2}))?/);
-      if (m) {
-        return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]), Number(m[4] || 0), Number(m[5] || 0));
-      }
-      return null;
-    }
-
-    function formatDateShort(d) {
-      if (!d || isNaN(d.getTime())) return "-";
-      const y = d.getFullYear();
-      const m = String(d.getMonth() + 1).padStart(2, "0");
-      const day = String(d.getDate()).padStart(2, "0");
-      return `${y}/${m}/${day}`;
-    }
-
-    function formatDateTimeShort(d) {
-      if (!d || isNaN(d.getTime())) return "-";
-      const base = formatDateShort(d);
-      const hh = String(d.getHours()).padStart(2, "0");
-      const mm = String(d.getMinutes()).padStart(2, "0");
-      return `${base} ${hh}:${mm}`;
-    }
-
-    function isBusinessDay(dateObj) {
-      const day = dateObj.getDay();
-      if (day === 0 || day === 6) return false;
-      const y = dateObj.getFullYear();
-      const m = String(dateObj.getMonth() + 1).padStart(2, "0");
-      const d = String(dateObj.getDate()).padStart(2, "0");
-      return !JP_HOLIDAYS.has(`${y}-${m}-${d}`);
-    }
-
-    // 開始日時から現在までの経過営業日数を算出
-    function countElapsedBusinessDays(fromDate, nowDate) {
-      if (!fromDate || fromDate > nowDate) return 0;
-      let count = 0;
-      const cursor = new Date(fromDate.getFullYear(), fromDate.getMonth(), fromDate.getDate());
-      const end = new Date(nowDate.getFullYear(), nowDate.getMonth(), nowDate.getDate());
-      while (cursor < end) {
-        cursor.setDate(cursor.getDate() + 1);
-        if (isBusinessDay(cursor)) {
-          count++;
-        }
-      }
-      return count;
-    }
-
-    // 名字安全抽出（スペース区切りまたは姓列なら名字のみ、判定に迷う場合はフルネーム）
-    function extractSafeSalutation(fullName, familyNameCol) {
-      const fam = (familyNameCol || "").trim();
-      if (fam && fam.length <= 6) {
-        return { salutation: `${fam}様`, isFamilyOnly: true };
-      }
-      const raw = (fullName || "").trim();
-      if (!raw) {
-        return { salutation: "求職者様", isFamilyOnly: false };
-      }
-      // 全角・半角スペースで区切られている場合は前半を名字として安全抽出
-      const parts = raw.split(/[\s\u3000]+/).filter(Boolean);
-      if (parts.length >= 2 && parts[0].length >= 1 && parts[0].length <= 6) {
-        return { salutation: `${parts[0]}様`, isFamilyOnly: true };
-      }
-      // スペースがない場合は誤分割リスクを避けフルネームのまま出力
-      return { salutation: `${raw}様`, isFamilyOnly: false };
-    }
-
-    function isKantoBranch(branchStr) {
-      const b = (branchStr || "").trim();
-      if (!b) return false;
-      return KANTO_BRANCHES.some(k => b.includes(k));
-    }
-
-    // ---------------------------------------------------------
-    // 履歴状態判定（翌日リマインド・30日クールダウン・完了状態）
-    // ---------------------------------------------------------
-    function getCandidateHistoryState(candidate, historyMap, now = new Date()) {
-      // 統合ID一覧のいずれかに履歴があれば最新を採用
-      const keys = [candidate.personKey, ...candidate.allIds];
-      let record = null;
+    function getCandidateHistoryRecord(candidate, historyMap) {
+      const keys = getCandidateKeys(candidate);
+      let latest = null;
       for (const k of keys) {
-        if (historyMap[k]) {
-          if (!record || (historyMap[k].updatedAt || 0) > (record.updatedAt || 0)) {
-            record = historyMap[k];
-          }
+        const rec = historyMap[k];
+        if (rec && (!latest || (rec.updatedAt || 0) > (latest.updatedAt || 0))) {
+          latest = rec;
         }
       }
-      if (!record) {
-        return {
-          status: "pending", // pending | remind_wait | remind_due | cooldown | done
-          record: null,
-          cooldownDaysLeft: 0
-        };
+      return latest;
+    }
+
+    function getCandidateHistoryState(candidate, historyMap, now = new Date()) {
+      const rec = getCandidateHistoryRecord(candidate, historyMap);
+      if (!rec) {
+        return { status: "pending", label: "未対応", cooldownDaysLeft: 0, record: null };
       }
 
       const MS_DAY = 24 * 60 * 60 * 1000;
       const nowMs = now.getTime();
 
-      // 激熱掘起の2段階ステップ管理
-      if (record.tab === "hotReactivate") {
-        if (record.step === 1 && record.firstSentAt) {
-          const elapsedMs = nowMs - record.firstSentAt;
-          if (elapsedMs >= MS_DAY) {
-            return { status: "remind_due", record, cooldownDaysLeft: 0 };
+      // 激熱掘起の2段階フロー：初回送信 -> 24h後リマインド再浮上 -> リマインド送信後30日クールダウン
+      if (candidate.tabId === "hotReactivate") {
+        if (rec.stage === "hot_initial_sent" && rec.initialSentAt) {
+          const elapsedHours = (nowMs - rec.initialSentAt) / (60 * 60 * 1000);
+          if (elapsedHours >= 24) {
+            return { status: "remind_due", label: "翌日リマインド対象", cooldownDaysLeft: 0, record: rec };
           } else {
-            return { status: "remind_wait", record, cooldownDaysLeft: 0 };
+            return { status: "remind_wait", label: "初回送信済(翌日リマインド待機)", cooldownDaysLeft: 0, record: rec };
           }
         }
-        if (record.step === 2 && record.secondSentAt) {
-          const elapsedDays = (nowMs - record.secondSentAt) / MS_DAY;
-          if (elapsedDays < 30) {
-            return {
-              status: "cooldown",
-              record,
-              cooldownDaysLeft: Math.ceil(30 - elapsedDays)
-            };
+        if (rec.stage === "cooldown" && rec.cooldownUntil) {
+          if (nowMs < rec.cooldownUntil) {
+            const daysLeft = Math.max(1, Math.ceil((rec.cooldownUntil - nowMs) / MS_DAY));
+            return { status: "cooldown", label: `30日クールダウン中(あと${daysLeft}日)`, cooldownDaysLeft: daysLeft, record: rec };
           } else {
-            return { status: "pending", record: null, cooldownDaysLeft: 0 };
+            return { status: "pending", label: "未対応(クールダウン終了)", cooldownDaysLeft: 0, record: rec };
           }
         }
       }
 
-      // 通常掘起の30日クールダウン
-      if (record.tab === "normalReactivate" && record.sentAt) {
-        const elapsedDays = (nowMs - record.sentAt) / MS_DAY;
-        if (elapsedDays < 30) {
-          return {
-            status: "cooldown",
-            record,
-            cooldownDaysLeft: Math.ceil(30 - elapsedDays)
-          };
-        } else {
-          return { status: "pending", record: null, cooldownDaysLeft: 0 };
+      // 通常掘起：送信後30日クールダウン
+      if (candidate.tabId === "normalReactivate") {
+        if (rec.stage === "cooldown" && rec.cooldownUntil) {
+          if (nowMs < rec.cooldownUntil) {
+            const daysLeft = Math.max(1, Math.ceil((rec.cooldownUntil - nowMs) / MS_DAY));
+            return { status: "cooldown", label: `30日クールダウン中(あと${daysLeft}日)`, cooldownDaysLeft: daysLeft, record: rec };
+          } else {
+            return { status: "pending", label: "未対応(クールダウン終了)", cooldownDaysLeft: 0, record: rec };
+          }
         }
       }
 
-      // その他タブの完了状態
-      if (record.done) {
-        return { status: "done", record, cooldownDaysLeft: 0 };
+      // その他タブ（3日以内未FIX / 未来人材 / 未FIX人材）
+      if (rec.stage === "done") {
+        return { status: "done", label: "対応済（送信完了）", cooldownDaysLeft: 0, record: rec };
       }
 
-      return { status: "pending", record, cooldownDaysLeft: 0 };
+      return { status: "pending", label: "未対応", cooldownDaysLeft: 0, record: rec };
     }
 
-    function recordCandidateAction(candidate, tabId, mode = "send") {
+    function recordCandidateAction(candidate, tabId) {
       const historyMap = loadIndependentHistory();
-      const nowMs = Date.now();
-      const currentState = getCandidateHistoryState(candidate, historyMap, new Date(nowMs));
-      let nextRecord = {
-        tab: tabId,
-        updatedAt: nowMs,
-        done: true
-      };
+      const now = new Date();
+      const nowMs = now.getTime();
+      const MS_30_DAYS = 30 * 24 * 60 * 60 * 1000;
+      const current = getCandidateHistoryState(candidate, historyMap, now);
 
+      let newRecord;
       if (tabId === "hotReactivate") {
-        if (currentState.status === "remind_due" || (currentState.record && currentState.record.step === 1)) {
-          // ステップ2（翌日リマインド送信完了 -> 30日クールダウンへ）
-          nextRecord = {
-            tab: "hotReactivate",
-            step: 2,
-            firstSentAt: currentState.record ? currentState.record.firstSentAt : nowMs - 86400000,
-            secondSentAt: nowMs,
-            updatedAt: nowMs,
-            done: true
+        if (current.status === "remind_due") {
+          newRecord = {
+            stage: "cooldown",
+            initialSentAt: current.record ? current.record.initialSentAt : nowMs,
+            reminderSentAt: nowMs,
+            cooldownUntil: nowMs + MS_30_DAYS,
+            updatedAt: nowMs
           };
         } else {
-          // ステップ1（初回送信完了 -> 翌日リマインド待機へ）
-          nextRecord = {
-            tab: "hotReactivate",
-            step: 1,
-            firstSentAt: nowMs,
-            updatedAt: nowMs,
-            done: true
+          newRecord = {
+            stage: "hot_initial_sent",
+            initialSentAt: nowMs,
+            updatedAt: nowMs
           };
         }
       } else if (tabId === "normalReactivate") {
-        nextRecord = {
-          tab: "normalReactivate",
+        newRecord = {
+          stage: "cooldown",
           sentAt: nowMs,
-          updatedAt: nowMs,
-          done: true
+          cooldownUntil: nowMs + MS_30_DAYS,
+          updatedAt: nowMs
         };
       } else {
-        nextRecord = {
-          tab: tabId,
+        newRecord = {
+          stage: "done",
           sentAt: nowMs,
-          updatedAt: nowMs,
-          done: true
+          updatedAt: nowMs
         };
       }
 
-      // personKey と統合された全IDに同期保存
-      historyMap[candidate.personKey] = nextRecord;
-      candidate.allIds.forEach(id => {
-        historyMap[id] = nextRecord;
+      getCandidateKeys(candidate).forEach(k => {
+        historyMap[k] = newRecord;
       });
-
       saveIndependentHistory(historyMap);
     }
 
-    function revertCandidateToPending(personKey) {
-      const candidate = appState.mergedCandidates.find(c => c.personKey === personKey);
+    function revertCandidateToPending(candidateId) {
+      const candidate = appState.allCandidates.find(c => c.id === candidateId);
       if (!candidate) return;
       const historyMap = loadIndependentHistory();
-      delete historyMap[candidate.personKey];
-      candidate.allIds.forEach(id => {
-        delete historyMap[id];
+      getCandidateKeys(candidate).forEach(k => {
+        delete historyMap[k];
       });
       saveIndependentHistory(historyMap);
       renderAll();
@@ -738,35 +705,128 @@
     }
 
     // ---------------------------------------------------------
-    // 職種自動補完・名寄せ・5タブ振り分け・案件マッチング
+    // ユーティリティ（日時計算・安全名字抽出・クリップボード）
     // ---------------------------------------------------------
-    function resolveJobCategory(rawJobDetail, qualifications) {
-      const detail = (rawJobDetail || "").trim();
-      const qual = (qualifications || "").trim();
-      if (detail.includes("看護")) {
-        return { jobType: "看護", complemented: false, originalDetail: detail };
+    function escapeHtml(str) {
+      return String(str ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function showToast(msg) {
+      const el = document.getElementById("toast");
+      el.textContent = msg;
+      el.classList.remove("hidden");
+      clearTimeout(el._timer);
+      el._timer = setTimeout(() => {
+        el.classList.add("hidden");
+      }, 3200);
+    }
+
+    function copyTextSafe(text) {
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      ta.style.position = "fixed";
+      ta.style.left = "-9999px";
+      document.body.appendChild(ta);
+      ta.select();
+      try {
+        document.execCommand("copy");
+      } catch (e) {
+        console.error("Copy failed", e);
       }
-      if (detail.includes("介護")) {
-        return { jobType: "介護", complemented: false, originalDetail: detail };
+      document.body.removeChild(ta);
+    }
+
+    function parseDateFlexible(str) {
+      if (!str) return null;
+      const s = String(str).trim().replace(/\./g, "-").replace(/\//g, "-");
+      const m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})(?:[ T](\d{1,2}):(\d{1,2})(?::(\d{1,2}))?)?/);
+      if (m) {
+        return new Date(
+          Number(m[1]),
+          Number(m[2]) - 1,
+          Number(m[3]),
+          m[4] ? Number(m[4]) : 0,
+          m[5] ? Number(m[5]) : 0,
+          m[6] ? Number(m[6]) : 0
+        );
       }
-      // 空欄・その他の場合は保有資格から自動補完
-      const isNurse = /看護師|准看護師|保健師|助産師/.test(qual);
-      return {
-        jobType: isNurse ? "看護" : "介護",
-        complemented: true,
-        originalDetail: detail || "（空欄）"
-      };
+      const d = new Date(s);
+      return isNaN(d.getTime()) ? null : d;
+    }
+
+    function formatDateShort(d) {
+      if (!d) return "";
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return `${y}-${m}-${day}`;
+    }
+
+    function formatDateCompact(d) {
+      if (!d) return "";
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return `${y}${m}${day}`;
+    }
+
+    function formatDateTimeShort(d) {
+      if (!d) return "";
+      const base = formatDateShort(d);
+      const hh = String(d.getHours()).padStart(2, "0");
+      const mm = String(d.getMinutes()).padStart(2, "0");
+      return `${base} ${hh}:${mm}`;
+    }
+
+    // 名字の安全自動抽出（スペース区切りまたは姓列なら名字のみ、判定に迷う場合はフルネーム）
+    function extractSafeSalutation(fullName, familyNameCol) {
+      const cleanLast = (familyNameCol || "").trim();
+      if (cleanLast && cleanLast.length <= 6) {
+        return { salutation: `${cleanLast}様`, isFamilyOnly: true };
+      }
+      const cleanFull = (fullName || "").trim();
+      if (!cleanFull) {
+        return { salutation: "求職者様", isFamilyOnly: false };
+      }
+      const parts = cleanFull.split(/[\s\u3000]+/).filter(Boolean);
+      if (parts.length >= 2 && parts[0].length >= 1 && parts[0].length <= 6) {
+        return { salutation: `${parts[0]}様`, isFamilyOnly: true };
+      }
+      return { salutation: `${cleanFull}様`, isFamilyOnly: false };
+    }
+
+    // 職種判定＆自動補完
+    function resolveJobType(jobDetailRaw, qualRaw) {
+      const jd = (jobDetailRaw || "").trim();
+      const ql = (qualRaw || "").trim();
+      if (/看護|ナース|保健師|助産師/.test(jd)) {
+        return { jobType: "看護", complemented: false };
+      }
+      if (/介護|ヘルパー|ケア|福祉|相談員|ケアマネ/.test(jd)) {
+        return { jobType: "介護", complemented: false };
+      }
+      if (/正看護師|准看護師|看護師|保健師|助産師/.test(ql)) {
+        return { jobType: "看護", complemented: true };
+      }
+      return { jobType: "介護", complemented: true };
     }
 
     function getProgressScore(statusStr, hasAttend) {
       const s = (statusStr || "").trim();
-      if (s.includes("FIX待ち") || s.includes("打診")) return 50;
+      if (s === "FIX待ち" || s.includes("FIX待ち")) return 60;
+      if (s.includes("打診")) return 50;
       if (s.includes("アテンド済") || hasAttend) return 40;
       if (s.includes("連絡済") || s.includes("面談")) return 30;
       if (s.includes("応募")) return 20;
       return 10;
     }
 
+    // 5タブ分類ロジック
     function classifyTab(row, now = new Date()) {
       const status = (row.status || "").trim();
       const attendDate = parseDateFlexible(row.attendDate);
@@ -777,34 +837,35 @@
       const MS_HOUR = 60 * 60 * 1000;
       const MS_DAY = 24 * MS_HOUR;
 
-      // 除外ステータス（決定済・辞退・NGなど）
       if (/決定|入社|成約|辞退|対象外|ブラック|NG/.test(status)) {
         return null;
       }
 
-      // 1. 3営業日以内 未FIX人材（アテンド・FIX待ちで12時間以上〜3営業日以内）
-      const isUnfixStatus = /FIX待ち|アテンド|打診/.test(status) || Boolean(attendDate);
+      const isFixWaiting = status === "FIX待ち" || status.includes("FIX待ち");
+      const isUnfixStatus = isFixWaiting || /アテンド|打診/.test(status) || Boolean(attendDate);
       const baseUnfixDate = attendDate || contactDate;
+
+      // 1. 3日以内 未FIX人材（最終ステータスFIX待ち等で、12時間以上〜3日(72時間)以内）
       if (isUnfixStatus && baseUnfixDate) {
         const elapsedHours = (now.getTime() - baseUnfixDate.getTime()) / MS_HOUR;
-        const elapsedBDs = countElapsedBusinessDays(baseUnfixDate, now);
-        if (elapsedHours >= 12 && elapsedBDs <= 3) {
-          return "within3bd";
+        if (elapsedHours >= 12 && elapsedHours <= 72) {
+          return "within3d";
         }
       }
 
-      // 2. 未来人材（就業希望時期が現在より14日以上先）
+      // 2. 未来人材（就業開始希望日が本日から45日以内：0〜45日先）
       if (startDate) {
-        const daysUntilStart = (startDate.getTime() - now.getTime()) / MS_DAY;
-        if (daysUntilStart >= 14) {
+        const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const targetStart = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+        const daysUntilStart = Math.round((targetStart.getTime() - todayStart.getTime()) / MS_DAY);
+        if (daysUntilStart >= 0 && daysUntilStart <= 45) {
           return "future";
         }
-      }
-      if (/未来|先々|時期未定/.test(status)) {
+      } else if (/未来|先々|時期未定/.test(status)) {
         return "future";
       }
 
-      // 3. 未FIX人材（アテンド・接触から7〜10日経過）
+      // 3. 未FIX人材（最終ステータスFIX待ち等で、アテンド・接触から7〜10日経過）
       if (isUnfixStatus && baseUnfixDate) {
         const elapsedDays = (now.getTime() - baseUnfixDate.getTime()) / MS_DAY;
         if (elapsedDays >= 7 && elapsedDays <= 10.99) {
@@ -832,53 +893,98 @@
     }
 
     // ---------------------------------------------------------
-    // CSVパーサ（UTF-8 / Shift-JIS自動判定）＆ 125列マッピング
+    // 全列CSVパーサ（UTF-8 / Shift-JIS自動判定・列数制限なし）
     // ---------------------------------------------------------
+    function handleCsvFile(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+      readCsvFileWithEncoding(file);
+      event.target.value = "";
+    }
+
+    function readCsvFileWithEncoding(file) {
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        const buffer = e.target.result;
+        let text = "";
+        try {
+          const utf8Decoder = new TextDecoder("utf-8", { fatal: true });
+          text = utf8Decoder.decode(buffer);
+        } catch (err) {
+          const sjisDecoder = new TextDecoder("shift_jis");
+          text = sjisDecoder.decode(buffer);
+        }
+        const rows = parseCsvText(text);
+        if (rows.length < 2) {
+          showToast("CSVデータが空、または読み取れませんでした");
+          return;
+        }
+        const stats = processParsedRows(rows, true, file.name);
+        closeModal("csvModal");
+        // ★ インポート完了中央ポップアップ表示
+        showCompletionPopup({
+          badge: "CSVインポート完了",
+          title: "インポート完了！",
+          desc: "全列CSVの読み込みと名寄せ・追客対象抽出が完了しました（既存の送信履歴・クールダウンはそのまま保持されています）。",
+          rows: [
+            { label: "読込ファイル名", value: file.name },
+            { label: "認識カラム数", value: `全 ${stats.colCount} 列` },
+            { label: "元データ行数", value: `${stats.rawRowCount} 行` },
+            { label: "名寄せ統合後", value: `${stats.mergedPersonCount} 名（重複 ${stats.duplicateMergedCount} 件合体）` },
+            { label: "追客対象抽出数", value: `${stats.targetCount} 名` }
+          ]
+        });
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
     function parseCsvText(text) {
       const rows = [];
-      let row = [];
-      let field = "";
+      let currentRow = [];
+      let currentVal = "";
       let inQuotes = false;
+      const cleanText = text.replace(/^\uFEFF/, "");
 
-      for (let i = 0; i < text.length; i++) {
-        const ch = text[i];
-        const next = text[i + 1];
+      for (let i = 0; i < cleanText.length; i++) {
+        const ch = cleanText[i];
+        const next = cleanText[i + 1];
+
         if (inQuotes) {
           if (ch === '"' && next === '"') {
-            field += '"';
+            currentVal += '"';
             i++;
           } else if (ch === '"') {
             inQuotes = false;
           } else {
-            field += ch;
+            currentVal += ch;
           }
         } else {
           if (ch === '"') {
             inQuotes = true;
           } else if (ch === ",") {
-            row.push(field);
-            field = "";
+            currentRow.push(currentVal);
+            currentVal = "";
           } else if (ch === "\r" && next === "\n") {
-            row.push(field);
-            rows.push(row);
-            row = [];
-            field = "";
+            currentRow.push(currentVal);
+            rows.push(currentRow);
+            currentRow = [];
+            currentVal = "";
             i++;
           } else if (ch === "\n" || ch === "\r") {
-            row.push(field);
-            rows.push(row);
-            row = [];
-            field = "";
+            currentRow.push(currentVal);
+            rows.push(currentRow);
+            currentRow = [];
+            currentVal = "";
           } else {
-            field += ch;
+            currentVal += ch;
           }
         }
       }
-      if (field.length > 0 || row.length > 0) {
-        row.push(field);
-        rows.push(row);
+      if (currentVal !== "" || currentRow.length > 0) {
+        currentRow.push(currentVal);
+        rows.push(currentRow);
       }
-      return rows.filter(r => r.some(cell => cell.trim() !== ""));
+      return rows.filter(r => r.some(cell => (cell || "").trim() !== ""));
     }
 
     function findColIndex(headers, candidates) {
@@ -893,54 +999,62 @@
       return -1;
     }
 
-    function processParsedRows(rows, isLive = true) {
-      if (!rows || rows.length < 2) {
-        showToast("有効なデータ行が見つかりませんでした");
-        return;
-      }
-      const headers = rows[0].map(h => h.trim());
-      const dataRows = rows.slice(1);
+    function processParsedRows(rows, isUserCsv, sourceLabel = "") {
+      const headers = rows[0].map((h, i) => (h || "").trim() || `列${i + 1}`);
+      appState.csvHeaders = headers;
 
       const idx = {
-        id: findColIndex(headers, ["応募者ID", "応募ID", "求職者ID", "ID"]),
-        name: findColIndex(headers, ["氏名", "求職者名", "名前"]),
-        familyName: findColIndex(headers, ["姓", "苗字"]),
+        id: findColIndex(headers, ["応募者ID", "求職者ID", "ID", "管理番号"]),
+        name: findColIndex(headers, ["氏名", "求職者名", "お名前", "名前"]),
+        lastName: findColIndex(headers, ["姓", "苗字"]),
         kana: findColIndex(headers, ["フリガナ", "カナ", "ふりがな"]),
         dob: findColIndex(headers, ["生年月日", "誕生日"]),
         age: findColIndex(headers, ["年齢"]),
+        phone: findColIndex(headers, ["電話番号", "携帯番号", "連絡先", "TEL", "tel"]),
+        email: findColIndex(headers, ["メールアドレス", "メール", "Email", "E-mail"]),
         pref: findColIndex(headers, ["都道府県"]),
         city: findColIndex(headers, ["市区町村", "住所1", "住所"]),
         branch: findColIndex(headers, ["担当支店", "支店", "エリア"]),
         staff: findColIndex(headers, ["アテンド担当ユーザー", "担当ユーザー", "担当者", "キャリアアドバイザー"]),
-        status: findColIndex(headers, ["対応ステータス", "ステータス", "進捗ステータス", "状態"]),
+        status: findColIndex(headers, ["最終ステータス", "対応ステータス", "ステータス", "進捗ステータス", "状態"]),
         jobDetail: findColIndex(headers, ["職種詳細", "希望職種", "職種"]),
         qual: findColIndex(headers, ["保有資格", "資格"]),
         applyDate: findColIndex(headers, ["応募日時", "応募日", "登録日時"]),
         attendDate: findColIndex(headers, ["アテンド日時", "アテンド日", "打診日時"]),
         lastContactDate: findColIndex(headers, ["最終接触日時", "最終接触日", "最終対応日"]),
-        desiredStartDate: findColIndex(headers, ["就業希望時期", "希望開始日", "入社希望時期"]),
+        desiredStartDate: findColIndex(headers, ["就業開始希望日", "就業開始日", "就業希望時期", "希望開始日", "入社予定日", "入社希望時期"]),
         preferences: findColIndex(headers, ["希望条件", "把握済条件", "備考", "シフト希望"]),
-        // 案件情報列（BO情報が含まれる場合）
-        boName: findColIndex(headers, ["案件名", "施設名", "法人名", "BO名"]),
-        boType: findColIndex(headers, ["雇用形態", "契約形態", "案件区分"]),
-        boDistance: findColIndex(headers, ["距離", "自宅からの距離", "km"]),
-        boDate: findColIndex(headers, ["BO取得日時", "求人取得日", "案件登録日"])
+        boName: findColIndex(headers, ["BO施設名", "案件名", "事業所名", "施設名"]),
+        boType: findColIndex(headers, ["雇用形態", "案件種別"]),
+        boDist: findColIndex(headers, ["距離", "距離km"]),
+        boDate: findColIndex(headers, ["BO取得日時", "案件取得日"])
       };
 
+      const rawRecords = [];
       const extractedJobs = [];
-      const rawRecords = dataRows.map((cols, rowIndex) => {
-        const getVal = (i) => (i >= 0 && cols[i] !== undefined ? cols[i].trim() : "");
-        const applicantId = getVal(idx.id) || `ROW-${rowIndex + 1}`;
-        const name = getVal(idx.name) || "名称未設定";
-        const familyName = getVal(idx.familyName);
+
+      for (let r = 1; r < rows.length; r++) {
+        const line = rows[r];
+        const rawObj = {};
+        headers.forEach((h, cIdx) => {
+          rawObj[h] = (line[cIdx] ?? "").trim();
+        });
+
+        const getVal = (colIdx) => (colIdx >= 0 && line[colIdx] !== undefined ? String(line[colIdx]).trim() : "");
+
+        const id = getVal(idx.id) || `ROW-${r}`;
+        const name = getVal(idx.name) || "氏名未登録";
+        const lastName = getVal(idx.lastName);
         const kana = getVal(idx.kana);
         const dob = getVal(idx.dob);
         const age = getVal(idx.age);
+        const phone = getVal(idx.phone);
+        const email = getVal(idx.email);
         const pref = getVal(idx.pref);
         const city = getVal(idx.city);
-        const branch = getVal(idx.branch);
+        const branch = getVal(idx.branch) || "本社";
         const staff = getVal(idx.staff) || "未割当";
-        const status = getVal(idx.status) || "新規応募";
+        const status = getVal(idx.status) || "未接触";
         const jobDetail = getVal(idx.jobDetail);
         const qual = getVal(idx.qual);
         const applyDate = getVal(idx.applyDate);
@@ -949,192 +1063,200 @@
         const desiredStartDate = getVal(idx.desiredStartDate);
         const preferences = getVal(idx.preferences);
 
-        // 行内に案件BOデータがあればマスタへ抽出
-        const boName = getVal(idx.boName);
-        if (boName) {
-          const distNum = parseFloat(getVal(idx.boDistance).replace(/[^0-9.]/g, ""));
-          extractedJobs.push({
-            id: `BO-${rowIndex}`,
-            facilityName: boName,
-            employmentType: getVal(idx.boType).includes("紹介") && !getVal(idx.boType).includes("予定") ? "紹介" : "派遣",
-            jobType: resolveJobCategory(jobDetail, qual).jobType,
-            pref,
-            city,
-            distanceKm: isNaN(distNum) ? 2.5 : distNum,
-            boAcquiredAt: getVal(idx.boDate) || applyDate || "2026-11-01 10:00",
-            applicantIdRef: applicantId
-          });
-        }
+        const jobResolved = resolveJobType(jobDetail, qual);
+        const salutationObj = extractSafeSalutation(name, lastName);
+        const isKanto = KANTO_BRANCHES.some(b => branch.includes(b));
 
-        const jobResolved = resolveJobCategory(jobDetail, qual);
-        const salutationInfo = extractSafeSalutation(name, familyName);
+        const normDob = dob.replace(/[^\d]/g, "");
+        const normKana = kana.replace(/[\s\u3000]/g, "");
+        const normAddr = `${pref}${city}`.replace(/[\s\u3000]/g, "");
+        let personKey = "";
+        if (normDob && normKana) personKey = `${normDob}_${normKana}`;
+        else if (normDob && normAddr) personKey = `${normDob}_${normAddr}`;
+        else personKey = `ID_${id}`;
 
-        return {
-          applicantId,
+        rawRecords.push({
+          id,
           name,
-          familyName,
-          salutation: salutationInfo.salutation,
-          isFamilyOnly: salutationInfo.isFamilyOnly,
+          lastName,
+          salutation: salutationObj.salutation,
+          isFamilyOnly: salutationObj.isFamilyOnly,
           kana,
           dob,
           age,
+          phone,
+          email,
           pref,
           city,
           branch,
-          isKanto: isKantoBranch(branch),
+          isKanto,
           staff,
           status,
+          jobDetail,
           jobType: jobResolved.jobType,
           jobComplemented: jobResolved.complemented,
-          originalJobDetail: jobResolved.originalDetail,
           qual,
           applyDate,
           attendDate,
           lastContactDate,
           desiredStartDate,
           preferences,
-          progressScore: getProgressScore(status, Boolean(attendDate))
-        };
-      });
+          personKey,
+          progressScore: getProgressScore(status, Boolean(attendDate)),
+          rawRow: rawObj
+        });
 
-      // 案件マスタの更新（CSV内にBO列が無い場合はデモBOマスタをフォールバック利用）
-      if (extractedJobs.length > 0) {
-        appState.jobMaster = extractedJobs;
-      } else if (appState.jobMaster.length === 0) {
-        appState.jobMaster = buildDefaultJobMaster();
+        const boName = getVal(idx.boName);
+        if (boName) {
+          const distNum = parseFloat(getVal(idx.boDist).replace(/[^\d.]/g, ""));
+          extractedJobs.push({
+            facilityName: boName,
+            employmentType: getVal(idx.boType).includes("紹介") ? "紹介" : "派遣",
+            jobType: jobResolved.jobType,
+            distanceKm: isNaN(distNum) ? 1.5 : distNum,
+            boAcquiredAt: getVal(idx.boDate) || formatDateShort(new Date()),
+            pref
+          });
+        }
       }
 
-      // 名寄せ処理（生年月日＋カナ、または生年月日＋住所）
+      appState.rawRecordsStore = rawRecords;
+
+      // 名寄せ（重複排除・進捗優先）
       const mergeMap = new Map();
       rawRecords.forEach(rec => {
-        const cleanDob = rec.dob.replace(/[^0-9]/g, "");
-        const cleanKana = rec.kana.replace(/[\s\u3000]/g, "");
-        const cleanAddr = (rec.pref + rec.city).replace(/[\s\u3000]/g, "");
-
-        let personKey = "";
-        if (cleanDob && cleanKana) {
-          personKey = `DOB_KANA:${cleanDob}_${cleanKana}`;
-        } else if (cleanDob && cleanAddr) {
-          personKey = `DOB_ADDR:${cleanDob}_${cleanAddr}`;
-        } else {
-          personKey = `ID:${rec.applicantId}`;
-        }
-
-        if (!mergeMap.has(personKey)) {
-          mergeMap.set(personKey, {
+        if (!mergeMap.has(rec.personKey)) {
+          mergeMap.set(rec.personKey, {
             ...rec,
-            personKey,
-            allIds: [rec.applicantId],
-            mergedCount: 1
+            mergedIds: [rec.id],
+            mergeCount: 1
           });
         } else {
-          const existing = mergeMap.get(personKey);
-          if (!existing.allIds.includes(rec.applicantId)) {
-            existing.allIds.push(rec.applicantId);
+          const existing = mergeMap.get(rec.personKey);
+          existing.mergeCount += 1;
+          if (!existing.mergedIds.includes(rec.id)) {
+            existing.mergedIds.push(rec.id);
           }
-          existing.mergedCount += 1;
-          // より進捗が進んでいるレコードをマスターに昇格
           if (rec.progressScore > existing.progressScore) {
-            const keptIds = existing.allIds;
-            const keptCount = existing.mergedCount;
+            const combinedIds = existing.mergedIds;
+            const combinedCount = existing.mergeCount;
             Object.assign(existing, rec, {
-              personKey,
-              allIds: keptIds,
-              mergedCount: keptCount
+              mergedIds: combinedIds,
+              mergeCount: combinedCount
             });
           }
         }
       });
 
+      const mergedList = Array.from(mergeMap.values());
       const now = new Date();
       const classified = [];
-      mergeMap.forEach(person => {
+
+      mergedList.forEach(person => {
         const tabId = classifyTab(person, now);
-        if (!tabId) return;
-
-        // 案件マッチング（同一都道府県または紐づきBO、5km以内派遣最大3件＋2km以内紹介）
-        const matchedDirect = appState.jobMaster
-          .filter(j => j.employmentType === "紹介" && j.jobType === person.jobType && j.distanceKm <= 2.0 && (!j.pref || !person.pref || j.pref === person.pref))
-          .sort((a, b) => a.distanceKm - b.distanceKm)
-          .slice(0, 2);
-
-        const matchedDispatch = appState.jobMaster
-          .filter(j => j.employmentType !== "紹介" && j.jobType === person.jobType && j.distanceKm <= 5.0 && (!j.pref || !person.pref || j.pref === person.pref))
-          .sort((a, b) => {
-            const da = parseDateFlexible(a.boAcquiredAt)?.getTime() || 0;
-            const db = parseDateFlexible(b.boAcquiredAt)?.getTime() || 0;
-            return db - da; // BO取得日時が新しい順
-          })
-          .slice(0, 3);
-
-        classified.push({
-          ...person,
-          tabId,
-          directJobs: matchedDirect,
-          dispatchJobs: matchedDispatch
-        });
+        if (tabId) {
+          let daysUntilStart = null;
+          const sd = parseDateFlexible(person.desiredStartDate);
+          if (sd) {
+            const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const targetStart = new Date(sd.getFullYear(), sd.getMonth(), sd.getDate());
+            daysUntilStart = Math.round((targetStart.getTime() - todayStart.getTime()) / (24 * 60 * 60 * 1000));
+          }
+          classified.push({
+            ...person,
+            tabId,
+            daysUntilStart
+          });
+        }
       });
 
       appState.rawRowCount = rawRecords.length;
-      appState.mergedCandidates = classified;
-      appState.isLiveCsv = isLive;
+      appState.mergedPersonCount = mergedList.length;
+      appState.duplicateMergedCount = rawRecords.length - mergedList.length;
+      appState.allCandidates = classified;
 
-      const badge = document.getElementById("dataSourceBadge");
-      if (isLive) {
-        badge.textContent = `CSV読込済（${rawRecords.length}行）`;
-        badge.className = "text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-orange-500/20 text-orange-300 border border-orange-500/50 shrink-0";
-      } else {
-        badge.textContent = "デモデータ";
-        badge.className = "text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-[#1E293B] text-slate-300 border border-slate-700 shrink-0";
+      if (extractedJobs.length > 0) {
+        appState.jobMaster = extractedJobs;
+      } else if (appState.jobMaster.length === 0) {
+        appState.jobMaster = getBuiltInJobs();
       }
 
-      populateFilterDropdowns();
+      const badge = document.getElementById("dataSourceBadge");
+      if (isUserCsv) {
+        badge.textContent = `CSV読込済 (全${headers.length}列 / ${classified.length}名対象)`;
+        badge.className = "text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-[#FF6B00]/20 text-[#FF8533] border border-[#FF6B00]/50 shrink-0";
+      } else if (sourceLabel) {
+        badge.textContent = sourceLabel;
+        badge.className = "text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shrink-0";
+      } else {
+        badge.textContent = "デモデータ";
+        badge.className = "text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-[#181B22] text-slate-300 border border-slate-700 shrink-0";
+      }
+
+      appState.currentPage = 1;
+      populateDropdowns();
       renderAll();
-    }
 
-    function handleCsvFile(event) {
-      const file = event.target.files && event.target.files[0];
-      if (!file) return;
-      readCsvFileWithEncoding(file);
-      event.target.value = "";
-    }
-
-    function readCsvFileWithEncoding(file) {
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        const buffer = e.target.result;
-        let text = "";
-        try {
-          // まずUTF-8（fatal: true）でデコードを試み、失敗したらShift-JIS（CP932）で読み込む
-          const utf8Decoder = new TextDecoder("utf-8", { fatal: true });
-          text = utf8Decoder.decode(buffer);
-        } catch (err) {
-          const sjisDecoder = new TextDecoder("shift-jis");
-          text = sjisDecoder.decode(buffer);
-        }
-        const rows = parseCsvText(text);
-        processParsedRows(rows, true);
-        closeModal("csvModal");
-        showToast(`CSVを読み込みました（履歴・リマインド・クールダウンは保持されています）`);
+      return {
+        colCount: headers.length,
+        rawRowCount: rawRecords.length,
+        mergedPersonCount: mergedList.length,
+        duplicateMergedCount: rawRecords.length - mergedList.length,
+        targetCount: classified.length
       };
-      reader.readAsArrayBuffer(file);
     }
 
     // ---------------------------------------------------------
-    // 文面生成ロジック（全テンプレート末尾署名統一）
+    // 案件マッチング（5km派遣BO最大3件＋2km紹介特別フック）
     // ---------------------------------------------------------
-    function generateMessageForCandidate(candidate, historyState, reasonIndex = 0) {
-      const salutation = candidate.salutation;
-      const tabId = candidate.tabId;
+    function matchJobsForCandidate(candidate) {
+      const sameJobType = appState.jobMaster.filter(j => j.jobType === candidate.jobType);
+      const areaFiltered = sameJobType.filter(j => !j.pref || !candidate.pref || j.pref === candidate.pref);
+      const pool = areaFiltered.length > 0 ? areaFiltered : sameJobType;
 
-      // 1. 3営業日以内 未FIX人材（名字安全抽出＋4種ランダム理由）
-      if (tabId === "within3bd") {
-        const reason = ENTRY_STATUS_REASONS[reasonIndex % ENTRY_STATUS_REASONS.length];
+      // 5km圏内の派遣・紹介予定派遣（BO取得日時が新しい順・最大3件）
+      const dispatchJobs = pool
+        .filter(j => j.employmentType !== "紹介" && j.distanceKm <= 5.0)
+        .sort((a, b) => {
+          const da = parseDateFlexible(a.boAcquiredAt)?.getTime() || 0;
+          const db = parseDateFlexible(b.boAcquiredAt)?.getTime() || 0;
+          if (db !== da) return db - da;
+          return a.distanceKm - b.distanceKm;
+        })
+        .slice(0, 3);
+
+      // 2km圏内の直接雇用（紹介）特別フック案件
+      const directHookJobs = pool
+        .filter(j => j.employmentType === "紹介" && j.distanceKm <= 2.0)
+        .sort((a, b) => a.distanceKm - b.distanceKm)
+        .slice(0, 1);
+
+      return { dispatchJobs, directHookJobs };
+    }
+
+    // ---------------------------------------------------------
+    // 文面生成テンプレート（全末尾「ビースタイル採用担当です」統一）
+    // ---------------------------------------------------------
+    function generateMessageText(candidate, historyState, reasonIdx = 0) {
+      const salutation = candidate.salutation || `${candidate.name}様`;
+      const { dispatchJobs, directHookJobs } = matchJobsForCandidate(candidate);
+
+      const dispatchLines = dispatchJobs.length > 0
+        ? dispatchJobs.map((j, i) => `・【新着枠${i + 1}】${j.facilityName}（ご自宅から約${j.distanceKm.toFixed(1)}km / ${j.employmentType}）`).join("\n")
+        : "・ご自宅から5km圏内の新着シフト・好条件枠（複数あり）";
+
+      const directHookBlock = directHookJobs.length > 0
+        ? `\n★さらに、ご自宅から2km圏内の超近場で【直接雇用（紹介）】の特別枠も出ております！\n・${directHookJobs[0].facilityName}（約${directHookJobs[0].distanceKm.toFixed(1)}km）\n`
+        : "";
+
+      // 1. 3日以内 未FIX人材（ご指定テンプレート＋ランダム理由）
+      if (candidate.tabId === "within3d") {
+        const reason = ENTRY_STATUS_REASONS[reasonIdx % ENTRY_STATUS_REASONS.length];
         return `${salutation}
 お世話になっております。ビースタイル採用担当です。
 
 先日はお忙しい中お時間いただきありがとうございました！
-エントリー求人ですが、先方にて${reason}と伺っております。
+エントリー求人ですが、${reason}と伺っております。
 ご案内させていただきました求人については、エントリー希望をもらっておりますが、その後ご検討状況はいかがでしょうか？
 お忙しいところ恐縮ですが、先方からの面談希望などの意向踏まえて返信いただけると幸いです。
 求人メールが届いてない場合、再送しますのでご一報いただけると幸いです。
@@ -1142,114 +1264,182 @@
 ビースタイル採用担当です`;
       }
 
-      // 案件リストテキスト生成
-      const dispatchLines = candidate.dispatchJobs.length > 0
-        ? candidate.dispatchJobs.map((j, idx) => `・【新着枠${idx + 1}】${j.facilityName}（ご自宅から約${j.distanceKm}km）`).join("\n")
-        : `・ご自宅から5km圏内の${candidate.jobType}新着求人（複数枠あり）`;
-
-      const directHook = candidate.directJobs.length > 0
-        ? `\nさらに、ご自宅から2km圏内の超近場で直接雇用（紹介）の特別枠【${candidate.directJobs[0].facilityName}（約${candidate.directJobs[0].distanceKm}km）】も空きが出ております！\n`
-        : "";
-
-      // 2. 未来人材
-      if (tabId === "future") {
-        const startLabel = candidate.desiredStartDate ? `${candidate.desiredStartDate}頃` : "ご希望時期";
+      // 2. 未来人材（就業開始45日以内）
+      if (candidate.tabId === "future") {
+        const startLabel = candidate.desiredStartDate ? `（ご希望時期：${candidate.desiredStartDate}頃）` : "";
         return `${salutation}
 お世話になっております。ビースタイル採用担当です。
 
-以前お伺いしておりました${startLabel}のご就業開始に向けて、条件に合いそうな新着求人が出始めましたので先行でご案内いたします！
+ご希望の就業開始時期${startLabel}が近づいてまいりましたので、最新の募集状況のご案内です！
+人気のエリア・時間帯は1ヶ月〜1ヶ月半前から枠が埋まり始めております。
 
+現在、${salutation}のご自宅から5km圏内で以下の新着求人が出ております。
 ${dispatchLines}
-${directHook}
-「まだ先の予定だけど条件だけ見てみたい」「少し開始時期が早まりそう」など、ご状況に合わせて柔軟に調整可能です。
-もしご希望時期の変更やご相談がございましたら、いつでもお気軽にご返信ください！
+${directHookBlock}
+「そろそろ見学や詳細を聞いてみたい」「希望時期が少し変わりそう」など、現在の状況を一言だけでも教えていただけますと幸いです！
 
 ビースタイル採用担当です`;
       }
 
       // 3. 未FIX人材（7〜10日経過）
-      if (tabId === "unfix") {
+      if (candidate.tabId === "unfix") {
         return `${salutation}
 お世話になっております。ビースタイル採用担当です。
 
-先日はお忙しい中お時間いただきありがとうございました！
-その後、お仕事探しのご状況はいかがでしょうか？
+先日ご案内いたしました求人の件、その後ご検討状況はいかがでしょうか？
+もし条件面やシフトで少しでも迷われている点があれば、無理に進める必要はございませんので遠慮なくおっしゃってください！
 
-他社様も含めて比較ご検討中かと思いますが、直近で${salutation.replace("様", "")}様のご自宅から5km圏内に新しい求人（新着BO）が入りましたので共有いたします！
-
+本日時点で、ご自宅から5km圏内にて新しく入ったばかりの求人（新着BO）も出ております。
 ${dispatchLines}
-${directHook}
-「シフトや時給の条件をもう少し調整したい」「まずは見学だけしてみたい」などございましたら、すぐにお繋ぎできますのでぜひお返事お待ちしております！
+${directHookBlock}
+ご希望に合わせて別求人のご提案も可能ですので、お気軽にお返事お待ちしております！
 
 ビースタイル採用担当です`;
       }
 
-      // 4. 激熱掘起（ステップ2：翌日リマインド対象）
-      if (tabId === "hotReactivate" && historyState && historyState.status === "remind_due") {
-        const directRemind = candidate.directJobs.length > 0
-          ? `\nご自宅から2km圏内の直接雇用（紹介）特別枠もまだ空きがございます！\n`
-          : "";
-        return `${salutation}
+      // 4. 激熱掘起（翌日リマインド対象 vs 初回打診）
+      if (candidate.tabId === "hotReactivate") {
+        if (historyState && historyState.status === "remind_due") {
+          const directShort = directHookJobs.length > 0
+            ? `\nご自宅から2km圏内の直接雇用（紹介）の特別枠もまだ空きがございます！\n`
+            : "";
+          return `${salutation}
 お世話になっております。ビースタイル採用担当です。
 
 昨日お送りいたしましたご自宅近くの新着求人（5km圏内）の件、ご確認いただけましたでしょうか？
-${directRemind}
-お忙しいところ恐れ入りますが、人気枠のため他の方で埋まってしまう前に一度ご確認いただければと思いご連絡いたしました。
 
+お忙しいところ恐れ入りますが、人気枠のため他の方で埋まってしまう前に一度ご確認いただければと思いご連絡いたしました。
+${directShort}
 「まだ今の職場を続ける予定」「条件が合えば話だけ聞きたい」など、一言だけでもご返信いただけますと幸いです！
 よろしくお願いいたします。
 
 ビースタイル採用担当です`;
+        }
+
+        return `${salutation}
+お世話になっております。ビースタイル採用担当です。
+
+以前はお話しさせていただきありがとうございました！
+その後、お仕事のご状況はいかがでしょうか？
+
+今回、以前伺っていたご希望条件に合いそうな新着求人が【ご自宅から5km圏内】で複数入りましたので優先的にご連絡いたしました。
+${dispatchLines}
+${directHookBlock}
+良い枠から順に埋まってしまうため、もし少しでもご興味があれば詳細をお送りいたします！
+「今はまだ動かない」「詳細だけ見たい」など、一言ご返信いただけますと幸いです。
+
+ビースタイル採用担当です`;
       }
 
-      // 5. 激熱掘起（初回打診）＆ 通常掘起（45日以上）
+      // 5. 通常掘起（応募から45日以上経過）
       return `${salutation}
 お世話になっております。ビースタイル採用担当です。
 
-以前ご登録・ご相談いただいておりましたお仕事探しの件で、${salutation.replace("様", "")}様のご自宅から5km圏内に好条件の新着求人が入りましたのでご連絡いたしました！
+以前ご応募いただいてから少しお時間が経ちましたが、その後お仕事探しのご状況はいかがでしょうか？
+現在、${salutation}のお住まい近く（5km圏内）で新しい求人が出ておりますのでご案内です。
 
 ${dispatchLines}
-${directHook}
-お休みや時間帯のご希望に合わせて条件交渉も可能です。
-「今すぐではないけど情報だけ知りたい」「一度話を聞いてみたい」など、ぜひお気軽にご返信ください！
+${directHookBlock}
+「すでに他で決まった」「条件が合えばまた探したい」など、現在の状況を一言だけでもご返信いただけますと幸いです！
+よろしくお願いいたします。
 
 ビースタイル採用担当です`;
     }
 
     // ---------------------------------------------------------
-    // フィルタリング＆描画処理
+    // 画面描画・フィルタリング・ページネーション
     // ---------------------------------------------------------
     function setAreaFilter(area) {
       appState.areaFilter = area;
       appState.currentPage = 1;
+      populateDropdowns();
       renderAll();
     }
 
-    function setActiveTab(tabId) {
+    function switchTab(tabId) {
       appState.activeTab = tabId;
       appState.currentPage = 1;
       renderAll();
     }
 
-    function populateFilterDropdowns() {
-      const prefSet = new Set();
-      const staffSet = new Set();
-      appState.mergedCandidates.forEach(c => {
-        if (c.pref) prefSet.add(c.pref);
-        if (c.staff) staffSet.add(c.staff);
+    function getAreaFilteredCandidates() {
+      if (appState.areaFilter === "kanto") {
+        return appState.allCandidates.filter(c => c.isKanto);
+      }
+      return appState.allCandidates;
+    }
+
+    function populateDropdowns() {
+      const areaList = getAreaFilteredCandidates();
+      const prefSelect = document.getElementById("filterPref");
+      const staffSelect = document.getElementById("filterStaff");
+      const prevPref = prefSelect.value;
+      const prevStaff = staffSelect.value;
+
+      const prefs = Array.from(new Set(areaList.map(c => c.pref).filter(Boolean))).sort();
+      const staffs = Array.from(new Set(areaList.map(c => c.staff).filter(Boolean))).sort();
+
+      prefSelect.innerHTML = `<option value="">都道府県：すべて</option>` +
+        prefs.map(p => `<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`).join("");
+      staffSelect.innerHTML = `<option value="">担当ユーザー：すべて</option>` +
+        staffs.map(s => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join("");
+
+      if (prefs.includes(prevPref)) prefSelect.value = prevPref;
+      if (staffs.includes(prevStaff)) staffSelect.value = prevStaff;
+    }
+
+    function getFilteredCandidatesForTab(tabId, ignoreSearchFilters = false) {
+      const historyMap = loadIndependentHistory();
+      const now = new Date();
+      const areaList = getAreaFilteredCandidates();
+
+      const onlyPending = document.getElementById("filterOnlyPending").checked;
+      const showCooldown = document.getElementById("filterShowCooldown").checked;
+      const prefVal = ignoreSearchFilters ? "" : document.getElementById("filterPref").value;
+      const staffVal = ignoreSearchFilters ? "" : document.getElementById("filterStaff").value;
+      const jobTypeVal = ignoreSearchFilters ? "" : document.getElementById("filterJobType").value;
+      const kwVal = ignoreSearchFilters ? "" : document.getElementById("filterKeyword").value.trim().toLowerCase();
+
+      const results = [];
+
+      for (const cand of areaList) {
+        if (cand.tabId !== tabId) continue;
+
+        const hState = getCandidateHistoryState(cand, historyMap, now);
+
+        // クールダウン中の表示制御
+        if (!showCooldown && (hState.status === "cooldown" || hState.status === "remind_wait")) {
+          continue;
+        }
+
+        // 未対応のみ表示フィルタ（翌日リマインド対象は「要対応」として常に残す）
+        if (onlyPending && hState.status === "done") {
+          continue;
+        }
+
+        if (prefVal && cand.pref !== prefVal) continue;
+        if (staffVal && cand.staff !== staffVal) continue;
+        if (jobTypeVal === "介護" && cand.jobType !== "介護") continue;
+        if (jobTypeVal === "看護" && cand.jobType !== "看護") continue;
+        if (jobTypeVal === "complement" && !cand.jobComplemented) continue;
+
+        if (kwVal) {
+          const hay = `${cand.name} ${cand.kana} ${cand.id} ${cand.pref} ${cand.city} ${cand.qual} ${cand.branch}`.toLowerCase();
+          if (!hay.includes(kwVal)) continue;
+        }
+
+        results.push({ ...cand, historyState: hState });
+      }
+
+      // 激熱掘起は「翌日リマインド対象」を最上段に優先ソート
+      results.sort((a, b) => {
+        const aRemind = a.historyState.status === "remind_due" ? 1 : 0;
+        const bRemind = b.historyState.status === "remind_due" ? 1 : 0;
+        if (bRemind !== aRemind) return bRemind - aRemind;
+        return 0;
       });
 
-      const prefSel = document.getElementById("filterPref");
-      const currentPref = prefSel.value;
-      prefSel.innerHTML = `<option value="">都道府県：すべて</option>` +
-        Array.from(prefSet).sort().map(p => `<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`).join("");
-      prefSel.value = currentPref;
-
-      const staffSel = document.getElementById("filterStaff");
-      const currentStaff = staffSel.value;
-      staffSel.innerHTML = `<option value="">担当ユーザー：すべて</option>` +
-        Array.from(staffSet).sort().map(s => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join("");
-      staffSel.value = currentStaff;
+      return results;
     }
 
     function applyFilters() {
@@ -1257,374 +1447,294 @@ ${directHook}
       renderAll();
     }
 
-    function getAreaFilteredCandidates() {
-      if (appState.areaFilter === "kanto") {
-        return appState.mergedCandidates.filter(c => c.isKanto);
-      }
-      return appState.mergedCandidates;
-    }
-
-    function getFilteredCandidatesForTab(tabId, overrideOnlyPending = null) {
-      const historyMap = loadIndependentHistory();
-      const now = new Date();
-      const areaCandidates = getAreaFilteredCandidates();
-
-      const prefVal = document.getElementById("filterPref").value;
-      const staffVal = document.getElementById("filterStaff").value;
-      const jobVal = document.getElementById("filterJobType").value;
-      const kwVal = document.getElementById("filterKeyword").value.trim().toLowerCase();
-      const onlyPending = overrideOnlyPending !== null
-        ? overrideOnlyPending
-        : document.getElementById("filterOnlyPending").checked;
-      const showCooldown = document.getElementById("filterShowCooldown").checked;
-
-      const list = areaCandidates.filter(c => {
-        if (c.tabId !== tabId) return false;
-
-        const hState = getCandidateHistoryState(c, historyMap, now);
-
-        // クールダウン中（30日以内）は原則非表示（チェック時のみ表示）
-        if (hState.status === "cooldown" && !showCooldown) {
-          return false;
-        }
-
-        // 未対応のみ表示フィルタ
-        if (onlyPending) {
-          // 翌日リマインド対象（remind_due）は対応が必要なため未対応扱いで表示する
-          const needsAction = hState.status === "pending" || hState.status === "remind_due";
-          if (!needsAction) return false;
-        }
-
-        if (prefVal && c.pref !== prefVal) return false;
-        if (staffVal && c.staff !== staffVal) return false;
-        if (jobVal === "complement" && !c.jobComplemented) return false;
-        if ((jobVal === "介護" || jobVal === "看護") && c.jobType !== jobVal) return false;
-
-        if (kwVal) {
-          const hay = [c.name, c.kana, c.applicantId, ...c.allIds, c.pref, c.city, c.qual, c.branch, c.staff]
-            .join(" ").toLowerCase();
-          if (!hay.includes(kwVal)) return false;
-        }
-
-        return true;
-      });
-
-      // 翌日リマインド対象（remind_due）を最上段に優先ソート
-      list.sort((a, b) => {
-        const ha = getCandidateHistoryState(a, historyMap, now);
-        const hb = getCandidateHistoryState(b, historyMap, now);
-        const pa = ha.status === "remind_due" ? 0 : 1;
-        const pb = hb.status === "remind_due" ? 0 : 1;
-        return pa - pb;
-      });
-
-      return list;
-    }
-
     function renderAll() {
-      const historyMap = loadIndependentHistory();
-      const now = new Date();
-      const areaCandidates = getAreaFilteredCandidates();
+      renderAreaToggleButtons();
+      renderNavTabs();
+      renderCriteriaBox();
+      renderCandidateList();
+    }
 
-      // 1. エリア区分2タブボタンのスタイル更新
-      const btnKanto = document.getElementById("areaTabKanto");
-      const btnAll = document.getElementById("areaTabAll");
+    function renderAreaToggleButtons() {
+      const kantoBtn = document.getElementById("areaTabKanto");
+      const allBtn = document.getElementById("areaTabAll");
+      const kantoCount = appState.allCandidates.filter(c => c.isKanto).length;
+      const totalCount = appState.allCandidates.length;
+
       if (appState.areaFilter === "kanto") {
-        btnKanto.className = "px-3 py-1 rounded-md text-xs font-extrabold bg-[#0F172A] text-white shadow-sm transition";
-        btnAll.className = "px-3 py-1 rounded-md text-xs font-bold text-slate-600 hover:text-slate-900 transition";
+        kantoBtn.className = "px-3 py-1 rounded-md text-xs font-extrabold bg-[#FF6B00] text-white shadow-sm transition";
+        allBtn.className = "px-3 py-1 rounded-md text-xs font-bold text-slate-600 hover:text-slate-900 transition";
       } else {
-        btnAll.className = "px-3 py-1 rounded-md text-xs font-extrabold bg-[#0F172A] text-white shadow-sm transition";
-        btnKanto.className = "px-3 py-1 rounded-md text-xs font-bold text-slate-600 hover:text-slate-900 transition";
+        kantoBtn.className = "px-3 py-1 rounded-md text-xs font-bold text-slate-600 hover:text-slate-900 transition";
+        allBtn.className = "px-3 py-1 rounded-md text-xs font-extrabold bg-[#0F1115] text-white shadow-sm transition";
       }
 
-      const kantoTotal = appState.mergedCandidates.filter(c => c.isKanto).length;
-      const otherTotal = appState.mergedCandidates.length - kantoTotal;
       document.getElementById("areaCountInfo").textContent =
-        `関東対象：${kantoTotal}名 ／ 関西・名古屋その他：${otherTotal}名`;
+        `関東対象：${kantoCount}名 ／ 関西・名古屋含む全エリア：${totalCount}名`;
+    }
 
-      // 2. 5タブナビゲーション描画（エリア連動カウントバッジ）
-      const navEl = document.getElementById("navTabs");
-      navEl.innerHTML = TAB_DEFINITIONS.map(tab => {
-        const activeCount = areaCandidates.filter(c => {
-          if (c.tabId !== tab.id) return false;
-          const hs = getCandidateHistoryState(c, historyMap, now);
-          return hs.status === "pending" || hs.status === "remind_due";
-        }).length;
-
+    function renderNavTabs() {
+      const nav = document.getElementById("navTabs");
+      nav.innerHTML = TAB_DEFINITIONS.map(tab => {
         const isActive = appState.activeTab === tab.id;
+        const items = getFilteredCandidatesForTab(tab.id, true);
+        const remindCount = tab.id === "hotReactivate"
+          ? items.filter(x => x.historyState.status === "remind_due").length
+          : 0;
+
+        const baseClass = isActive
+          ? "px-3.5 py-2.5 text-xs font-extrabold text-[#FF8533] border-b-2 border-[#FF6B00] bg-[#181B22] rounded-t-lg shrink-0 flex items-center gap-1.5"
+          : "px-3.5 py-2.5 text-xs font-bold text-slate-400 hover:text-white border-b-2 border-transparent shrink-0 flex items-center gap-1.5 transition";
+
+        const countBadgeClass = isActive
+          ? "px-1.5 py-0.5 text-[10px] rounded-full bg-[#FF6B00] text-white font-extrabold"
+          : "px-1.5 py-0.5 text-[10px] rounded-full bg-slate-800 text-slate-300 font-bold";
+
+        const remindBadge = remindCount > 0
+          ? `<span class="px-1.5 py-0.5 text-[10px] rounded-full bg-rose-600 text-white font-extrabold animate-pulse">🔔${remindCount}</span>`
+          : "";
+
         return `
-          <button type="button" onclick="setActiveTab('${tab.id}')"
-                  class="nav-tab px-3 py-2.5 text-xs sm:text-sm font-bold whitespace-nowrap inline-flex items-center gap-1.5 border-b-3 transition ${
-                    isActive
-                      ? "text-white border-b-[3px] border-[#F97316]"
-                      : "text-slate-400 hover:text-slate-200 border-b-[3px] border-transparent"
-                  }">
-            <span>${tab.label}</span>
-            <span class="text-[11px] font-extrabold px-2 py-0.5 rounded-full ${
-              isActive ? "bg-[#F97316] text-[#0F172A]" : "bg-[#1E293B] text-slate-300"
-            }">${activeCount}</span>
+          <button type="button" onclick="switchTab('${tab.id}')" class="${baseClass}">
+            <span>${escapeHtml(tab.label)}</span>
+            <span class="${countBadgeClass}">${items.length}</span>
+            ${remindBadge}
           </button>
         `;
       }).join("");
+    }
 
-      // 3. 折りたたみ抽出基準の更新
-      renderCriteriaDetails();
+    function renderCriteriaBox() {
+      const tab = TAB_DEFINITIONS.find(t => t.id === appState.activeTab);
+      document.getElementById("criteriaSummary").innerHTML = `
+        <span>【${escapeHtml(tab.label)}】の抽出基準・アプローチ設計を見る</span>
+        <span class="text-[#FF6B00] font-extrabold text-[11px]">開閉 ▼</span>
+      `;
 
-      // 4. 現在のタブのフィルタ結果取得＆描画
-      const filtered = getFilteredCandidatesForTab(appState.activeTab);
-      appState.filteredList = filtered;
+      const descriptions = {
+        within3d: `
+          <ul class="list-disc pl-4 space-y-1">
+            <li><strong>抽出対象：</strong>最終ステータスが「FIX待ち」（またはアテンド済・打診中）で、アテンド日時・最終接触日時から <strong>12時間以上 〜 3日（72時間）以内</strong> の超ホット層。</li>
+            <li><strong>アプローチ設計：</strong>エントリー求人の状況（充足・他社決定・直接雇用枠終了・選考外をランダム自動挿入）を伝えつつ、希望求人の検討状況確認とメール再送フォローを行います。</li>
+          </ul>
+        `,
+        future: `
+          <ul class="list-disc pl-4 space-y-1">
+            <li><strong>抽出対象：</strong>就業開始希望日（就業開始日・就業希望時期）が <strong>本日から45日以内（0〜45日先）</strong> の層。</li>
+            <li><strong>アプローチ設計：</strong>希望開始時期の1ヶ月〜1ヶ月半前から人気枠が埋まり始めるため、5km圏内の新着派遣BO＋2km圏内の直接雇用特別枠を先出し提案します。希望日変更時は右上ボタンからID自動コピーで基幹システムへ移動できます。</li>
+          </ul>
+        `,
+        unfix: `
+          <ul class="list-disc pl-4 space-y-1">
+            <li><strong>抽出対象：</strong>最終ステータスが「FIX待ち」等で、アテンド・接触から <strong>7〜10日経過</strong> した層（11日以上経過した層は自動で「激熱掘起」へ移行）。</li>
+            <li><strong>アプローチ設計：</strong>他社比較で迷っているタイミングに対し、BO取得日時が新しい5km圏内の新着求人をぶつけて再着火させます。</li>
+          </ul>
+        `,
+        hotReactivate: `
+          <ul class="list-disc pl-4 space-y-1">
+            <li><strong>抽出対象：</strong>過去にアテンド・職場見学経験があり、最終接触から <strong>11日以上経過</strong> した高確度層。</li>
+            <li><strong>2段階フォロー機能：</strong>初回文面を送信・コピーすると、翌日に <strong>「🔔 翌日リマインド対象」</strong> として最上段へ自動再浮上し、専用のリマインド文面に切り替わります。リマインド送信後は <strong>30日間（1ヶ月）クールダウン非表示</strong> に自動移行します。</li>
+          </ul>
+        `,
+        normalReactivate: `
+          <ul class="list-disc pl-4 space-y-1">
+            <li><strong>抽出対象：</strong>応募日から <strong>45日以上経過</strong> している全掘り起こし対象層（進行中・他タブ該当除く）。</li>
+            <li><strong>30日クールダウン機能：</strong>文面送信完了後、CSVを再読み込みしても消えない独立ストレージにより <strong>30日間（1ヶ月）自動で非表示</strong> となり、重複追客を防止します。</li>
+          </ul>
+        `
+      };
 
-      const totalPages = Math.max(1, Math.ceil(filtered.length / appState.pageSize));
+      document.getElementById("criteriaBody").innerHTML = descriptions[appState.activeTab] || "";
+    }
+
+    function renderCandidateList() {
+      const listEl = document.getElementById("candidateList");
+      const filtered = getFilteredCandidatesForTab(appState.activeTab, false);
+      const total = filtered.length;
+
+      document.getElementById("resultCountText").textContent = `該当：${total}件`;
+      document.getElementById("jobMasterStats").textContent =
+        `案件マスタ：派遣BO(5km) ${appState.jobMaster.filter(j => j.employmentType !== "紹介").length}件 ／ 紹介(2km) ${appState.jobMaster.filter(j => j.employmentType === "紹介").length}件`;
+
+      if (total === 0) {
+        listEl.innerHTML = `
+          <div class="bg-white border border-slate-200 rounded-2xl p-8 text-center shadow-sm">
+            <div class="text-sm font-extrabold text-slate-800 mb-1">現在表示できる対象者はいません</div>
+            <p class="text-xs text-slate-500">
+              エリア切替（関東 / 全エリア）や「未対応のみ表示」「送信後30日以内も表示」のチェックを変更するか、新しいCSVを読み込んでください。
+            </p>
+          </div>
+        `;
+        document.getElementById("paginationBar").innerHTML = "";
+        return;
+      }
+
+      const totalPages = Math.max(1, Math.ceil(total / appState.pageSize));
       if (appState.currentPage > totalPages) appState.currentPage = totalPages;
-
       const startIdx = (appState.currentPage - 1) * appState.pageSize;
       const pageItems = filtered.slice(startIdx, startIdx + appState.pageSize);
 
-      document.getElementById("resultCountText").textContent = `該当：${filtered.length}件`;
-      const directBoCount = appState.jobMaster.filter(j => j.employmentType === "紹介").length;
-      const dispatchBoCount = appState.jobMaster.length - directBoCount;
-      document.getElementById("jobMasterStats").textContent =
-        `案件マスタ：派遣BO(5km) ${dispatchBoCount}件 ／ 紹介特別枠(2km) ${directBoCount}件`;
-
-      const listEl = document.getElementById("candidateList");
-      if (pageItems.length === 0) {
-        listEl.innerHTML = `
-          <div class="bg-white border border-slate-200 rounded-xl p-8 text-center text-slate-500">
-            <div class="text-sm font-extrabold text-slate-700 mb-1">該当する対象者はいません</div>
-            <div class="text-xs">フィルタ条件（「未対応のみ表示」や「関東 / 全エリア」切替）を変更してご確認ください。</div>
-          </div>
-        `;
-      } else {
-        listEl.innerHTML = pageItems.map(c => renderCandidateCard(c, historyMap, now)).join("");
-      }
-
-      // 5. ページネーション描画
-      const pagEl = document.getElementById("paginationBar");
-      if (filtered.length <= appState.pageSize) {
-        pagEl.innerHTML = "";
-      } else {
-        pagEl.innerHTML = `
-          <button type="button" onclick="changePage(-1)" ${appState.currentPage <= 1 ? "disabled" : ""}
-                  class="px-3.5 py-2 rounded-lg text-xs font-bold bg-white border border-slate-300 disabled:opacity-40">
-            ← 前へ
-          </button>
-          <span class="text-xs font-extrabold text-slate-700">${appState.currentPage} / ${totalPages} ページ</span>
-          <button type="button" onclick="changePage(1)" ${appState.currentPage >= totalPages ? "disabled" : ""}
-                  class="px-3.5 py-2 rounded-lg text-xs font-bold bg-white border border-slate-300 disabled:opacity-40">
-            次へ →
-          </button>
-        `;
-      }
+      listEl.innerHTML = pageItems.map(cand => renderCandidateCard(cand)).join("");
+      renderPagination(totalPages);
     }
 
-    function changePage(delta) {
-      appState.currentPage += delta;
-      renderAll();
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
-
-    function renderCriteriaDetails() {
-      const tab = appState.activeTab;
-      const summaryEl = document.getElementById("criteriaSummary");
-      const bodyEl = document.getElementById("criteriaBody");
-      const tabObj = TAB_DEFINITIONS.find(t => t.id === tab);
-      summaryEl.innerHTML = `
-        <span>【${tabObj ? tabObj.label : ""}】の抽出基準・アプローチ設計を見る</span>
-        <span class="text-[#F97316] font-extrabold text-[11px]">開閉 ▼</span>
-      `;
-
-      const map = {
-        within3bd: `
-          <ul class="list-disc pl-4 space-y-1">
-            <li><strong>抽出対象：</strong>アテンド済み・FIX待ちのうち、アテンド日時（または最終接触日時）から <code>12時間以上 〜 3営業日以内</code>（土日祝除外）の超ホット層。</li>
-            <li><strong>文面＆宛名ルール：</strong>姓列またはスペース区切りから<strong>名字のみを安全抽出</strong>（判定に迷う場合はフルネーム）。エントリー求人状況（充足／他社決定／直接雇用埋まり／選考外）をランダム自動挿入します。</li>
-          </ul>`,
-        future: `
-          <ul class="list-disc pl-4 space-y-1">
-            <li><strong>抽出対象：</strong>就業希望時期が14日以上先、またはステータスが「未来人材」の早期キープ層。</li>
-            <li><strong>希望日変更リンク：</strong>各カードの <code>希望日変更・修正 ↗</code> から基幹システム（<code>${escapeHtml(getCrmBaseUrl())}</code>）を別タブで開き、応募者IDを自動コピーします。</li>
-          </ul>`,
-        unfix: `
-          <ul class="list-disc pl-4 space-y-1">
-            <li><strong>抽出対象：</strong>アテンド済み・FIX待ちのうち、アテンド日（または最終接触日）から <code>7〜10日経過</code> した再提案スイートスポット層。</li>
-            <li><strong>案件差し込み：</strong>自宅から <code>5km圏内の派遣BO（BO取得日時が新しい順・最大3件）</code> と、<code>2km圏内の紹介特別枠</code> を自動挿入します。</li>
-          </ul>`,
-        hotReactivate: `
-          <ul class="list-disc pl-4 space-y-1">
-            <li><strong>抽出対象：</strong>過去にアテンド・職場見学経験があり、11日以上経過している高確度掘り起こし層。</li>
-            <li><strong>2段階ステップ（独立ストレージ管理）：</strong>初回送信・コピー後、<strong>翌日（24時間経過後）に「🔔 翌日リマインド対象」として最上段に自動再浮上</strong>し専用リマインド文面に切り替わります。リマインド送信完了後は <code>30日間（1ヶ月）クールダウン非表示</code> へ移行します。</li>
-          </ul>`,
-        normalReactivate: `
-          <ul class="list-disc pl-4 space-y-1">
-            <li><strong>抽出対象：</strong>応募日（未入力時は基準日）から <code>45日以上経過</code> した掘り起こし層。</li>
-            <li><strong>30日クールダウン：</strong>文面コピーまたは完了記録後、独立ストレージに保存され <code>30日間（1ヶ月）自動で非表示</code> になります（CSV再読込でも消えません）。</li>
-          </ul>`
-      };
-      bodyEl.innerHTML = map[tab] || "";
-    }
-
-    function renderCandidateCard(c, historyMap, now) {
-      const hState = getCandidateHistoryState(c, historyMap, now);
+    function renderCandidateCard(cand) {
+      const hState = cand.historyState;
+      const { dispatchJobs, directHookJobs } = matchJobsForCandidate(cand);
       const isRemindDue = hState.status === "remind_due";
-      const isDoneLike = hState.status === "done" || hState.status === "remind_wait" || hState.status === "cooldown";
+      const isDoneOrCooldown = hState.status === "done" || hState.status === "cooldown" || hState.status === "remind_wait";
 
-      // ステータスバッジ生成
-      let statusBadgeHtml = "";
-      if (isRemindDue) {
-        statusBadgeHtml = `<span class="px-2 py-0.5 rounded text-[11px] font-extrabold bg-rose-600 text-white animate-pulse">🔔 翌日リマインド対象</span>`;
-      } else if (hState.status === "remind_wait") {
-        statusBadgeHtml = `<span class="px-2 py-0.5 rounded text-[11px] font-bold bg-amber-100 text-amber-800 border border-amber-300">初回送信済（翌日リマインド待機中）</span>`;
-      } else if (hState.status === "cooldown") {
-        statusBadgeHtml = `<span class="px-2 py-0.5 rounded text-[11px] font-bold bg-slate-200 text-slate-700">送信済・30日クールダウン中（あと${hState.cooldownDaysLeft}日）</span>`;
-      } else if (hState.status === "done") {
-        statusBadgeHtml = `<span class="px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">対応済（送信記録あり）</span>`;
-      } else {
-        statusBadgeHtml = `<span class="px-2 py-0.5 rounded text-[11px] font-bold bg-orange-100 text-orange-800 border border-orange-200">${escapeHtml(c.status)}</span>`;
-      }
+      // ステータスバッジ群
+      const jobBadge = cand.jobType === "看護"
+        ? `<span class="px-2 py-0.5 rounded-md text-[11px] font-extrabold bg-rose-50 text-rose-700 border border-rose-200">看護</span>`
+        : `<span class="px-2 py-0.5 rounded-md text-[11px] font-extrabold bg-sky-50 text-sky-700 border border-sky-200">介護</span>`;
 
-      const areaBadge = c.isKanto
-        ? `<span class="px-2 py-0.5 rounded text-[11px] font-bold bg-slate-800 text-white">関東：${escapeHtml(c.branch || "関東")}</span>`
-        : `<span class="px-2 py-0.5 rounded text-[11px] font-bold bg-slate-100 text-slate-600 border border-slate-200">${escapeHtml(c.branch || "その他エリア")}</span>`;
-
-      const jobBadge = c.jobType === "看護"
-        ? `<span class="px-2 py-0.5 rounded text-[11px] font-extrabold bg-teal-50 text-teal-800 border border-teal-200">看護</span>`
-        : `<span class="px-2 py-0.5 rounded text-[11px] font-extrabold bg-blue-50 text-blue-800 border border-blue-200">介護</span>`;
-
-      const mergeBadge = c.mergedCount > 1
-        ? `<span class="px-2 py-0.5 rounded text-[11px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">名寄せ統合(${c.mergedCount}件)</span>`
+      const complementBadge = cand.jobComplemented
+        ? `<span class="px-2 py-0.5 rounded-md text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-300">職種自動補完(要元データ修正)</span>`
         : "";
 
-      // 職種自動補完警告バナー
-      const complementAlert = c.jobComplemented ? `
-        <div class="mb-2.5 p-2.5 rounded-lg bg-amber-50 border border-amber-300 flex flex-wrap items-center justify-between gap-2 text-xs text-amber-950">
-          <div>
-            <span class="font-extrabold">⚠ 職種詳細要確認：</span>元データ「${escapeHtml(c.originalJobDetail)}」から資格に基づき<strong>${c.jobType}</strong>へ自動補完しました。
-          </div>
-          <button type="button" onclick="openCrmWithIdCopy('${escapeHtml(c.applicantId)}', '基幹システム（職種修正）')"
-                  class="px-2.5 py-1 rounded-md text-[11px] font-extrabold bg-amber-600 hover:bg-amber-700 text-white shrink-0">
-            元データ修正 ↗
-          </button>
-        </div>
-      ` : "";
+      const statusBadge = `<span class="px-2 py-0.5 rounded-md text-[11px] font-extrabold bg-orange-50 text-orange-800 border border-orange-200">最終ステータス: ${escapeHtml(cand.status)}</span>`;
 
-      // 未来人材用：希望日変更・修正ボタン
-      const futureEditBtn = c.tabId === "future" ? `
-        <button type="button" onclick="openCrmWithIdCopy('${escapeHtml(c.applicantId)}', '基幹システム（希望日変更）')"
-                class="px-2.5 py-1 rounded-md text-[11px] font-extrabold bg-[#0F172A] hover:bg-[#F97316] text-white transition">
-          希望日変更・修正 ↗
+      const startBadge = (cand.tabId === "future" && cand.daysUntilStart !== null)
+        ? `<span class="px-2 py-0.5 rounded-md text-[11px] font-extrabold bg-indigo-50 text-indigo-700 border border-indigo-200">開始まであと${cand.daysUntilStart}日</span>`
+        : "";
+
+      const remindBadge = isRemindDue
+        ? `<span class="px-2.5 py-0.5 rounded-md text-[11px] font-extrabold bg-rose-600 text-white shadow-sm animate-pulse">🔔 翌日リマインド対象</span>`
+        : "";
+
+      const historyBadge = hState.status !== "pending" && !isRemindDue
+        ? `<span class="px-2 py-0.5 rounded-md text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">${escapeHtml(hState.label)}</span>`
+        : "";
+
+      const mergeBadge = cand.mergeCount > 1
+        ? `<span class="px-2 py-0.5 rounded-md text-[11px] font-bold bg-slate-100 text-slate-700 border border-slate-300">名寄せ統合: ${cand.mergeCount}件</span>`
+        : "";
+
+      // 右上：基幹システム修正リンク（未来人材 or 職種補完対象で特に強調、全カードからアクセス可）
+      const crmBtnLabel = cand.tabId === "future" ? "希望日変更・修正 ↗" : "元データ修正 ↗";
+      const crmButton = `
+        <button type="button" onclick="openCrmEditLink('${escapeHtml(cand.id)}')"
+                class="px-2.5 py-1 rounded-lg text-[11px] font-extrabold bg-[#0F1115] hover:bg-[#FF6B00] text-white transition shrink-0">
+          ${crmBtnLabel}
         </button>
-      ` : "";
+      `;
 
-      // 2km以内紹介特別枠
-      const directHtml = c.directJobs.length > 0 ? `
-        <div class="mb-2 p-2.5 rounded-lg bg-purple-50 border border-purple-200">
-          <div class="flex items-center justify-between text-[11px] font-extrabold text-purple-800 mb-1">
-            <span>🏠 2km圏内・紹介（直接雇用）特別フック枠</span>
-            <span>${c.directJobs.length}件</span>
+      // 2km直接雇用フック枠
+      const directHookHtml = directHookJobs.length > 0 ? `
+        <div class="p-2.5 rounded-xl bg-amber-50/80 border border-amber-300 mb-2">
+          <div class="flex items-center justify-between text-[11px] font-extrabold text-amber-900 mb-1">
+            <span>🏠 2km圏内・直接雇用（紹介）特別フック枠あり</span>
+            <span class="px-1.5 py-0.5 rounded bg-amber-200/80 text-amber-950">約${directHookJobs[0].distanceKm.toFixed(1)}km</span>
           </div>
-          ${c.directJobs.map(j => `
-            <div class="flex items-center justify-between gap-2 text-xs py-1 border-t border-purple-100 first:border-t-0">
-              <span class="font-bold text-slate-800 truncate">${escapeHtml(j.facilityName)}</span>
-              <div class="flex items-center gap-2 shrink-0">
-                <span class="font-extrabold text-purple-700">約${j.distanceKm}km</span>
-                <a href="${SEARCH_ORDER_URL}" target="_blank" rel="noopener noreferrer"
-                   class="px-2 py-0.5 rounded bg-white hover:bg-purple-100 text-purple-800 border border-purple-300 text-[11px] font-bold">
-                  案件詳細 ↗
-                </a>
-              </div>
-            </div>
-          `).join("")}
+          <div class="text-xs font-bold text-slate-800 truncate">${escapeHtml(directHookJobs[0].facilityName)}</div>
         </div>
       ` : "";
 
-      // 5km以内派遣BO（最大3件）
-      const dispatchHtml = c.dispatchJobs.length > 0 ? `
-        <div class="mb-3 p-2.5 rounded-lg bg-orange-50/70 border border-orange-200">
-          <div class="flex items-center justify-between text-[11px] font-extrabold text-orange-900 mb-1">
-            <span>📍 5km圏内 候補案件（BO取得日時が新しい順・最大3件）</span>
-            <span>${c.dispatchJobs.length}件</span>
+      // 5km圏内派遣BOリスト
+      const dispatchHtml = `
+        <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200 mb-3">
+          <div class="flex items-center justify-between text-[11px] font-bold text-slate-600 mb-1.5">
+            <span>5km以内の派遣・紹介予定派遣（BO取得新しい順）</span>
+            <a href="${SEARCH_ORDER_URL}" target="_blank" rel="noopener noreferrer" class="text-[#FF6B00] hover:underline font-extrabold">
+              全案件検索 ↗
+            </a>
           </div>
-          ${c.dispatchJobs.map(j => `
-            <div class="flex items-center justify-between gap-2 text-xs py-1 border-t border-orange-100 first:border-t-0">
-              <span class="font-medium text-slate-800 truncate">${escapeHtml(j.facilityName)}</span>
-              <div class="flex items-center gap-2 shrink-0 text-[11px]">
-                <span class="font-extrabold text-[#EA580C]">約${j.distanceKm}km</span>
-                <span class="text-slate-500 hidden sm:inline">BO:${escapeHtml(j.boAcquiredAt.slice(0, 10))}</span>
-                <a href="${SEARCH_ORDER_URL}" target="_blank" rel="noopener noreferrer"
-                   class="px-2 py-0.5 rounded bg-white hover:bg-orange-100 text-orange-800 border border-orange-300 font-bold">
-                  案件詳細 ↗
-                </a>
-              </div>
+          ${dispatchJobs.length > 0 ? `
+            <div class="divide-y divide-slate-200/70">
+              ${dispatchJobs.map(j => `
+                <div class="py-1 flex items-center justify-between gap-2 text-xs">
+                  <span class="font-semibold text-slate-800 truncate">${escapeHtml(j.facilityName)}</span>
+                  <div class="flex items-center gap-2 shrink-0 text-[11px]">
+                    <span class="font-extrabold text-[#FF6B00]">約${j.distanceKm.toFixed(1)}km</span>
+                    <span class="text-slate-400">BO:${escapeHtml(j.boAcquiredAt)}</span>
+                  </div>
+                </div>
+              `).join("")}
             </div>
-          `).join("")}
+          ` : `<div class="text-[11px] text-slate-400">5km圏内の該当BOなし（汎用新着案内テンプレートを使用します）</div>`}
         </div>
-      ` : "";
+      `;
 
-      const primaryBtnLabel = isRemindDue
-        ? "🔔 翌日リマインド文面を作成"
+      const primaryBtnText = isRemindDue
+        ? "🔔 翌日リマインド文面を作成・確認"
         : "文面作成・確認";
 
+      const actionBtnText = isRemindDue
+        ? "リマインド送信完了（30日非表示へ）"
+        : (cand.tabId === "hotReactivate" ? "初回送信完了（翌日リマインドへ）" : "送信記録をつける（完了）");
+
+      const borderHighlight = isRemindDue
+        ? "border-rose-400 ring-2 ring-rose-100"
+        : (isDoneOrCooldown ? "border-slate-200 opacity-85" : "border-slate-200 hover:border-[#FF6B00]/60");
+
       return `
-        <article class="bg-white border ${isRemindDue ? "border-rose-300 border-l-4 border-l-rose-600 bg-rose-50/20" : isDoneLike ? "border-slate-200 border-l-4 border-l-emerald-500 opacity-75" : "border-slate-200 border-l-4 border-l-[#0F172A] hover:border-l-[#F97316]"} rounded-xl p-3.5 sm:p-4 shadow-sm transition">
-          <!-- 上段バッジ＆リンク -->
-          <div class="flex flex-wrap items-start justify-between gap-2 mb-2">
+        <article class="bg-white border ${borderHighlight} rounded-2xl p-3.5 sm:p-4 shadow-sm transition">
+          <!-- 1段目：バッジ群＆ID・修正リンク -->
+          <div class="flex flex-wrap items-center justify-between gap-1.5 mb-2">
             <div class="flex flex-wrap items-center gap-1.5">
               ${jobBadge}
-              ${areaBadge}
-              ${statusBadgeHtml}
+              ${statusBadge}
+              ${startBadge}
+              ${remindBadge}
+              ${historyBadge}
+              ${complementBadge}
               ${mergeBadge}
             </div>
-            <div class="flex flex-wrap items-center gap-1.5">
-              ${futureEditBtn}
-              <button type="button" onclick="copyApplicantIdOnly('${escapeHtml(c.applicantId)}')"
-                      class="px-2 py-1 rounded-md text-[11px] font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200">
-                ID: ${escapeHtml(c.applicantId)} 📋
-              </button>
+            <div class="flex items-center gap-1.5">
+              <span class="text-[11px] font-mono font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-600">ID: ${escapeHtml(cand.id)}</span>
+              ${crmButton}
             </div>
           </div>
 
-          <!-- 氏名・宛名プレビュー・基本情報 -->
-          <div class="flex flex-wrap items-center gap-2 mb-1.5">
-            <span class="text-base font-extrabold text-slate-900">${escapeHtml(c.name)}</span>
-            <span class="text-[11px] font-bold px-2 py-0.5 rounded bg-orange-50 text-orange-800 border border-orange-200">
-              宛名: ${escapeHtml(c.salutation)}（${c.isFamilyOnly ? "名字抽出" : "フルネーム安全表記"}）
-            </span>
-            <span class="text-xs text-slate-500">${escapeHtml(c.kana)} ${c.age ? `(${escapeHtml(c.age)}歳)` : ""} ／ ${escapeHtml(c.pref)}${escapeHtml(c.city)}</span>
+          <!-- 2段目：氏名・宛名抽出結果・基本情報 -->
+          <div class="mb-2">
+            <div class="flex flex-wrap items-baseline gap-2">
+              <h3 class="text-base font-extrabold text-slate-900">${escapeHtml(cand.name)}</h3>
+              <span class="text-[11px] font-bold px-2 py-0.5 rounded bg-orange-50 text-orange-800 border border-orange-200">
+                宛名: ${escapeHtml(cand.salutation)}（${cand.isFamilyOnly ? "名字抽出" : "フルネーム安全表記"}）
+              </span>
+              <span class="text-xs text-slate-500">
+                ${escapeHtml(cand.kana)} ${cand.age ? `(${escapeHtml(cand.age)}歳)` : ""} ／ ${escapeHtml(cand.pref)} ${escapeHtml(cand.city)}
+              </span>
+            </div>
+            <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-slate-500 mt-1">
+              ${cand.phone ? `<span class="font-bold text-slate-700">TEL: ${escapeHtml(cand.phone)}</span>` : ""}
+              ${cand.applyDate ? `<span>応募日: ${escapeHtml(cand.applyDate)}</span>` : ""}
+              ${cand.attendDate ? `<span>アテンド日: ${escapeHtml(cand.attendDate)}</span>` : ""}
+              ${cand.desiredStartDate ? `<span class="font-bold text-indigo-700">就業開始希望: ${escapeHtml(cand.desiredStartDate)}</span>` : ""}
+              ${cand.qual ? `<span>資格: ${escapeHtml(cand.qual)}</span>` : ""}
+              <span>担当: ${escapeHtml(cand.staff)}（${escapeHtml(cand.branch)}）</span>
+            </div>
           </div>
 
-          <!-- 日付・資格・担当メタデータ -->
-          <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600 mb-2.5">
-            <span>応募日: <strong>${escapeHtml(c.applyDate || "-")}</strong></span>
-            <span>アテンド日: <strong>${escapeHtml(c.attendDate || "-")}</strong></span>
-            ${c.desiredStartDate ? `<span>就業希望時期: <strong class="text-[#EA580C]">${escapeHtml(c.desiredStartDate)}</strong></span>` : ""}
-            <span>資格: <strong>${escapeHtml(c.qual || "未記載")}</strong></span>
-            <span>担当: <strong>${escapeHtml(c.staff)}</strong></span>
-          </div>
-
-          ${complementAlert}
-
-          ${c.preferences ? `
-            <div class="mb-2.5 px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-xs text-slate-600">
-              <span class="font-bold text-slate-700">把握済条件：</span>${escapeHtml(c.preferences)}
+          <!-- 3段目：把握済条件 -->
+          ${cand.preferences ? `
+            <div class="px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200/80 text-xs text-slate-600 mb-2.5">
+              <span class="font-bold text-slate-700">把握済条件：</span>${escapeHtml(cand.preferences)}
             </div>
           ` : ""}
 
-          ${directHtml}
+          <!-- 4段目：2km直接雇用フック＆5km派遣BOリスト -->
+          ${directHookHtml}
           ${dispatchHtml}
 
-          <!-- カード下部アクションボタン -->
-          <div class="flex flex-wrap items-center gap-2 pt-1">
-            <button type="button" onclick="openComposeModal('${escapeHtml(c.personKey)}')"
-                    class="flex-[1.6] min-w-[170px] py-2.5 px-3 rounded-xl text-xs sm:text-sm font-extrabold ${isRemindDue ? "bg-rose-600 hover:bg-rose-700" : "bg-[#F97316] hover:bg-[#EA580C]"} text-white shadow-sm transition">
-              ${primaryBtnLabel}
+          <!-- 5段目：アクションボタン行 -->
+          <div class="flex flex-wrap items-center gap-2">
+            <button type="button" onclick="openComposeModal('${escapeHtml(cand.id)}')"
+                    class="flex-1 min-w-[160px] py-2.5 px-4 rounded-xl text-xs sm:text-sm font-extrabold bg-[#0F1115] hover:bg-[#FF6B00] text-white shadow-sm transition">
+              ${primaryBtnText}
             </button>
-            <button type="button" onclick="markDoneDirectly('${escapeHtml(c.personKey)}')"
-                    class="flex-1 min-w-[140px] py-2.5 px-3 rounded-xl text-xs sm:text-sm font-bold ${isDoneLike ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-white hover:bg-slate-50 text-slate-800 border border-slate-300"} transition">
-              ${isDoneLike ? "✓ 記録済（再記録）" : "送信記録をつける（完了）"}
+            <button type="button" onclick="quickCompleteCandidate('${escapeHtml(cand.id)}')"
+                    class="py-2.5 px-3.5 rounded-xl text-xs font-bold bg-white hover:bg-orange-50 text-slate-800 border border-slate-300 transition">
+              ${actionBtnText}
             </button>
-            ${isDoneLike ? `
-              <button type="button" onclick="revertCandidateToPending('${escapeHtml(c.personKey)}')"
-                      class="py-2.5 px-3 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 transition">
+            <button type="button" onclick="openRawColsModal('${escapeHtml(cand.id)}')"
+                    class="py-2.5 px-3 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 transition">
+              全列データ
+            </button>
+            ${hState.status !== "pending" ? `
+              <button type="button" onclick="revertCandidateToPending('${escapeHtml(cand.id)}')"
+                      class="py-2.5 px-3 rounded-xl text-xs font-bold bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 transition">
                 未対応に戻す
               </button>
             ` : ""}
@@ -1633,98 +1743,105 @@ ${directHook}
       `;
     }
 
-    function copyApplicantIdOnly(id) {
-      copyTextSafe(id);
-      showToast(`応募者ID「${id}」をコピーしました`);
-    }
-
-    function markDoneDirectly(personKey) {
-      const c = appState.mergedCandidates.find(x => x.personKey === personKey);
-      if (!c) return;
-      recordCandidateAction(c, c.tabId, "manual");
-      renderAll();
-      if (c.tabId === "hotReactivate") {
-        const hs = getCandidateHistoryState(c, loadIndependentHistory(), new Date());
-        if (hs.status === "remind_wait") {
-          showToast(`${c.name}様の初回送信を記録しました（翌日にリマインド対象へ再浮上します）`);
-        } else {
-          showToast(`${c.name}様のリマインド完了を記録しました（30日間クールダウンに入ります）`);
-        }
-      } else if (c.tabId === "normalReactivate") {
-        showToast(`${c.name}様の送信完了を記録しました（30日間クールダウンに入ります）`);
-      } else {
-        showToast(`${c.name}様を対応済（完了）にしました`);
+    function renderPagination(totalPages) {
+      const bar = document.getElementById("paginationBar");
+      if (totalPages <= 1) {
+        bar.innerHTML = "";
+        return;
       }
+      bar.innerHTML = `
+        <button type="button" onclick="changePage(${appState.currentPage - 1})" ${appState.currentPage <= 1 ? "disabled" : ""}
+                class="px-3.5 py-2 rounded-xl text-xs font-bold bg-white border border-slate-300 disabled:opacity-40">
+          ← 前へ
+        </button>
+        <span class="text-xs font-extrabold text-slate-700">${appState.currentPage} / ${totalPages} ページ</span>
+        <button type="button" onclick="changePage(${appState.currentPage + 1})" ${appState.currentPage >= totalPages ? "disabled" : ""}
+                class="px-3.5 py-2 rounded-xl text-xs font-bold bg-white border border-slate-300 disabled:opacity-40">
+          次へ →
+        </button>
+      `;
+    }
+
+    function changePage(page) {
+      appState.currentPage = page;
+      renderCandidateList();
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
 
     // ---------------------------------------------------------
-    // 文面生成モーダル操作
+    // モーダル操作・文面作成・送信記録
     // ---------------------------------------------------------
-    function openComposeModal(personKey) {
-      const c = appState.mergedCandidates.find(x => x.personKey === personKey);
-      if (!c) return;
-      appState.currentComposeCandidate = c;
-      appState.currentReasonIndex = Math.floor(Math.random() * ENTRY_STATUS_REASONS.length);
+    function openModal(id) {
+      const el = document.getElementById(id);
+      el.classList.remove("hidden");
+      el.classList.add("flex");
+    }
+
+    function closeModal(id) {
+      const el = document.getElementById(id);
+      el.classList.add("hidden");
+      el.classList.remove("flex");
+    }
+
+    function openCrmEditLink(candidateId) {
+      const url = localStorage.getItem(STORAGE_URL_KEY) || DEFAULT_CRM_URL;
+      copyTextSafe(candidateId);
+      showToast(`応募者ID「${candidateId}」をコピーしました。基幹システムを開きます`);
+      window.open(url, "_blank", "noopener,noreferrer");
+    }
+
+    function openComposeModal(candidateId) {
+      const cand = appState.allCandidates.find(c => c.id === candidateId);
+      if (!cand) return;
 
       const historyMap = loadIndependentHistory();
-      const hState = getCandidateHistoryState(c, historyMap, new Date());
-      const tabObj = TAB_DEFINITIONS.find(t => t.id === c.tabId);
+      const hState = getCandidateHistoryState(cand, historyMap, new Date());
+      appState.currentComposeCandidate = cand;
+      appState.currentReasonIndex = Math.floor(Math.random() * ENTRY_STATUS_REASONS.length);
 
+      const tabDef = TAB_DEFINITIONS.find(t => t.id === cand.tabId);
       document.getElementById("composeTabBadge").textContent =
-        hState.status === "remind_due" ? `${tabObj.label} ／ 🔔 翌日リマインド` : tabObj.label;
-      document.getElementById("composeTitle").textContent = `${c.name}様（宛名：${c.salutation}）への送信文面`;
+        hState.status === "remind_due" ? `${tabDef.label}（🔔 翌日リマインド）` : tabDef.label;
+      document.getElementById("composeTitle").textContent = `${cand.name}様（宛名：${cand.salutation}）への送信文面`;
 
-      // 3営業日以内 未FIX人材のランダム理由バー制御
       const shuffleBar = document.getElementById("shuffleBar");
-      if (c.tabId === "within3bd") {
+      if (cand.tabId === "within3d") {
         shuffleBar.classList.remove("hidden");
         document.getElementById("currentReasonLabel").textContent = ENTRY_STATUS_REASONS[appState.currentReasonIndex];
       } else {
         shuffleBar.classList.add("hidden");
       }
 
-      // モーダル内の案件詳細リンクプレビュー
-      const jobsPreviewEl = document.getElementById("composeJobsPreview");
-      const allMatched = [
-        ...c.directJobs.map(j => ({ ...j, label: "2km紹介特別枠", badgeClass: "bg-purple-100 text-purple-800" })),
-        ...c.dispatchJobs.map(j => ({ ...j, label: "5km派遣BO", badgeClass: "bg-orange-100 text-orange-800" }))
-      ];
-      if (allMatched.length > 0 && c.tabId !== "within3bd") {
-        jobsPreviewEl.innerHTML = `
-          <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5">
-            <div class="text-[11px] font-extrabold text-slate-600">差し込み候補案件（詳細確認）：</div>
-            ${allMatched.map(j => `
-              <div class="flex items-center justify-between gap-2 text-xs">
-                <div class="flex items-center gap-1.5 min-w-0">
-                  <span class="px-1.5 py-0.5 rounded text-[10px] font-bold shrink-0 ${j.badgeClass}">${j.label}</span>
-                  <span class="font-bold text-slate-800 truncate">${escapeHtml(j.facilityName)}（約${j.distanceKm}km）</span>
-                </div>
-                <a href="${SEARCH_ORDER_URL}" target="_blank" rel="noopener noreferrer"
-                   class="px-2 py-0.5 rounded bg-white hover:bg-orange-50 text-orange-700 border border-orange-300 text-[11px] font-bold shrink-0">
-                  案件詳細 ↗
-                </a>
-              </div>
-            `).join("")}
+      const { dispatchJobs, directHookJobs } = matchJobsForCandidate(cand);
+      const previewEl = document.getElementById("composeJobsPreview");
+      previewEl.innerHTML = `
+        <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <span class="font-bold text-slate-700">マッチング案件：</span>
+            <span>5km派遣BO ${dispatchJobs.length}件 ／ 2km紹介特別枠 ${directHookJobs.length}件</span>
           </div>
-        `;
-      } else {
-        jobsPreviewEl.innerHTML = "";
-      }
+          <a href="${SEARCH_ORDER_URL}" target="_blank" rel="noopener noreferrer"
+             class="text-[#FF6B00] font-extrabold hover:underline">
+            案件詳細検索を開く ↗
+          </a>
+        </div>
+      `;
 
       document.getElementById("composeTextarea").value =
-        generateMessageForCandidate(c, hState, appState.currentReasonIndex);
+        generateMessageText(cand, hState, appState.currentReasonIndex);
 
       openModal("composeModal");
     }
 
     function reshuffleReason() {
-      const c = appState.currentComposeCandidate;
-      if (!c) return;
+      const cand = appState.currentComposeCandidate;
+      if (!cand) return;
       appState.currentReasonIndex = (appState.currentReasonIndex + 1) % ENTRY_STATUS_REASONS.length;
       document.getElementById("currentReasonLabel").textContent = ENTRY_STATUS_REASONS[appState.currentReasonIndex];
-      const hState = getCandidateHistoryState(c, loadIndependentHistory(), new Date());
+      const historyMap = loadIndependentHistory();
+      const hState = getCandidateHistoryState(cand, historyMap, new Date());
       document.getElementById("composeTextarea").value =
-        generateMessageForCandidate(c, hState, appState.currentReasonIndex);
+        generateMessageText(cand, hState, appState.currentReasonIndex);
     }
 
     function copyMessageOnly() {
@@ -1734,184 +1851,262 @@ ${directHook}
     }
 
     function copyAndRecordSent() {
-      const c = appState.currentComposeCandidate;
-      if (!c) return;
+      const cand = appState.currentComposeCandidate;
+      if (!cand) return;
       const text = document.getElementById("composeTextarea").value;
       copyTextSafe(text);
-      recordCandidateAction(c, c.tabId, "copy_and_send");
+      recordCandidateAction(cand, cand.tabId);
       closeModal("composeModal");
       renderAll();
 
-      if (c.tabId === "hotReactivate") {
-        const hs = getCandidateHistoryState(c, loadIndependentHistory(), new Date());
-        if (hs.status === "remind_wait") {
-          showToast("文面をコピー＆初回送信を記録しました（翌日にリマインド対象へ再浮上します）");
-        } else {
-          showToast("リマインド文面をコピー＆完了記録しました（30日間クールダウンへ移行）");
-        }
-      } else if (c.tabId === "normalReactivate") {
-        showToast("文面をコピー＆送信記録しました（30日間クールダウンへ移行）");
+      if (cand.tabId === "hotReactivate") {
+        showToast(`${cand.salutation}の文面をコピー＆記録しました（翌日にリマインド対象へ再浮上します）`);
+      } else if (cand.tabId === "normalReactivate") {
+        showToast(`${cand.salutation}の文面をコピー＆記録しました（30日間クールダウン非表示になります）`);
       } else {
-        showToast("文面をコピーし、対応済（完了）として記録しました");
+        showToast(`${cand.salutation}の文面をコピー＆送信完了として記録しました`);
       }
+    }
+
+    function quickCompleteCandidate(candidateId) {
+      const cand = appState.allCandidates.find(c => c.id === candidateId);
+      if (!cand) return;
+      recordCandidateAction(cand, cand.tabId);
+      renderAll();
+      showToast(`${cand.name}様の対応完了を記録しました`);
     }
 
     // ---------------------------------------------------------
-    // BOM付きUTF-8 CSVエクスポート（Excel文字化け完全防止・全23項目）
+    // Excel用CSVエクスポート＆分かりやすいプレビュー＆完了ポップアップ
     // ---------------------------------------------------------
-    function openExportModal() {
-      updateExportModalCounts();
-      openModal("exportModal");
-    }
-
-    function updateExportModalCounts() {
-      const onlyPending = document.getElementById("exportOnlyPending").checked;
-      const filteredCount = getFilteredCandidatesForTab(appState.activeTab, onlyPending).length;
-      const tabAllCount = getTabCandidatesForExport("tab", onlyPending).length;
-      const allTabsCount = getTabCandidatesForExport("all", onlyPending).length;
-
-      document.getElementById("exportCountFiltered").textContent = `対象件数：${filteredCount}件（現在の絞り込み条件を反映）`;
-      document.getElementById("exportCountTab").textContent = `対象件数：${tabAllCount}件（選択中のタブ全件）`;
-      document.getElementById("exportCountAll").textContent = `対象件数：${allTabsCount}件（全5タブ一括）`;
-    }
-
-    document.addEventListener("change", (e) => {
-      if (e.target && e.target.id === "exportOnlyPending") {
-        updateExportModalCounts();
-      }
-    });
-
-    function getTabCandidatesForExport(scope, onlyPending) {
-      if (scope === "filtered") {
-        return getFilteredCandidatesForTab(appState.activeTab, onlyPending);
-      }
+    function getExportTargetList(scope, onlyPending) {
       const historyMap = loadIndependentHistory();
       const now = new Date();
-      const areaCandidates = getAreaFilteredCandidates();
+      let base = [];
 
-      return areaCandidates.filter(c => {
-        if (scope === "tab" && c.tabId !== appState.activeTab) return false;
-        const hState = getCandidateHistoryState(c, historyMap, now);
-        if (onlyPending) {
-          return hState.status === "pending" || hState.status === "remind_due";
-        }
-        return true;
-      });
+      if (scope === "filtered") {
+        base = getFilteredCandidatesForTab(appState.activeTab, false);
+      } else if (scope === "tab") {
+        base = getFilteredCandidatesForTab(appState.activeTab, true);
+      } else {
+        const areaList = getAreaFilteredCandidates();
+        base = areaList.map(c => ({
+          ...c,
+          historyState: getCandidateHistoryState(c, historyMap, now)
+        }));
+      }
+
+      if (onlyPending) {
+        base = base.filter(c => c.historyState.status === "pending" || c.historyState.status === "remind_due");
+      }
+      return base;
     }
 
-    function exportCsvDirect(scope) {
-      const onlyPending = document.getElementById("filterOnlyPending").checked;
-      const targets = getTabCandidatesForExport(scope, onlyPending);
-      executeCsvDownload(targets, scope);
+    function buildExportFileName(scope, count) {
+      const todayStr = formatDateCompact(new Date());
+      const areaLabel = appState.areaFilter === "kanto" ? "関東" : "全エリア";
+      const activeTabObj = TAB_DEFINITIONS.find(t => t.id === appState.activeTab);
+      const scopeLabel = scope === "all" ? "全5タブ一括" : (activeTabObj ? activeTabObj.shortFile : "追客");
+      return `追客リスト_${areaLabel}_${scopeLabel}_${count}件_${todayStr}.csv`;
+    }
+
+    function buildExportTableData(list, includeRawCols) {
+      const baseHeaders = [
+        "追客区分",
+        "対応状況",
+        "氏名",
+        "宛名表記",
+        "電話番号",
+        "職種",
+        "保有資格",
+        "就業開始希望日",
+        "最終ステータス",
+        "担当支店",
+        "担当ユーザー",
+        "都道府県",
+        "市区町村",
+        "応募日",
+        "アテンド日",
+        "2km紹介特別枠",
+        "5km派遣BO候補(最大3件)",
+        "生成済み送信文面",
+        "応募者ID"
+      ];
+
+      const extraHeaders = (includeRawCols && appState.csvHeaders.length > 0)
+        ? appState.csvHeaders
+        : [];
+
+      const headers = [...baseHeaders, ...extraHeaders];
+
+      const rows = list.map(cand => {
+        const tabDef = TAB_DEFINITIONS.find(t => t.id === cand.tabId);
+        const { dispatchJobs, directHookJobs } = matchJobsForCandidate(cand);
+        const msg = generateMessageText(cand, cand.historyState, 0);
+
+        const baseRow = [
+          tabDef ? tabDef.label : cand.tabId,
+          cand.historyState.label,
+          cand.name,
+          cand.salutation,
+          cand.phone || "",
+          cand.jobType,
+          cand.qual,
+          cand.desiredStartDate || "",
+          cand.status,
+          cand.branch,
+          cand.staff,
+          cand.pref,
+          cand.city,
+          cand.applyDate,
+          cand.attendDate,
+          directHookJobs.length > 0 ? `${directHookJobs[0].facilityName}(${directHookJobs[0].distanceKm}km)` : "",
+          dispatchJobs.map(j => `${j.facilityName}(${j.distanceKm}km)`).join(" / "),
+          msg,
+          cand.id
+        ];
+
+        const extraRow = extraHeaders.map(h => (cand.rawRow && cand.rawRow[h] !== undefined ? cand.rawRow[h] : ""));
+        return [...baseRow, ...extraRow];
+      });
+
+      return { headers, rows };
+    }
+
+    function updateExportModalPreview() {
+      const onlyPending = document.getElementById("exportOnlyPending").checked;
+      const includeRawCols = document.getElementById("exportIncludeRawCols").checked;
+
+      const listFiltered = getExportTargetList("filtered", onlyPending);
+      const listTab = getExportTargetList("tab", onlyPending);
+      const listAll = getExportTargetList("all", onlyPending);
+
+      document.getElementById("exportCountFiltered").textContent = `対象：${listFiltered.length}件`;
+      document.getElementById("exportFileNameFiltered").textContent = `保存名：${buildExportFileName("filtered", listFiltered.length)}`;
+
+      document.getElementById("exportCountTab").textContent = `対象：${listTab.length}件`;
+      document.getElementById("exportFileNameTab").textContent = `保存名：${buildExportFileName("tab", listTab.length)}`;
+
+      document.getElementById("exportCountAll").textContent = `対象：${listAll.length}件`;
+      document.getElementById("exportFileNameAll").textContent = `保存名：${buildExportFileName("all", listAll.length)}`;
+
+      const previewList = listFiltered.slice(0, 3);
+      const wrap = document.getElementById("exportPreviewTableWrap");
+      if (previewList.length === 0) {
+        wrap.innerHTML = `<div class="p-4 text-center text-slate-400">該当データがありません</div>`;
+        return;
+      }
+
+      const { headers, rows } = buildExportTableData(previewList, includeRawCols);
+      const showColsCount = Math.min(headers.length, 10);
+
+      wrap.innerHTML = `
+        <table class="min-w-full border-collapse text-left">
+          <thead class="bg-slate-800 text-white">
+            <tr>
+              ${headers.slice(0, showColsCount).map(h => `<th class="px-2 py-1.5 border-r border-slate-700 whitespace-nowrap font-bold">${escapeHtml(h)}</th>`).join("")}
+              ${headers.length > showColsCount ? `<th class="px-2 py-1.5 whitespace-nowrap text-orange-300">...他 ${headers.length - showColsCount} 列</th>` : ""}
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-200">
+            ${rows.map(r => `
+              <tr>
+                ${r.slice(0, showColsCount).map(cell => `<td class="px-2 py-1.5 border-r border-slate-100 whitespace-nowrap max-w-[160px] truncate">${escapeHtml(cell)}</td>`).join("")}
+                ${headers.length > showColsCount ? `<td class="px-2 py-1.5 text-slate-400">...</td>` : ""}
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      `;
+    }
+
+    function openExportModal() {
+      updateExportModalPreview();
+      openModal("exportModal");
     }
 
     function exportCsvFromModal(scope) {
       const onlyPending = document.getElementById("exportOnlyPending").checked;
-      const targets = getTabCandidatesForExport(scope, onlyPending);
-      executeCsvDownload(targets, scope);
+      const includeRawCols = document.getElementById("exportIncludeRawCols").checked;
+      runCsvDownload(scope, onlyPending, includeRawCols);
       closeModal("exportModal");
     }
 
-    function executeCsvDownload(targets, scope) {
-      if (!targets || targets.length === 0) {
-        showToast("出力対象のデータが0件です");
+    function exportCsvDirect(scope) {
+      runCsvDownload(scope, false, false);
+    }
+
+    function runCsvDownload(scope, onlyPending, includeRawCols) {
+      const list = getExportTargetList(scope, onlyPending);
+      if (list.length === 0) {
+        showToast("出力対象のデータがありません");
         return;
       }
 
-      const historyMap = loadIndependentHistory();
-      const now = new Date();
-
-      const headers = [
-        "区分タブ",
-        "エリア区分",
-        "アプローチフェーズ",
-        "対応ステータス",
-        "応募者ID",
-        "統合ID一覧",
-        "氏名",
-        "宛名表記",
-        "カナ",
-        "年齢",
-        "都道府県",
-        "市区町村",
-        "職種",
-        "職種要確認フラグ",
-        "保有資格",
-        "担当ユーザー",
-        "担当支店",
-        "応募日",
-        "アテンド日",
-        "就業希望時期",
-        "2km以内紹介特別枠",
-        "5km以内候補案件(最大3件)",
-        "生成メッセージ文面"
-      ];
-
-      const csvRows = [headers];
-
-      targets.forEach((c, i) => {
-        const tabObj = TAB_DEFINITIONS.find(t => t.id === c.tabId);
-        const hState = getCandidateHistoryState(c, historyMap, now);
-
-        let phaseLabel = "初回アプローチ";
-        if (hState.status === "remind_due") phaseLabel = "翌日リマインド対象";
-        else if (hState.status === "remind_wait") phaseLabel = "初回送信済(翌日リマインド待機)";
-        else if (hState.status === "cooldown") phaseLabel = `30日クールダウン中(あと${hState.cooldownDaysLeft}日)`;
-        else if (hState.status === "done") phaseLabel = "対応完了";
-
-        const directStr = c.directJobs.map(j => `${j.facilityName}(約${j.distanceKm}km)`).join(" / ");
-        const dispatchStr = c.dispatchJobs.map(j => `${j.facilityName}(約${j.distanceKm}km)`).join(" / ");
-        const generatedMsg = generateMessageForCandidate(c, hState, i % ENTRY_STATUS_REASONS.length);
-
-        csvRows.push([
-          tabObj ? tabObj.label : c.tabId,
-          c.isKanto ? "関東" : "その他",
-          phaseLabel,
-          c.status,
-          c.applicantId,
-          c.allIds.join(" / "),
-          c.name,
-          c.salutation,
-          c.kana,
-          c.age,
-          c.pref,
-          c.city,
-          c.jobType,
-          c.jobComplemented ? `要確認(元:${c.originalJobDetail})` : "正常",
-          c.qual,
-          c.staff,
-          c.branch,
-          c.applyDate,
-          c.attendDate,
-          c.desiredStartDate,
-          directStr,
-          dispatchStr,
-          generatedMsg
-        ]);
-      });
-
-      const csvContent = csvRows.map(row =>
+      const { headers, rows } = buildExportTableData(list, includeRawCols);
+      const csvLines = [headers, ...rows].map(row =>
         row.map(cell => `"${String(cell ?? "").replace(/"/g, '""')}"`).join(",")
-      ).join("\r\n");
+      );
 
-      // Excel文字化け防止のUTF-8 BOMを先頭に付与
       const bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
-      const blob = new Blob([bom, csvContent], { type: "text/csv;charset=utf-8;" });
+      const blob = new Blob([bom, csvLines.join("\r\n")], { type: "text/csv;charset=utf-8;" });
+      const fileName = buildExportFileName(scope, list.length);
+
+      triggerFileDownload(blob, fileName);
+
+      // ★ エクスポート完了中央ポップアップ表示
+      const areaLabel = appState.areaFilter === "kanto" ? "関東エリア" : "全エリア";
+      showCompletionPopup({
+        badge: "Excel用CSVエクスポート完了",
+        title: "エクスポート完了！",
+        desc: "Excelで文字化けしないBOM付きUTF-8形式でCSVファイルをダウンロードしました。",
+        rows: [
+          { label: "保存ファイル名", value: fileName },
+          { label: "対象エリア", value: areaLabel },
+          { label: "出力件数", value: `${list.length} 件` },
+          { label: "出力項目数", value: `全 ${headers.length} 列（送信文面・候補案件含む）` }
+        ]
+      });
+    }
+
+    function triggerFileDownload(blob, fileName) {
       const url = URL.createObjectURL(blob);
-
-      const d = new Date();
-      const stamp = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}${String(d.getDate()).padStart(2, "0")}_${String(d.getHours()).padStart(2, "0")}${String(d.getMinutes()).padStart(2, "0")}`;
-      const areaLabel = appState.areaFilter === "kanto" ? "関東" : "全エリア";
-
       const a = document.createElement("a");
       a.href = url;
-      a.download = `bstyle_outreach_${areaLabel}_${scope}_${stamp}.csv`;
+      a.download = fileName;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
 
-      showToast(`CSVを出力しました（${targets.length}件・Excel対応BOM付UTF-8）`);
+    // ---------------------------------------------------------
+    // 別ファイル data.js 書き出し（軽量化・配布用）
+    // ---------------------------------------------------------
+    function exportDataJsFile() {
+      const payload = {
+        exportedAt: new Date().toISOString(),
+        headers: appState.csvHeaders,
+        rawRecords: appState.rawRecordsStore.map(r => r.rawRow),
+        jobMaster: appState.jobMaster
+      };
+
+      const jsContent = `/**\n * data.js - ビースタイル 追客・掘り起こし管理 外部データファイル\n * 生成日時: ${formatDateTimeShort(new Date())}\n */\nwindow.BSTYLE_APP_DATA = ${JSON.stringify(payload, null, 2)};\n`;
+      const blob = new Blob([jsContent], { type: "application/javascript;charset=utf-8;" });
+      triggerFileDownload(blob, "data.js");
+      closeModal("csvModal");
+
+      // ★ data.js エクスポート完了中央ポップアップ表示
+      showCompletionPopup({
+        badge: "外部データファイル書き出し完了",
+        title: "エクスポート完了！",
+        desc: "軽量化・配布用の外部データファイル（data.js）を保存しました。GitHub等にアップロードするとメンバー全員に反映されます。",
+        rows: [
+          { label: "保存ファイル名", value: "data.js" },
+          { label: "格納レコード数", value: `${payload.rawRecords.length} 件` },
+          { label: "格納カラム数", value: `全 ${payload.headers.length} 列` }
+        ]
+      });
     }
 
     // ---------------------------------------------------------
@@ -1919,46 +2114,50 @@ ${directHook}
     // ---------------------------------------------------------
     function downloadHistoryJson() {
       const historyMap = loadIndependentHistory();
-      const payload = {
-        app: "bstyle-outreach-manager",
+      const jsonStr = JSON.stringify({
         exportedAt: new Date().toISOString(),
+        version: 2,
         history: historyMap
-      };
-      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const d = new Date();
-      const stamp = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}${String(d.getDate()).padStart(2, "0")}`;
+      }, null, 2);
+      const blob = new Blob([jsonStr], { type: "application/json" });
+      const fileName = `bstyle_followup_history_${formatDateCompact(new Date())}.json`;
+      triggerFileDownload(blob, fileName);
 
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `bstyle_history_backup_${stamp}.json`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-
-      showToast("送信履歴・リマインド・クールダウンデータをJSON保存しました");
+      showCompletionPopup({
+        badge: "履歴バックアップ完了",
+        title: "エクスポート完了！",
+        desc: "送信履歴・翌日リマインド・30日クールダウン状態のバックアップファイルを保存しました。",
+        rows: [
+          { label: "保存ファイル名", value: fileName },
+          { label: "保存レコードキー数", value: `${Object.keys(historyMap).length} 件` }
+        ]
+      });
     }
 
     function restoreHistoryJson(event) {
       const file = event.target.files && event.target.files[0];
       if (!file) return;
       const reader = new FileReader();
-      reader.onload = function(e) {
+      reader.onload = function (e) {
         try {
           const parsed = JSON.parse(e.target.result);
-          const incoming = parsed.history || parsed;
-          if (typeof incoming !== "object" || incoming === null) {
-            throw new Error("Invalid JSON");
-          }
+          const restored = parsed.history || parsed;
           const current = loadIndependentHistory();
-          const merged = { ...current, ...incoming };
+          const merged = { ...current, ...restored };
           saveIndependentHistory(merged);
           renderAll();
-          updateExportModalCounts();
-          showToast("バックアップJSONから履歴データを復元しました");
+          closeModal("exportModal");
+          showCompletionPopup({
+            badge: "履歴復元インポート完了",
+            title: "インポート完了！",
+            desc: "バックアップJSONから送信履歴・クールダウン状態を復元しました。",
+            rows: [
+              { label: "読込ファイル名", value: file.name },
+              { label: "復元後の総履歴キー数", value: `${Object.keys(merged).length} 件` }
+            ]
+          });
         } catch (err) {
-          showToast("JSONファイルの読み込みに失敗しました");
+          showToast("JSONファイルの形式が正しくありません");
         }
       };
       reader.readAsText(file);
@@ -1966,175 +2165,245 @@ ${directHook}
     }
 
     // ---------------------------------------------------------
-    // URL設定・名寄せ内訳モーダル
+    // 全列データ閲覧モーダル
     // ---------------------------------------------------------
-    function openUrlModal() {
-      document.getElementById("crmBaseUrlInput").value = getCrmBaseUrl();
-      openModal("urlModal");
+    function openRawColsModal(candidateId) {
+      const cand = appState.allCandidates.find(c => c.id === candidateId);
+      if (!cand) return;
+      appState.currentRawColsCandidate = cand;
+      document.getElementById("rawColsTitle").textContent = `${cand.name}様（ID: ${cand.id}）のCSV全列データ`;
+      document.getElementById("rawColsSubtitle").textContent = `読み込んだCSVの全${appState.csvHeaders.length}列を表示しています`;
+      document.getElementById("rawColsSearch").value = "";
+      renderRawColsTable();
+      openModal("rawColsModal");
     }
 
-    function saveCrmUrl() {
-      const val = document.getElementById("crmBaseUrlInput").value.trim();
-      if (val) {
-        localStorage.setItem(STORAGE_URL_KEY, val);
-        closeModal("urlModal");
-        showToast("基幹システム修正URLを保存しました");
+    function renderRawColsTable() {
+      const cand = appState.currentRawColsCandidate;
+      if (!cand) return;
+      const kw = document.getElementById("rawColsSearch").value.trim().toLowerCase();
+      const hideEmpty = document.getElementById("rawColsHideEmpty").checked;
+      const container = document.getElementById("rawColsTableContainer");
+
+      const entries = Object.entries(cand.rawRow || {}).filter(([k, v]) => {
+        if (hideEmpty && (!v || String(v).trim() === "")) return false;
+        if (kw && !k.toLowerCase().includes(kw) && !String(v).toLowerCase().includes(kw)) return false;
+        return true;
+      });
+
+      if (entries.length === 0) {
+        container.innerHTML = `<div class="p-4 text-center text-xs text-slate-400">該当する列がありません</div>`;
+        return;
       }
+
+      container.innerHTML = `
+        <table class="min-w-full divide-y divide-slate-200 text-xs">
+          <thead class="bg-slate-100 text-slate-700">
+            <tr>
+              <th class="px-3 py-2 text-left font-extrabold w-2/5">CSV列名</th>
+              <th class="px-3 py-2 text-left font-extrabold">値</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100 bg-white">
+            ${entries.map(([k, v]) => `
+              <tr>
+                <td class="px-3 py-2 font-bold text-slate-700 bg-slate-50/50 break-all">${escapeHtml(k)}</td>
+                <td class="px-3 py-2 text-slate-900 break-all">${escapeHtml(v || "（空欄）")}</td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      `;
     }
 
-    function resetCrmUrl() {
-      localStorage.setItem(STORAGE_URL_KEY, DEFAULT_CRM_URL);
-      document.getElementById("crmBaseUrlInput").value = DEFAULT_CRM_URL;
-      showToast("初期URLに戻しました");
-    }
-
+    // ---------------------------------------------------------
+    // 名寄せ・履歴内訳モーダル
+    // ---------------------------------------------------------
     function openMergeModal() {
       const historyMap = loadIndependentHistory();
-      const now = new Date();
-      let remindDueCount = 0;
-      let remindWaitCount = 0;
+      const keys = Object.keys(historyMap);
+      let remindWait = 0;
       let cooldownCount = 0;
       let doneCount = 0;
 
-      appState.mergedCandidates.forEach(c => {
-        const hs = getCandidateHistoryState(c, historyMap, now);
-        if (hs.status === "remind_due") remindDueCount++;
-        else if (hs.status === "remind_wait") remindWaitCount++;
-        else if (hs.status === "cooldown") cooldownCount++;
-        else if (hs.status === "done") doneCount++;
+      keys.forEach(k => {
+        const rec = historyMap[k];
+        if (rec.stage === "hot_initial_sent") remindWait++;
+        else if (rec.stage === "cooldown") cooldownCount++;
+        else if (rec.stage === "done") doneCount++;
       });
 
-      const mergedDiff = Math.max(0, appState.rawRowCount - appState.mergedCandidates.length);
       document.getElementById("mergeStatsContent").innerHTML = `
-        <div class="grid grid-cols-2 gap-2">
-          <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
-            <div class="text-[11px] text-slate-500">読込CSV総行数</div>
-            <div class="text-lg font-extrabold text-slate-900">${appState.rawRowCount} 行</div>
-          </div>
-          <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
-            <div class="text-[11px] text-slate-500">名寄せ統合・対象抽出後</div>
-            <div class="text-lg font-extrabold text-[#F97316]">${appState.mergedCandidates.length} 名</div>
-          </div>
-        </div>
         <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5">
-          <div class="font-extrabold text-slate-800">独立ストレージ蓄積状況（CSV再読込でも保持）</div>
-          <div>・🔔 翌日リマインド対象（要対応）：<strong>${remindDueCount} 名</strong></div>
-          <div>・⏳ 翌日リマインド待機中（送信24h以内）：<strong>${remindWaitCount} 名</strong></div>
-          <div>・🛡 30日クールダウン非表示中：<strong>${cooldownCount} 名</strong></div>
-          <div>・✓ その他タブ対応済：<strong>${doneCount} 名</strong></div>
-          <div class="text-[11px] text-slate-500 pt-1">※ 同一人物（生年月日＋カナ／住所一致）は最も進捗が進んでいるレコードをマスターとして自動統合しています（重複圧縮：${mergedDiff}件）。</div>
+          <div class="font-extrabold text-slate-900">1. 名寄せ（重複統合）内訳</div>
+          <div class="flex justify-between"><span>CSV総行数：</span><span class="font-bold">${appState.rawRowCount} 行</span></div>
+          <div class="flex justify-between"><span>重複統合（同一人物合体）：</span><span class="font-bold text-[#FF6B00]">-${appState.duplicateMergedCount} 件</span></div>
+          <div class="flex justify-between"><span>名寄せ後ユニーク人数：</span><span class="font-bold">${appState.mergedPersonCount} 名</span></div>
+          <div class="flex justify-between"><span>追客対象（5タブ該当）：</span><span class="font-extrabold text-slate-900">${appState.allCandidates.length} 名</span></div>
+        </div>
+        <div class="p-3 rounded-xl bg-orange-50/60 border border-orange-200 space-y-1.5">
+          <div class="font-extrabold text-orange-950">2. 独立ストレージ蓄積状況（CSV再読込でも消えない領域）</div>
+          <div class="flex justify-between"><span>保存キー総数：</span><span class="font-bold">${keys.length} 件</span></div>
+          <div class="flex justify-between"><span>激熱掘起（翌日リマインド待機・対象）：</span><span class="font-bold">${remindWait} 件</span></div>
+          <div class="flex justify-between"><span>30日間クールダウン中：</span><span class="font-bold">${cooldownCount} 件</span></div>
+          <div class="flex justify-between"><span>通常対応完了済：</span><span class="font-bold">${doneCount} 件</span></div>
         </div>
       `;
       openModal("mergeModal");
     }
 
+    // ---------------------------------------------------------
+    // URL設定・ドラッグ＆ドロップ・初期化
+    // ---------------------------------------------------------
     function openCsvModal() {
       openModal("csvModal");
     }
 
-    function openModal(id) {
-      const el = document.getElementById(id);
-      if (el) {
-        el.classList.remove("hidden");
-        el.classList.add("flex");
+    function openUrlModal() {
+      document.getElementById("crmBaseUrlInput").value = localStorage.getItem(STORAGE_URL_KEY) || DEFAULT_CRM_URL;
+      document.getElementById("externalDataUrlInput").value = localStorage.getItem(STORAGE_EXT_DATA_URL_KEY) || "";
+      openModal("urlModal");
+    }
+
+    function saveUrls() {
+      const crmUrl = document.getElementById("crmBaseUrlInput").value.trim() || DEFAULT_CRM_URL;
+      const extUrl = document.getElementById("externalDataUrlInput").value.trim();
+      localStorage.setItem(STORAGE_URL_KEY, crmUrl);
+      if (extUrl) {
+        localStorage.setItem(STORAGE_EXT_DATA_URL_KEY, extUrl);
+      } else {
+        localStorage.removeItem(STORAGE_EXT_DATA_URL_KEY);
+      }
+      closeModal("urlModal");
+      if (extUrl) {
+        loadFromExternalUrl(extUrl);
+      } else {
+        showToast("システムURLを保存しました");
       }
     }
 
-    function closeModal(id) {
-      const el = document.getElementById(id);
-      if (el) {
-        el.classList.add("hidden");
-        el.classList.remove("flex");
-      }
+    function resetUrls() {
+      localStorage.setItem(STORAGE_URL_KEY, DEFAULT_CRM_URL);
+      localStorage.removeItem(STORAGE_EXT_DATA_URL_KEY);
+      document.getElementById("crmBaseUrlInput").value = DEFAULT_CRM_URL;
+      document.getElementById("externalDataUrlInput").value = "";
+      showToast("初期URLに戻しました");
     }
 
-    function escapeHtml(str) {
-      return String(str ?? "")
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#39;");
+    function setupDragAndDrop() {
+      const zone = document.getElementById("csvDropZone");
+      if (!zone) return;
+      zone.addEventListener("dragover", e => {
+        e.preventDefault();
+        zone.classList.add("border-[#FF6B00]", "bg-orange-50");
+      });
+      zone.addEventListener("dragleave", () => {
+        zone.classList.remove("border-[#FF6B00]", "bg-orange-50");
+      });
+      zone.addEventListener("drop", e => {
+        e.preventDefault();
+        zone.classList.remove("border-[#FF6B00]", "bg-orange-50");
+        const file = e.dataTransfer.files && e.dataTransfer.files[0];
+        if (file) readCsvFileWithEncoding(file);
+      });
     }
 
     // ---------------------------------------------------------
-    // デモデータ構築（動作確認用・各タブ＆関東/関西混在）
+    // 外部data.js / URL読込 ＆ 内蔵デモデータ生成
     // ---------------------------------------------------------
-    function buildDefaultJobMaster() {
+    function getBuiltInJobs() {
+      const today = formatDateShort(new Date());
       return [
-        { id: "BO-101", facilityName: "ベネッセスタイルケア グランダ三軒茶屋", employmentType: "派遣", jobType: "介護", pref: "東京都", distanceKm: 0.4, boAcquiredAt: "2026-11-12 15:30" },
-        { id: "BO-102", facilityName: "チャームスイート世田谷三軒茶屋", employmentType: "派遣", jobType: "介護", pref: "東京都", distanceKm: 0.8, boAcquiredAt: "2026-11-11 11:00" },
-        { id: "BO-103", facilityName: "駒沢介護福祉センター", employmentType: "派遣", jobType: "介護", pref: "東京都", distanceKm: 1.9, boAcquiredAt: "2026-11-05 09:20" },
-        { id: "BO-104", facilityName: "特別養護老人ホーム 世田谷の杜（直接雇用）", employmentType: "紹介", jobType: "介護", pref: "東京都", distanceKm: 0.7, boAcquiredAt: "2026-11-12 10:00" },
-        { id: "BO-105", facilityName: "大宮中央ケアセンター", employmentType: "派遣", jobType: "介護", pref: "埼玉県", distanceKm: 1.2, boAcquiredAt: "2026-11-12 14:00" },
-        { id: "BO-106", facilityName: "横浜みなとみらい訪問看護ステーション", employmentType: "派遣", jobType: "看護", pref: "神奈川県", distanceKm: 1.5, boAcquiredAt: "2026-11-12 16:00" },
-        { id: "BO-107", facilityName: "みなとみらいクリニック（直接雇用）", employmentType: "紹介", jobType: "看護", pref: "神奈川県", distanceKm: 1.1, boAcquiredAt: "2026-11-10 13:00" },
-        { id: "BO-108", facilityName: "梅田ロイヤルケアホーム", employmentType: "派遣", jobType: "介護", pref: "大阪府", distanceKm: 1.4, boAcquiredAt: "2026-11-11 17:00" }
+        { facilityName: "グランダ三軒茶屋ケアホーム", employmentType: "派遣", jobType: "介護", distanceKm: 0.4, boAcquiredAt: today, pref: "東京都" },
+        { facilityName: "世田谷リハビリ・デイサービス", employmentType: "派遣", jobType: "介護", distanceKm: 1.2, boAcquiredAt: today, pref: "東京都" },
+        { facilityName: "駒沢公園シニアレジデンス", employmentType: "派遣", jobType: "介護", distanceKm: 2.3, boAcquiredAt: today, pref: "東京都" },
+        { facilityName: "特別養護老人ホーム 世田谷の杜", employmentType: "紹介", jobType: "介護", distanceKm: 0.6, boAcquiredAt: today, pref: "東京都" },
+        { facilityName: "大宮駅西口内科・在宅クリニック", employmentType: "派遣", jobType: "看護", distanceKm: 0.8, boAcquiredAt: today, pref: "埼玉県" },
+        { facilityName: "さいたま新都心ケアレジデンス", employmentType: "紹介", jobType: "看護", distanceKm: 1.4, boAcquiredAt: today, pref: "埼玉県" },
+        { facilityName: "横浜みなとみらい有料老人ホーム", employmentType: "派遣", jobType: "介護", distanceKm: 1.1, boAcquiredAt: today, pref: "神奈川県" }
       ];
+    }
+
+    function loadFromExternalDataObject(dataObj, label) {
+      if (!dataObj) return false;
+      if (Array.isArray(dataObj.jobMaster) && dataObj.jobMaster.length > 0) {
+        appState.jobMaster = dataObj.jobMaster;
+      }
+      if (Array.isArray(dataObj.rawRecords) && dataObj.rawRecords.length > 0 && Array.isArray(dataObj.headers)) {
+        const rows = [
+          dataObj.headers,
+          ...dataObj.rawRecords.map(obj => dataObj.headers.map(h => obj[h] ?? ""))
+        ];
+        processParsedRows(rows, false, label);
+        return true;
+      }
+      return false;
+    }
+
+    async function loadFromExternalUrl(url) {
+      try {
+        if (url.endsWith(".js")) {
+          const s = document.createElement("script");
+          s.src = `${url}?t=${Date.now()}`;
+          s.onload = () => {
+            if (window.BSTYLE_APP_DATA && loadFromExternalDataObject(window.BSTYLE_APP_DATA, "外部data.js読込済")) {
+              showToast("外部data.jsから最新データを読み込みました");
+            }
+          };
+          s.onerror = () => showToast("外部data.jsの読み込みに失敗しました");
+          document.body.appendChild(s);
+        } else {
+          const res = await fetch(`${url}?t=${Date.now()}`);
+          const json = await res.json();
+          if (loadFromExternalDataObject(json, "外部JSON読込済")) {
+            showToast("外部JSONから最新データを読み込みました");
+          }
+        }
+      } catch (e) {
+        console.error(e);
+        showToast("外部データURLの読み込みに失敗しました");
+      }
     }
 
     function loadDemoData(notify = false) {
-      appState.jobMaster = buildDefaultJobMaster();
       const now = new Date();
-      const fmt = (daysOffset, hoursOffset = 0) => {
-        const d = new Date(now.getTime() + daysOffset * 86400000 + hoursOffset * 3600000);
-        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")} ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
-      };
+      const h24Ago = formatDateTimeShort(new Date(now.getTime() - 26 * 3600 * 1000));
+      const d8Ago = formatDateTimeShort(new Date(now.getTime() - 8 * 24 * 3600 * 1000));
+      const d25Ago = formatDateTimeShort(new Date(now.getTime() - 25 * 24 * 3600 * 1000));
+      const d60Ago = formatDateTimeShort(new Date(now.getTime() - 60 * 24 * 3600 * 1000));
+      const d20Ahead = formatDateShort(new Date(now.getTime() + 20 * 24 * 3600 * 1000));
+
+      appState.jobMaster = getBuiltInJobs();
 
       const demoRows = [
-        ["応募者ID","氏名","姓","フリガナ","生年月日","年齢","都道府県","市区町村","担当支店","アテンド担当ユーザー","対応ステータス","職種詳細","保有資格","応募日時","アテンド日時","就業希望時期","希望条件"],
-        ["01M4R001","鈴木 恵美","鈴木","スズキ エミ","1985-04-12","41","東京都","世田谷区三軒茶屋","東京東","山上 健太","FIX待ち","介護士","介護福祉士",fmt(-4),fmt(-1,-4),"","シフト:早番・日勤 / 週4日 / 時給1750円"],
-        ["01M4R002","東海林太郎","","ショウジ タロウ","1979-08-20","47","神奈川県","横浜市西区","神奈川","佐藤 遥","アテンド済","その他","正看護師",fmt(-3),fmt(-2),"","日勤のみ / オンコールなし"],
-        ["01M4R003","高橋 美咲","高橋","タカハシ ミサキ","1992-11-03","34","東京都","世田谷区太子堂","本社","山上 健太","未来人材","介護士","初任者研修",fmt(-10),"",fmt(35),"2026年12月下旬開始希望 / 週3日"],
-        ["01M4R004","伊藤 健一","伊藤","イトウ ケンイチ","1981-02-15","45","埼玉県","さいたま市大宮区","埼玉","高橋 誠","FIX待ち","介護士","実務者研修",fmt(-12),fmt(-8),"","夜勤専従希望 / 月8回"],
-        ["01M4R005","渡辺 由美","渡辺","ワタナベ ユミ","1988-06-30","38","東京都","世田谷区駒沢","東京東","佐藤 遥","過去アテンド","介護士","介護福祉士",fmt(-40),fmt(-25),"","自宅近く・自転車通勤希望"],
-        ["01M4R006","中村 裕子","中村","ナカムラ ユウコ","1976-09-10","50","神奈川県","川崎市中原区","神奈川","高橋 誠","未アテンド","看護師","准看護師",fmt(-60),"","","扶養内・午前のみ希望"],
-        ["01M4R007","山本 浩二","山本","ヤマモト コウジ","1983-12-01","42","大阪府","大阪市北区","関西","西村 拓海","FIX待ち","介護士","介護福祉士",fmt(-3),fmt(-1,-6),"","関西エリア確認用サンプル"]
+        ["応募者ID", "氏名", "フリガナ", "生年月日", "年齢", "電話番号", "都道府県", "市区町村", "担当支店", "アテンド担当ユーザー", "最終ステータス", "職種詳細", "保有資格", "応募日時", "アテンド日時", "最終接触日時", "就業開始希望日", "希望条件"],
+        ["01M4R001", "鈴木 恵美", "スズキ エミ", "1985-04-12", "41", "090-1111-2222", "東京都", "世田谷区三軒茶屋1-22", "東京東", "山上 健太", "FIX待ち", "介護職", "介護福祉士", "2026-11-10 10:00", h24Ago, h24Ago, "", "シフト:早番・日勤 / 週4日 / 希望時給:1750円"],
+        ["01M4R002", "高橋 美咲", "タカハシ ミサキ", "1990-08-23", "36", "080-3333-4444", "東京都", "世田谷区太子堂2-15", "本社", "佐藤 翔太", "未来希望", "介護職", "初任者研修", "2026-11-01 11:20", "2026-11-03 14:00", "2026-11-03 14:00", d20Ahead, "シフト:日勤のみ / 週3〜4日 / デイサービス希望"],
+        ["01M4R003", "伊藤 健一", "イトウ ケンイチ", "1978-11-05", "48", "090-5555-6666", "埼玉県", "さいたま市大宮区桜木町1-8", "埼玉", "中村 優子", "FIX待ち", "", "正看護師", "2026-11-02 09:30", d8Ago, d8Ago, "", "シフト:日勤・オンコールなし / 週5日"],
+        ["01M4R004", "渡辺 真由美", "ワタナベ マユミ", "1982-02-19", "44", "080-7777-8888", "神奈川県", "横浜市西区南幸2-10", "神奈川", "山上 健太", "職見済", "介護職", "実務者研修", d60Ago, d25Ago, d25Ago, "", "シフト:夜勤専従 / 週2回"],
+        ["01M4R005", "小林 誠", "コバヤシ マコト", "1988-07-30", "38", "090-9999-0000", "東京都", "江東区豊洲3-5", "東京東", "佐藤 翔太", "未接触", "介護職", "介護福祉士", d60Ago, "", "", "", "シフト:フルシフト / 週5日"],
+        ["01M4R006", "山本 陽子", "ヤマモト ヨウコ", "1987-03-14", "39", "090-1212-3434", "大阪府", "大阪市北区梅田1-1", "関西", "田中 裕樹", "FIX待ち", "介護職", "介護福祉士", "2026-11-10 12:00", h24Ago, h24Ago, "", "日勤のみ（全エリア切替で確認可能）"]
       ];
 
-      processParsedRows(demoRows, false);
+      processParsedRows(demoRows, false, "");
       if (notify) {
         closeModal("csvModal");
         showToast("デモデータに戻しました");
       }
     }
 
-    // ---------------------------------------------------------
-    // 初期化（ドラッグ＆ドロップ設定・モーダル外クリック閉じる）
-    // ---------------------------------------------------------
-    window.addEventListener("DOMContentLoaded", () => {
-      const dropZone = document.getElementById("csvDropZone");
-      if (dropZone) {
-        ["dragenter", "dragover"].forEach(ev => {
-          dropZone.addEventListener(ev, e => {
-            e.preventDefault();
-            dropZone.classList.add("border-[#F97316]", "bg-orange-50");
-          });
-        });
-        ["dragleave", "drop"].forEach(ev => {
-          dropZone.addEventListener(ev, e => {
-            e.preventDefault();
-            dropZone.classList.remove("border-[#F97316]", "bg-orange-50");
-          });
-        });
-        dropZone.addEventListener("drop", e => {
-          const file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
-          if (file) readCsvFileWithEncoding(file);
-        });
+    window.onload = function () {
+      setupDragAndDrop();
+      const savedExtUrl = localStorage.getItem(STORAGE_EXT_DATA_URL_KEY);
+      if (window.BSTYLE_APP_DATA && loadFromExternalDataObject(window.BSTYLE_APP_DATA, "外部data.js読込済")) {
+        // 同フォルダの data.js から起動
+      } else {
+        loadDemoData(false);
       }
-
-      // モーダル背景クリックで閉じる
-      ["composeModal", "exportModal", "csvModal", "urlModal", "mergeModal"].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) {
-          el.addEventListener("click", e => {
-            if (e.target === el) closeModal(id);
-          });
-        }
-      });
-
-      loadDemoData(false);
-    });
+      if (savedExtUrl) {
+        loadFromExternalUrl(savedExtUrl);
+      }
+    };
   </script>
 </body>
 </html>
