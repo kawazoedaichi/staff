@@ -1114,35 +1114,46 @@
       return a.distKm - b.distKm;
     });
 
-    // 同一施設名・同一住所の案件は選択せずスキップ（ユニーク施設のみ抽出）
+    // 派遣BOと紹介をまたいで、同一施設名・同一住所は重複選択せずスキップ
+    var seenFacilityNames = new Set();
+    var seenFacilityAddrs = new Set();
+
     var uniqueDispList = [];
-    var seenDispNames = new Set();
-    var seenDispAddrs = new Set();
     for (var dIdx = 0; dIdx < rawDispList.length; dIdx++) {
       var dj = rawDispList[dIdx];
       var nName = normalizeFacilityForDedup(dj.name);
       var nAddr = normalizeAddressForDedup(dj.address);
-      if ((nName && seenDispNames.has(nName)) || (nAddr && seenDispAddrs.has(nAddr))) continue;
-      if (nName) seenDispNames.add(nName);
-      if (nAddr) seenDispAddrs.add(nAddr);
+      if ((nName && seenFacilityNames.has(nName)) || (nAddr && seenFacilityAddrs.has(nAddr))) continue;
+      if (nName) seenFacilityNames.add(nName);
+      if (nAddr) seenFacilityAddrs.add(nAddr);
       uniqueDispList.push(dj);
     }
 
+    var selectedDispatch = uniqueDispList.slice(0, 3);
+
+    // 実際に派遣BO候補（上位3件）として選ばれた施設のみを重複除外セットに登録し、紹介案件側と重複しないようにする
+    var usedNamesForCross = new Set();
+    var usedAddrsForCross = new Set();
+    selectedDispatch.forEach(function(sd) {
+      var sn = normalizeFacilityForDedup(sd.name);
+      var sa = normalizeAddressForDedup(sd.address);
+      if (sn) usedNamesForCross.add(sn);
+      if (sa) usedAddrsForCross.add(sa);
+    });
+
     var uniqueDirList = [];
-    var seenDirNames = new Set();
-    var seenDirAddrs = new Set();
     for (var rIdx = 0; rIdx < rawDirList.length; rIdx++) {
       var rj = rawDirList[rIdx];
       var rName = normalizeFacilityForDedup(rj.name);
       var rAddr = normalizeAddressForDedup(rj.address);
-      if ((rName && seenDirNames.has(rName)) || (rAddr && seenDirAddrs.has(rAddr))) continue;
-      if (rName) seenDirNames.add(rName);
-      if (rAddr) seenDirAddrs.add(rAddr);
+      if ((rName && usedNamesForCross.has(rName)) || (rAddr && usedAddrsForCross.has(rAddr))) continue;
+      if (rName) usedNamesForCross.add(rName);
+      if (rAddr) usedAddrsForCross.add(rAddr);
       uniqueDirList.push(rj);
     }
 
     return {
-      dispatch: uniqueDispList.slice(0, 3),
+      dispatch: selectedDispatch,
       direct: uniqueDirList.slice(0, 2),
       totalDispCount: uniqueDispList.length,
       totalDirCount: uniqueDirList.length,
