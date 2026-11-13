@@ -28,6 +28,8 @@
       --teal-soft: #f0fdfa;
       --purple: #7c3aed;
       --purple-soft: #f5f3ff;
+      --blue: #2563eb;
+      --blue-soft: #eff6ff;
       --success: #16a34a;
       --success-soft: #f0fdf4;
       --radius: 10px;
@@ -57,11 +59,11 @@
       background: var(--header-bg);
       color: #ffffff;
       border-bottom: 1px solid var(--header-border);
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.16);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
     }
 
     .header-inner {
-      max-width: 980px;
+      max-width: 1040px;
       margin: 0 auto;
       padding: 12px 16px 0;
     }
@@ -197,10 +199,10 @@
       color: var(--text);
     }
 
-    /* Clean SaaS Underline Navigation Tabs */
+    /* 5-Tab SaaS Underline Navigation */
     .nav-tabs {
       display: flex;
-      gap: 4px;
+      gap: 2px;
       overflow-x: auto;
       scrollbar-width: none;
     }
@@ -214,23 +216,21 @@
       background: transparent;
       border: none;
       border-bottom: 3px solid transparent;
-      padding: 10px 14px;
+      padding: 10px 12px;
       font-size: 13px;
       font-weight: 600;
       color: #9ca3af;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
-      gap: 6px;
+      gap: 5px;
       white-space: nowrap;
       transition: color 0.15s ease, border-color 0.15s ease;
     }
 
-    @media (max-width: 520px) {
+    @media (max-width: 640px) {
       .nav-tab {
-        flex: 1;
-        justify-content: center;
-        padding: 10px 4px;
+        padding: 10px 8px;
         font-size: 12px;
         gap: 4px;
       }
@@ -261,7 +261,7 @@
 
     /* Main Container */
     .main-container {
-      max-width: 980px;
+      max-width: 1040px;
       margin: 0 auto;
       padding: 14px 16px;
     }
@@ -359,25 +359,25 @@
 
     .filter-row-bottom {
       display: flex;
-      gap: 10px;
+      gap: 8px;
       align-items: center;
       flex-wrap: wrap;
     }
 
     .filter-row-bottom input[type="text"] {
       flex: 1;
-      min-width: 200px;
+      min-width: 190px;
     }
 
     .checkbox-label {
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 600;
       color: var(--text);
       cursor: pointer;
-      padding: 6px 10px;
+      padding: 7px 10px;
       border-radius: 8px;
       background: var(--surface-subtle);
       border: 1px solid var(--border);
@@ -386,8 +386,8 @@
     }
 
     .checkbox-label input[type="checkbox"] {
-      width: 16px;
-      height: 16px;
+      width: 15px;
+      height: 15px;
       accent-color: var(--orange);
       cursor: pointer;
     }
@@ -456,8 +456,13 @@
       box-shadow: 0 2px 10px rgba(17, 24, 39, 0.06);
     }
 
+    .candidate-card.is-remind-due {
+      border-left-color: var(--rose);
+      background: #fffafb;
+    }
+
     .candidate-card.is-done {
-      opacity: 0.62;
+      opacity: 0.65;
       border-left-color: var(--success);
       background: #fafafa;
     }
@@ -490,10 +495,11 @@
 
     .badge-orange { background: var(--orange-soft); color: #c2410c; border: 1px solid var(--orange-border); }
     .badge-dark { background: #111827; color: #ffffff; }
-    .badge-amber { background: var(--amber-soft); color: var(--amber); }
-    .badge-rose { background: var(--rose-soft); color: var(--rose); }
+    .badge-amber { background: var(--amber-soft); color: var(--amber); border: 1px solid #fde68a; }
+    .badge-rose { background: var(--rose-soft); color: var(--rose); border: 1px solid #fecdd3; }
     .badge-teal { background: var(--teal-soft); color: var(--teal); }
     .badge-purple { background: var(--purple-soft); color: var(--purple); border: 1px solid #ddd6fe; }
+    .badge-blue { background: var(--blue-soft); color: var(--blue); border: 1px solid #bfdbfe; }
     .badge-neutral { background: #f3f4f6; color: var(--text-secondary); }
     .badge-success { background: var(--success-soft); color: var(--success); }
 
@@ -560,6 +566,16 @@
       font-size: 16px;
       font-weight: 800;
       color: var(--text);
+    }
+
+    .salutation-tag {
+      font-size: 11px;
+      font-weight: 700;
+      color: #9a3412;
+      background: var(--orange-soft);
+      border: 1px solid var(--orange-border);
+      padding: 1px 7px;
+      border-radius: 5px;
     }
 
     .person-sub {
@@ -684,6 +700,7 @@
     .card-footer {
       display: flex;
       gap: 8px;
+      flex-wrap: wrap;
     }
 
     .card-footer .btn-compose {
@@ -783,9 +800,18 @@
       cursor: pointer;
     }
 
+    .modal-sub-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+    }
+
     textarea.msg-box {
       width: 100%;
-      min-height: 230px;
+      min-height: 245px;
       padding: 12px;
       border: 1px solid var(--border-strong);
       border-radius: 8px;
@@ -903,9 +929,13 @@
         </div>
       </div>
 
-      <!-- 4 SaaS Underline Navigation Tabs -->
+      <!-- 5 SaaS Underline Navigation Tabs (Ordered Left to Right by Priority) -->
       <nav class="nav-tabs" role="tablist">
-        <button class="nav-tab active" data-tab="future" onclick="switchTab('future')">
+        <button class="nav-tab active" data-tab="recent3d" onclick="switchTab('recent3d')">
+          <span>3営業日以内 未FIX人材</span>
+          <span class="tab-badge" id="cnt-recent3d">0</span>
+        </button>
+        <button class="nav-tab" data-tab="future" onclick="switchTab('future')">
           <span>未来人材</span>
           <span class="tab-badge" id="cnt-future">0</span>
         </button>
@@ -928,7 +958,7 @@
   <main class="main-container">
     <!-- Per-Tab Collapsible <details> Block (Closed by default) -->
     <details class="criteria-details" id="tabDetailsBox">
-      <summary id="tabDetailsSummary">【未来人材】の抽出基準・アプローチ設計を見る</summary>
+      <summary id="tabDetailsSummary">【3営業日以内 未FIX人材】の抽出基準・アプローチ設計を見る</summary>
       <div class="criteria-body" id="tabDetailsBody"></div>
     </details>
 
@@ -948,8 +978,8 @@
       <div class="filter-row-bottom">
         <input type="text" id="filterKeyword" placeholder="氏名・フリガナ・ID・エリア・資格で検索..." oninput="resetPageAndRender()">
         <label class="checkbox-label">
-          <input type="checkbox" id="filterTodoOnly" checked onchange="resetPageAndRender()">
-          <span>未対応のみ表示</span>
+          <input type="checkbox" id="filterShowCooldown" onchange="resetPageAndRender()">
+          <span>送信後30日以内(クールダウン中)・リマインド待機中も表示</span>
         </label>
       </div>
     </section>
@@ -961,7 +991,7 @@
         <span id="masterCountLabel">案件マスタ：派遣BO(5km) 0件 ／ 紹介(2km) 0件</span>
       </div>
       <div class="toolbar-right">
-        <button class="btn btn-outline" style="padding:5px 10px; font-size:11px;" onclick="openSummaryModal()">名寄せ内訳</button>
+        <button class="btn btn-outline" style="padding:5px 10px; font-size:11px;" onclick="openSummaryModal()">名寄せ・履歴内訳</button>
         <button class="btn btn-dark" style="padding:5px 11px; font-size:11px;" onclick="exportCsvData('filtered')">表示中を即CSV出力</button>
       </div>
     </div>
@@ -988,6 +1018,11 @@
         <button class="btn-icon-close" onclick="closeMsgModal()">✕</button>
       </div>
 
+      <div id="modalShuffleBar" class="modal-sub-bar" style="display:none;">
+        <span style="font-size:12px; color:var(--text-secondary);" id="modalReasonBadge"></span>
+        <button class="btn btn-outline" style="padding:4px 10px; font-size:11px;" onclick="shuffleRecent3dReason()">🎲 理由を再抽選</button>
+      </div>
+
       <div id="modalDirectBox" class="direct-box" style="display:none;"></div>
       <div id="modalDispatchBox" class="dispatch-box" style="display:none;"></div>
 
@@ -995,7 +1030,7 @@
 
       <div class="modal-actions">
         <button class="btn btn-outline" style="padding:11px;" onclick="copyMessageOnly()">文面をコピー</button>
-        <button class="btn btn-orange" style="padding:11px;" onclick="copyAndMarkDone()">コピーして対応済みにする</button>
+        <button class="btn btn-orange" id="modalPrimaryActionBtn" style="padding:11px;" onclick="copyAndRecordAction()">コピーして送信記録をつける</button>
       </div>
     </div>
   </div>
@@ -1004,16 +1039,16 @@
   <div class="modal-overlay" id="exportModal" onclick="if(event.target===this) closeExportModal()">
     <div class="modal-dialog">
       <div class="modal-head">
-        <div class="modal-title">CSVエクスポート・消込データバックアップ</div>
+        <div class="modal-title">CSVエクスポート・送信履歴バックアップ</div>
         <button class="btn-icon-close" onclick="closeExportModal()">✕</button>
       </div>
       <p style="font-size:12px; color:var(--text-secondary); margin-top:0;">
-        Excelで文字化けせず開ける<strong>BOM付きUTF-8形式</strong>でCSVを出力します。生成メッセージ文面・5km以内候補案件・2km紹介特別枠もすべて列に含まれます。
+        Excelで文字化けせず開ける<strong>BOM付きUTF-8形式</strong>でCSVを出力します。宛名（名字判定）・生成メッセージ文面・5km以内候補案件・2km紹介特別枠・送信履歴ステータスも列に含まれます。
       </p>
 
       <label class="checkbox-label" style="margin-bottom:12px; width:100%;">
-        <input type="checkbox" id="exportTodoOnlyCheck">
-        <span>未対応（未チェック）のみ出力する</span>
+        <input type="checkbox" id="exportIncludeCooldownCheck">
+        <span>クールダウン中・待機中のレコードも出力に含める</span>
       </label>
 
       <div style="display:grid; gap:10px; margin-bottom:16px;">
@@ -1035,22 +1070,22 @@
 
         <div class="export-card-option">
           <div>
-            <div style="font-weight:700; font-size:13px;">3. 全4タブ一括CSV出力</div>
-            <div style="font-size:11px; color:var(--text-secondary);">未来人材・未FIX人材・激熱掘起・通常掘起の全員（<span id="expMasterAllCount">0</span>件）</div>
+            <div style="font-weight:700; font-size:13px;">3. 全5タブ一括CSV出力</div>
+            <div style="font-size:11px; color:var(--text-secondary);">全5タブ（3営業日以内未FIX・未来・未FIX・激熱掘起・通常掘起）の全員（<span id="expMasterAllCount">0</span>件）</div>
           </div>
           <button class="btn btn-outline" onclick="exportCsvData('all_tabs')">一括出力</button>
         </div>
       </div>
 
       <div style="border-top:1px solid var(--border); padding-top:12px;">
-        <div style="font-size:12px; font-weight:700; margin-bottom:4px;">進捗チェック履歴（消込データ）のJSONエクスポート／インポート</div>
+        <div style="font-size:12px; font-weight:700; margin-bottom:4px;">送信履歴・リマインド・30日クールダウンデータのJSON保存／復元</div>
         <div style="font-size:11px; color:var(--text-secondary); margin-bottom:8px;">
-          別PCやスマホへ作業を引き継ぐ場合、チェック状態をJSONファイルで保存・復元できます。
+          別PCやスマホへ作業を引き継ぐ場合、独立保存されている送信・クールダウン履歴をJSONファイルで保存・復元できます。
         </div>
         <div style="display:flex; gap:8px;">
-          <button class="btn btn-outline" style="flex:1;" onclick="exportStatusBackupJson()">消込履歴を保存(JSON)</button>
-          <button class="btn btn-outline" style="flex:1;" onclick="document.getElementById('statusBackupInput').click()">消込履歴を復元(JSON)</button>
-          <input type="file" id="statusBackupInput" accept=".json,application/json" style="display:none" onchange="importStatusBackupJson(event)">
+          <button class="btn btn-outline" style="flex:1;" onclick="exportHistoryBackupJson()">履歴を保存(JSON)</button>
+          <button class="btn btn-outline" style="flex:1;" onclick="document.getElementById('historyBackupInput').click()">履歴を復元(JSON)</button>
+          <input type="file" id="historyBackupInput" accept=".json,application/json" style="display:none" onchange="importHistoryBackupJson(event)">
         </div>
       </div>
     </div>
@@ -1060,11 +1095,11 @@
   <div class="modal-overlay" id="uploadModal" onclick="if(event.target===this) closeUploadModal()">
     <div class="modal-dialog">
       <div class="modal-head">
-        <div class="modal-title">CSV読込（1ファイル完結・ブラウザ内処理）</div>
+        <div class="modal-title">CSV読込（送信履歴・30日クールダウンは自動保持）</div>
         <button class="btn-icon-close" onclick="closeUploadModal()">✕</button>
       </div>
       <p style="font-size:12px; color:var(--text-secondary); margin-top:0;">
-        125列CSV（UTF-8 / Shift-JIS自動判定）を選択してください。データは外部サーバーへ送信されず、お使いの端末のブラウザ内のみで処理・保存されます。
+        125列CSV（UTF-8 / Shift-JIS自動判定）を選択してください。新しいCSVを読み込んでも、<strong>蓄積された送信履歴・翌日リマインド・30日クールダウン状態は別ストレージで安全に維持</strong>されます。
       </p>
       <div class="drop-area" id="dropzone" onclick="document.getElementById('csvFileInput').click()">
         <div style="font-weight:800; color:var(--text); margin-bottom:4px;">クリックしてCSVファイルを選択</div>
@@ -1073,7 +1108,7 @@
       </div>
       <div style="display:flex; gap:8px;">
         <button class="btn btn-outline" style="flex:1;" onclick="loadBuiltInDemo()">デモデータに戻す</button>
-        <button class="btn btn-outline" style="flex:1; color:var(--rose);" onclick="clearSavedStatuses()">対応済チェックをリセット</button>
+        <button class="btn btn-outline" style="flex:1; color:var(--rose);" onclick="clearPersistedHistory()">送信履歴を全リセット</button>
       </div>
     </div>
   </div>
@@ -1100,16 +1135,16 @@
   <div class="modal-overlay" id="summaryModal" onclick="if(event.target===this) closeSummaryModal()">
     <div class="modal-dialog">
       <div class="modal-head">
-        <div class="modal-title">重複名寄せ・除外・案件マスタ内訳</div>
+        <div class="modal-title">重複名寄せ・除外・送信履歴ストレージ内訳</div>
         <button class="btn-icon-close" onclick="closeSummaryModal()">✕</button>
       </div>
       <div class="summary-grid" id="summaryStatsGrid"></div>
       <div style="background:#fafafa; border:1px solid var(--border); border-radius:8px; padding:10px; font-size:12px; margin-bottom:10px;">
         <div style="font-weight:700; margin-bottom:4px;">重複名寄せ統合ログ（抜粋）</div>
-        <div id="mergeLogList" style="color:var(--text-secondary); max-height:140px; overflow-y:auto;"></div>
+        <div id="mergeLogList" style="color:var(--text-secondary); max-height:130px; overflow-y:auto;"></div>
       </div>
       <div style="background:#fafafa; border:1px solid var(--border); border-radius:8px; padding:10px; font-size:12px;">
-        <div style="font-weight:700; margin-bottom:4px;">同一CSVから抽出した近隣マッチング用案件マスタ</div>
+        <div style="font-weight:700; margin-bottom:4px;">近隣マッチング用案件マスタ＆独立履歴ストレージ</div>
         <div id="jobMasterSummary" style="color:var(--text-secondary);"></div>
       </div>
     </div>
@@ -1120,25 +1155,40 @@
 
   <script>
     // =========================================================================
-    // 1. Per-Tab Criteria & Workflow Rules (<details> closed by default)
+    // 1. Tab Names, Specifications & Random Reasons
     // =========================================================================
     const TAB_NAMES = {
+      recent3d: '3営業日以内 未FIX人材',
       future: '未来人材',
       chance: '未FIX人材',
       hot: '激熱掘起',
       dig: '通常掘起'
     };
 
+    const RECENT_3D_REASONS = [
+      '先方にて充足してしまった',
+      '他社で決定してしまった',
+      '直接雇用で埋まってしまった',
+      'エントリー選考外となってしまった'
+    ];
+
     const TAB_SPECS = {
+      recent3d: {
+        summary: '【3営業日以内 未FIX人材】の抽出基準・アプローチ設計を見る',
+        html: `
+          <div><strong>抽出対象（最優先・打診後後追い）：</strong><code>FIX待ち</code> / <code>アテンド済</code> のうち、<code>アテンド日</code>（または最終接触日時）から <strong>12時間以上 〜 3営業日（土日祝除外）以内</strong> の超ホット層。</div>
+          <ul>
+            <li><strong>エントリー求人スライド追客</strong>：直近エントリー求人の状況（充足／他社決定／直接雇用充足／エントリー選考外をランダム自動挿入）を伝えつつ、意向確認とメール未着フォローを行います。</li>
+            <li><strong>送信後の挙動</strong>：送信記録をつけると完了状態（非表示）になります。</li>
+          </ul>
+        `
+      },
       future: {
         summary: '【未来人材】の抽出基準・アプローチ設計を見る',
         html: `
           <div><strong>抽出対象：</strong>派遣・紹介予定派遣の介護／看護スタッフのうち、就業開始希望日（<code>即日か就業可能時期</code> または <code>備考</code> 記載日）が基準日から <strong>35日以上先</strong>、または <code>ステータス=未来人材</code> の求職者。</div>
           <ul>
-            <li><strong>初期アプローチ（84〜97日前）</strong>：相場観の目線合わせとして、自宅から5km以内の参考案件を打診。</li>
-            <li><strong>温度感確認（63〜76日前）</strong>：案件は送らず、退職交渉・有給消化の進捗と開始時期のズレを確認。</li>
-            <li><strong>本格打診（49〜62日前）</strong>：希望条件に合う5km以内の好条件枠を先行募集としてオファー。</li>
-            <li><strong>顔合わせ日程回収（35〜48日前）</strong>：具体的な2択日程を提示し、職場見学（顔合わせ）を確定。</li>
+            <li><strong>開始時期別ステップ</strong>：初期アプローチ（84〜97日前）→ 温度感確認（63〜76日前）→ 本格打診（49〜62日前）→ 顔合わせ日程回収（35〜48日前）。</li>
             <li><strong>希望日変更時</strong>：各カードの <code>希望日変更・修正 ↗</code> から基幹システムを修正してください。</li>
           </ul>
         `
@@ -1146,43 +1196,44 @@
       chance: {
         summary: '【未FIX人材】の抽出基準・アプローチ設計を見る',
         html: `
-          <div><strong>抽出対象：</strong>面談・接触済み（<code>アテンド日</code> あり、または <code>FIX待ち</code> / <code>アテンド済</code> / <code>アテンドステータス=OK</code>）で、まだFIXに至っていない層。</div>
+          <div><strong>抽出対象：</strong><code>FIX待ち</code> / <code>アテンド済</code> のうち、<code>アテンド日</code>（または最終接触日時）から <strong>7〜10日経過</strong> した比較検討スイートスポット層。</div>
           <ul>
-            <li><strong>スイートスポット（経過 7〜10日）</strong>：他社と比較検討し「時給・条件が合わない」「提案が少ない」と感じ始める最優先タイミング。<strong>BO取得日時が新しい順の5km以内派遣BO（最大3件）</strong>で即提案。</li>
-            <li><strong>その他未FIX（経過 30日以内）</strong>：他社決定前に新着BOを定期フォロー。</li>
-            <li><strong>2km圏内 紹介特別フック</strong>：自宅から2km以内にマッチする紹介（直接雇用）求人がある場合は特別枠を自動挿入。</li>
+            <li><strong>新着BO＋2km紹介フック</strong>：<strong>BO取得日時が新しい順の5km以内派遣BO（最大3件）</strong>＋2km圏内紹介特別枠を提示して他社比較から引き戻します。</li>
           </ul>
         `
       },
       hot: {
-        summary: '【激熱掘起】の抽出基準・アプローチ設計を見る',
+        summary: '【激熱掘起】の抽出基準・2段階リマインド設計を見る',
         html: `
-          <div><strong>抽出対象：</strong>過去面談済み（<code>アテンド日</code> あり・30日超経過、または <code>契約終了日</code> あり、あるいは過去 <code>他社決定</code> / <code>登録辞退</code> で希望条件把握済み）の再接触期待値が高い層。</div>
+          <div><strong>抽出対象：</strong>過去に面談・接触実績がある高確度層（アテンド後11〜180日経過、契約終了日あり、または過去他社決定・辞退で条件把握済み）。</div>
           <ul>
-            <li><strong>初期ギャップ・契約満了フォロー</strong>：他社就業後の違和感や契約終了タイミングを狙い、<strong>BO取得日時が新しい順の5km以内好条件枠（最大3件）</strong>を打診。</li>
-            <li><strong>2km圏内 紹介特別フック</strong>：自宅から2km以内の直接雇用求人がある場合は特別オファーとして併記。</li>
+            <li><strong>ステップ① 初回打診</strong>：5km以内好条件枠＋2km紹介特別枠を送信。送信当日は「翌日リマインド待機」として非表示になります。</li>
+            <li><strong>ステップ② 翌日リマインド自動再浮上</strong>：初回送信から <strong>24時間経過後（翌日）</strong> に自動で <code>🔔 翌日リマインド対象</code> として再表示され、専用の翌日リマインド文面に切り替わります。</li>
+            <li><strong>ステップ③ 30日クールダウン</strong>：リマインドも送信完了すると、<strong>30日間（1ヶ月）自動で非表示</strong>になり、30日後に再浮上します（CSVを再読込しても履歴は消えません）。</li>
           </ul>
         `
       },
       dig: {
-        summary: '【通常掘起】の抽出基準・アプローチ設計を見る',
+        summary: '【通常掘起】の抽出基準・30日クールダウン設計を見る',
         html: `
-          <div><strong>抽出対象：</strong>未面談・長期休眠層（最終接触・応募から30日超経過、<code>アテンド待ち</code>・<code>誘致待ち</code>・<code>接触待ち</code>・<code>不通</code> など、ハードNG以外の休眠リード）。</div>
+          <div><strong>抽出対象：</strong><code>応募日</code>（未入力時は接触日等）から <strong>45日以上経過</strong> したすべての有効リード（他タブ・稼働中・ハードNG除く）。</div>
           <ul>
-            <li><strong>返信ハードル低下＋新着BO提示</strong>：「LINEで一言返すだけでOK」と負担を下げつつ、<strong>BO取得日時が新しい順の5km以内案件（最大3件）</strong>を提示して反応を引き出します。</li>
+            <li><strong>30日間クールダウン自動管理</strong>：掘り起こし文面を送信すると履歴が独立ストレージに蓄積され、<strong>30日間（1ヶ月）自動で非表示</strong>になります。新しいCSVを読み込んでもクールダウン状態は消えません。</li>
           </ul>
         `
       }
     };
 
     // =========================================================================
-    // 2. Constants & Status Rankings
+    // 2. Independent Storage Keys & Constants
     // =========================================================================
-    const DATA_STORAGE_KEY = 'bstyle_csv_rows_v4';
-    const STATUS_STORAGE_KEY = 'bstyle_done_ids_v4';
-    const URL_STORAGE_KEY = 'bstyle_crm_base_url_v4';
+    const CSV_CACHE_STORAGE_KEY = 'bstyle_csv_rows_v5';
+    const HISTORY_STORAGE_KEY = 'bstyle_followup_history_v5'; // Never cleared on CSV reload
+    const URL_STORAGE_KEY = 'bstyle_crm_base_url_v5';
     const DEFAULT_CRM_URL = 'https://b-style-20260516.duo.arrove.jp/';
     const PAGE_SIZE = 20;
+    const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+    const THIRTY_DAYS_MS = 30 * ONE_DAY_MS;
 
     const STATUS_RANK = {
       '稼働中': 180,
@@ -1209,14 +1260,27 @@
     };
 
     const ACTIVE_EXCLUDE_STATUSES = new Set([
-      '稼働中', '入職済', '入職待ち', '内定', '内定待ち', 'FIX済', '職見済', '職見待ち', '終了待ち', '辞退/NG確定'
+      '稼働中', '入職済', '入職待ち', '入社済', '内定', '内定承諾', '内定待ち',
+      'FIX済', '職見済', '職見待ち', '職場見学予定', '選考中', '終了待ち', '辞退/NG確定'
     ]);
 
     const HARD_NG_KEYWORDS = [
-      '年齢', '就業不可', '人物懸念', '紹介不可', '経験資格なし', '経験・資格なし'
+      '年齢', '就業不可', '人物懸念', '紹介不可', '経験資格なし', '経験・資格なし', '連絡禁止', 'ブラック'
     ];
 
-    // Fallback BOs used ONLY if imported CSV contains zero lat/lng coordinates
+    // Japanese National Holidays (2025-2027) for exact business-day calculation
+    const JP_HOLIDAYS = new Set([
+      '2025-01-01','2025-01-13','2025-02-11','2025-02-23','2025-02-24','2025-03-20',
+      '2025-04-29','2025-05-03','2025-05-04','2025-05-05','2025-05-06','2025-07-21',
+      '2025-08-11','2025-09-15','2025-09-23','2025-10-13','2025-11-03','2025-11-23','2025-11-24',
+      '2026-01-01','2026-01-12','2026-02-11','2026-02-23','2026-03-20','2026-04-29',
+      '2026-05-03','2026-05-04','2026-05-05','2026-05-06','2026-07-20','2026-08-11',
+      '2026-09-21','2026-09-22','2026-09-23','2026-10-12','2026-11-03','2026-11-23',
+      '2027-01-01','2027-01-11','2027-02-11','2027-02-23','2027-03-21','2027-03-22',
+      '2027-04-29','2027-05-03','2027-05-04','2027-05-05','2027-07-19','2027-08-11',
+      '2027-09-20','2027-09-23','2027-10-11','2027-11-03','2027-11-23'
+    ]);
+
     const FALLBACK_SAMPLE_BOS = [
       { title: 'チャームスイート世田谷三軒茶屋', sub: '【派遣】有料老人ホーム介護職（時給1,750円・日勤可）', role: '介護', emp: 'dispatch', lat: 35.6442, lng: 139.6695, boTs: Date.parse('2026-11-12T16:00:00'), boDateStr: '2026/11/12' },
       { title: '特別養護老人ホーム 世田谷太子堂（正社員）', sub: '【紹介】特養での介護職（月給28.5万円〜・三軒茶屋駅徒歩5分）', role: '介護', emp: 'direct', lat: 35.6451, lng: 139.6725, boTs: Date.parse('2026-11-12T10:00:00'), boDateStr: '2026/11/12' },
@@ -1227,10 +1291,37 @@
     ];
 
     // =========================================================================
-    // 3. Built-in Demo Dataset
+    // 3. Built-in Demo Dataset (Covers all 5 tabs & surname edge cases)
     // =========================================================================
     const DEMO_RAW_ROWS = [
-      // Tab 1: 未来人材
+      // Tab 1: 3営業日以内 未FIX人材 (Space-separated name -> 名字 "鈴木様")
+      {
+        応募者ID: '01M4R001', 氏名: '鈴木 恵美', フリガナ: 'スズキ エミ', 生年月日: '1985-03-19',
+        '住所(都道府県)': '東京都', 住所: '東京都世田谷区三軒茶屋1-22-4', 電話番号: '090-1001-2002', メールアドレス: 'suzuki.e@example.com',
+        緯度: '35.6430', 経度: '139.6702',
+        区分: '派遣', 職種詳細: '介護士', 資格: '介護福祉士',
+        担当支店: '東京東', アテンド担当ユーザー: '山上 健太',
+        応募日: '2026-11-10 10:00', アテンド日: '2026-11-11 16:00', BO取得日時: '2026-11-12 16:00', ステータス: 'FIX待ち',
+        アテンドステータス: 'OK',
+        即日か就業可能時期: '即日', 週勤務可能日数: '4', 希望する施設形態: '有料老人ホーム', 希望時給: '1750円',
+        '勤務可能シフト(早番)': '可', '勤務可能シフト(日勤)': '可',
+        事業所: 'チャームスイート世田谷三軒茶屋',
+        備考: 'エントリー求人：チャームスイート世田谷三軒茶屋（日勤・早番希望）'
+      },
+      // Tab 1: 3営業日以内 未FIX人材 (No-space name -> Safe full name "東海林美穂様")
+      {
+        応募者ID: '01M4R002', 氏名: '東海林美穂', フリガナ: 'ショウジ ミホ', 生年月日: '1991-08-24',
+        '住所(都道府県)': '東京都', 住所: '東京都江東区豊洲3-4-2', 電話番号: '080-3003-4004', メールアドレス: 'shoji.m@example.com',
+        緯度: '35.6540', 経度: '139.7955',
+        区分: '紹介予定派遣', 職種詳細: '看護師', 資格: '正看護師',
+        担当支店: '東京東', アテンド担当ユーザー: '河添 遥',
+        応募日: '2026-11-11 09:30', アテンド日: '2026-11-12 14:30', BO取得日時: '2026-11-12 17:45', ステータス: 'アテンド済',
+        アテンドステータス: 'OK',
+        即日か就業可能時期: '即日', 週勤務可能日数: '5', 希望する施設形態: 'クリニック・デイ', 希望時給: '2300円',
+        '勤務可能シフト(日勤)': '可',
+        備考: '日勤常勤または日勤派遣で検討中。'
+      },
+      // Tab 2: 未来人材
       {
         応募者ID: '01M4F101', 氏名: '高橋 美咲', フリガナ: 'タカハシ ミサキ', 生年月日: '1988-05-14',
         '住所(都道府県)': '東京都', 住所: '東京都世田谷区三軒茶屋2-14-8', 電話番号: '090-1111-2222', メールアドレス: 'takahashi.m@example.com',
@@ -1253,20 +1344,7 @@
         事業所: '特別養護老人ホーム 世田谷太子堂（正社員・賞与4.0ヶ月）',
         備考: '【正社員・紹介】特養での介護職（月給28.5万円〜・三軒茶屋駅徒歩5分）'
       },
-      {
-        応募者ID: '01M4F102', 氏名: '斎藤 健一', フリガナ: 'サイトウ ケンイチ', 生年月日: '1980-12-09',
-        '住所(都道府県)': '千葉県', 住所: '千葉県船橋市本町4-12-5', 電話番号: '080-2222-3333', メールアドレス: 'saito.k@example.com',
-        緯度: '35.7015', 経度: '139.9852',
-        区分: '派遣', 職種詳細: '介護士', 資格: '初任者研修',
-        担当支店: '東京東', アテンド担当ユーザー: '河添 遥',
-        応募日: '2026-10-20', アテンド日: '2026-10-23', BO取得日時: '2026-11-08 11:10', ステータス: '未来人材',
-        アテンドステータス: 'OK',
-        即日か就業可能時期: '2027-01-10', 週勤務可能日数: '5', 希望する施設形態: '介護老人保健施設', 希望時給: '1650円',
-        '勤務可能シフト(日勤)': '可', '勤務可能シフト(遅番)': '可',
-        事業所: 'ケアホーム船橋本町',
-        備考: '1月10日開始希望。車通勤可の施設希望。'
-      },
-      // Tab 2: 未FIX人材 (職種詳細="その他" & 資格="正看護師" -> 自動補完:看護 + isAutoRole=true)
+      // Tab 3: 未FIX人材 (7-10 days elapsed + auto role complement)
       {
         応募者ID: '01M4C201', 氏名: '加藤 智子', フリガナ: 'カトウ トモコ', 生年月日: '1982-02-17',
         '住所(都道府県)': '東京都', 住所: '東京都江東区東雲1-9-10', 電話番号: '090-3333-4444', メールアドレス: 'kato.t@example.com',
@@ -1302,7 +1380,7 @@
         事業所: 'チャームスイート川口栄町',
         備考: 'NEW 【派遣社員】有料老人ホーム介護職（時給1,700円・駅徒歩4分）'
       },
-      // Tab 3: 激熱掘起 (アテンド日 >30日前)
+      // Tab 4: 激熱掘起
       {
         応募者ID: '01M4H301', 氏名: '中村 佳奈', フリガナ: 'ナカムラ カナ', 生年月日: '1986-07-11',
         '住所(都道府県)': '東京都', 住所: '東京都世田谷区太子堂4-1-1', 電話番号: '090-5555-6666', メールアドレス: 'nakamura.k@example.com',
@@ -1329,18 +1407,18 @@
         事業所: '特別養護老人ホーム 川崎駅前苑',
         備考: 'NEW 【派遣社員】特養での介護職（時給1,750円・駅徒歩4分）'
       },
-      // Tab 4: 通常掘起 (職種詳細="その他" & 無資格 -> 自動補完:介護 + isAutoRole=true)
+      // Tab 5: 通常掘起 (応募日 >= 45日前 + auto role complement)
       {
         応募者ID: '01M4D401', 氏名: '山本 ゆかり', フリガナ: 'ヤマモト ユカリ', 生年月日: '1975-09-12',
         '住所(都道府県)': '埼玉県', 住所: '埼玉県川口市本町4-3-12', 電話番号: '090-7777-8888', メールアドレス: 'yamamoto.y@example.com',
         緯度: '35.8005', 経度: '139.7210',
         区分: '派遣', 職種詳細: 'その他', 資格: '無資格',
         担当支店: '埼玉', アテンド担当ユーザー: '清水 大輔',
-        応募日: '2026-09-25', アテンド日: '', BO取得日時: '2026-11-11 18:00', ステータス: 'アテンド待ち',
+        応募日: '2026-09-20', アテンド日: '', BO取得日時: '2026-11-11 18:00', ステータス: 'アテンド待ち',
         即日か就業可能時期: '即日', 事業所: 'SOMPOケア ラヴィーレ川口',
         備考: 'NEW 【派遣社員】有料老人ホーム介護職（時給1,680円・週3日〜）'
       },
-      // Duplicate merge test (中島 栄子)
+      // Duplicate merge test + >=45 days 通常掘起 (中島 栄子)
       {
         応募者ID: '01M4D991', 氏名: '中島 栄子', フリガナ: 'ナカジマ エイコ', 生年月日: '1968-10-07',
         '住所(都道府県)': '東京都', 住所: '東京都江東区有明3-7-11', 電話番号: '090-8888-9999', メールアドレス: 'nakajima.e@example.com',
@@ -1357,28 +1435,15 @@
         緯度: '35.6345', 経度: '139.7930',
         区分: '派遣', 職種詳細: '看護師', 資格: '正看護師',
         担当支店: '東京東', アテンド担当ユーザー: '河添 遥',
-        応募日: '2026-10-05', BO取得日時: '2026-10-05 09:00', ステータス: '接触待ち',
+        応募日: '2026-09-25', BO取得日時: '2026-09-25 09:00', ステータス: '接触待ち',
         備考: 'Web応募（看護師・日勤希望）'
       },
-      // Duplicate active exclusion test (服部 咲良)
-      {
-        応募者ID: '01M4X001', 氏名: '服部 咲良', フリガナ: 'ハットリ サクラ', 生年月日: '2002-12-08',
-        '住所(都道府県)': '東京都', 住所: '東京都世田谷区駒沢2-11-1', 緯度: '35.6315', 経度: '139.6610',
-        区分: '派遣', 職種詳細: '介護士', 担当支店: '東京東', アテンド担当ユーザー: '山上 健太',
-        応募日: '2026-09-01', ステータス: 'アテンド待ち'
-      },
+      // Active exclusion test
       {
         応募者ID: '01M4X002', 氏名: '服部 咲良', フリガナ: 'ハットリ サクラ', 生年月日: '2002-12-08',
         '住所(都道府県)': '東京都', 住所: '東京都世田谷区駒沢2-11-1', 緯度: '35.6315', 経度: '139.6610',
         区分: '派遣', 職種詳細: '介護士', 担当支店: '東京東', アテンド担当ユーザー: '山上 健太',
         応募日: '2026-10-01', ステータス: '稼働中', 事業所: '駒沢介護福祉センター'
-      },
-      // Hard NG exclusion test
-      {
-        応募者ID: '01M4X003', 氏名: '中林 やす江', フリガナ: 'ナカバヤシ ヤスエ', 生年月日: '1952-07-04',
-        '住所(都道府県)': '千葉県', 住所: '千葉県市川市八幡2-10-2', 緯度: '35.7215', 経度: '139.9270',
-        区分: '派遣', 職種詳細: '介護士', 担当支店: '東京東', アテンド担当ユーザー: '小田 彩乃',
-        応募日: '2026-10-02', ステータス: '対象外', 誘致NG理由詳細: '年齢NG（74歳）'
       }
     ];
 
@@ -1387,8 +1452,8 @@
     // =========================================================================
     let appState = {
       isDemo: true,
-      baseDate: new Date(2026, 10, 13), // 2026-11-13
-      activeTab: 'future',
+      baseDate: new Date(2026, 10, 13, 10, 0), // 2026-11-13 10:00
+      activeTab: 'recent3d',
       currentPage: 1,
       candidates: [],
       dispatchJobMaster: [],
@@ -1401,20 +1466,22 @@
         excludedDirectOnly: 0
       },
       mergeLogs: [],
-      statuses: {},
+      // Independent persistent history map: { [trackingKey]: { stage: 'done'|'hot_step1'|'cooldown_30d', sentAt: ms, tab: string, name: string } }
+      history: {},
       crmUrlBase: DEFAULT_CRM_URL,
-      activeModalId: null
+      activeModalId: null,
+      modalReasonIdx: 0
     };
 
     // =========================================================================
-    // 5. Storage, Normalization, Date & Haversine Math
+    // 5. Storage, Name Extraction, Business Days & Geo Math
     // =========================================================================
     function loadPersistedState() {
       try {
-        const rawSt = localStorage.getItem(STATUS_STORAGE_KEY);
-        appState.statuses = rawSt ? JSON.parse(rawSt) : {};
+        const rawHist = localStorage.getItem(HISTORY_STORAGE_KEY);
+        appState.history = rawHist ? JSON.parse(rawHist) : {};
       } catch (e) {
-        appState.statuses = {};
+        appState.history = {};
       }
       try {
         const savedUrl = localStorage.getItem(URL_STORAGE_KEY);
@@ -1422,29 +1489,44 @@
       } catch (e) {}
     }
 
-    function saveStatusesToStorage() {
+    function saveHistoryToStorage() {
       try {
-        localStorage.setItem(STATUS_STORAGE_KEY, JSON.stringify(appState.statuses));
+        localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(appState.history));
       } catch (e) {}
     }
 
     function saveCsvRowsToStorage(rows) {
       try {
-        localStorage.setItem(DATA_STORAGE_KEY, JSON.stringify(rows));
-      } catch (e) {
-        // Ignore quota exceeded if CSV is huge
-      }
+        localStorage.setItem(CSV_CACHE_STORAGE_KEY, JSON.stringify(rows));
+      } catch (e) {}
     }
 
     function loadSavedCsvRows() {
       try {
-        const raw = localStorage.getItem(DATA_STORAGE_KEY);
+        const raw = localStorage.getItem(CSV_CACHE_STORAGE_KEY);
         if (!raw) return null;
         const parsed = JSON.parse(raw);
         return Array.isArray(parsed) && parsed.length ? parsed : null;
       } catch (e) {
         return null;
       }
+    }
+
+    // Safe surname extraction: uses dedicated `姓` column or space-separated first token; otherwise full name
+    function extractSafeSalutationName(row) {
+      const explicitLast = (row['姓'] || row['苗字'] || '').trim();
+      if (explicitLast) {
+        return { salutation: explicitLast, isSurnameOnly: true };
+      }
+      const rawName = (row['氏名'] || row['求職者名'] || row['名前'] || '').trim();
+      if (!rawName) {
+        return { salutation: '求職者', isSurnameOnly: false };
+      }
+      const parts = rawName.split(/[\s　]+/).filter(Boolean);
+      if (parts.length >= 2 && parts[0].length >= 1 && parts[0].length <= 5) {
+        return { salutation: parts[0], isSurnameOnly: true };
+      }
+      return { salutation: rawName, isSurnameOnly: false };
     }
 
     function normalizeKana(str) {
@@ -1505,12 +1587,36 @@
       return `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}`;
     }
 
+    function formatIsoDate(d) {
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    }
+
     function diffDays(fromDate, toDate) {
       if (!fromDate || !toDate) return null;
-      const ms = 24 * 60 * 60 * 1000;
       const a = new Date(fromDate.getFullYear(), fromDate.getMonth(), fromDate.getDate());
       const b = new Date(toDate.getFullYear(), toDate.getMonth(), toDate.getDate());
-      return Math.round((b - a) / ms);
+      return Math.round((b - a) / ONE_DAY_MS);
+    }
+
+    function isJapaneseBusinessDay(d) {
+      const dow = d.getDay();
+      if (dow === 0 || dow === 6) return false;
+      if (JP_HOLIDAYS.has(formatIsoDate(d))) return false;
+      return true;
+    }
+
+    // Count business days elapsed between fromDate and toDate (excluding Sat, Sun, JP Holidays)
+    function countBusinessDaysElapsed(fromDate, toDate) {
+      if (!fromDate || !toDate || toDate < fromDate) return 0;
+      const start = new Date(fromDate.getFullYear(), fromDate.getMonth(), fromDate.getDate());
+      const end = new Date(toDate.getFullYear(), toDate.getMonth(), toDate.getDate());
+      let count = 0;
+      const cur = new Date(start);
+      while (cur < end) {
+        cur.setDate(cur.getDate() + 1);
+        if (isJapaneseBusinessDay(cur)) count++;
+      }
+      return count;
     }
 
     function resolveRoleAndComplement(row) {
@@ -1624,7 +1730,7 @@
     }
 
     // =========================================================================
-    // 7. Core Engine: Deduplication, 5km Dispatched BOs, 2km Direct Hook, 4 Tabs
+    // 7. Core Engine: Deduplication, Job Masters & 5-Tab Classification
     // =========================================================================
     function extractLatLng(row) {
       let lat = parseFloat(row['緯度'] || row['lat'] || '');
@@ -1671,6 +1777,8 @@
     }
 
     function determineReferenceDate(rawRows) {
+      // If CSV dates are close to real current date, use real current time; otherwise use CSV max date + 10:00
+      const now = new Date();
       let latest = null;
       for (const r of rawRows) {
         for (const col of ['応募日', 'アテンド日', 'BO取得日時', '最終更新日時']) {
@@ -1678,7 +1786,9 @@
           if (d && (!latest || d > latest)) latest = d;
         }
       }
-      return latest || new Date();
+      if (!latest) return now;
+      if (Math.abs(now - latest) <= 7 * ONE_DAY_MS) return now;
+      return new Date(latest.getFullYear(), latest.getMonth(), latest.getDate(), 18, 0);
     }
 
     function buildPreferencesText(row) {
@@ -1708,7 +1818,7 @@
     }
 
     function processRawRecords(rawRows, isDemoMode) {
-      const baseDate = isDemoMode ? new Date(2026, 10, 13) : determineReferenceDate(rawRows);
+      const baseDate = isDemoMode ? new Date(2026, 10, 13, 10, 0) : determineReferenceDate(rawRows);
       appState.baseDate = baseDate;
 
       const dispatchJobMap = new Map();
@@ -1764,7 +1874,6 @@
         }
       }
 
-      // Fallback sample BOs if CSV lacks lat/lon job rows
       if (dispatchJobMap.size === 0 && directJobMap.size === 0) {
         for (const fb of FALLBACK_SAMPLE_BOS) {
           if (fb.emp === 'direct') directJobMap.set(`${fb.role}|${fb.title}`, fb);
@@ -1809,6 +1918,7 @@
             canonical: row,
             rank,
             appTs,
+            personKeys: [kKey, aKey].filter(Boolean),
             mergedIds: [row['応募者ID']].filter(Boolean),
             allRows: [row]
           });
@@ -1820,6 +1930,8 @@
           if (row['応募者ID'] && !grp.mergedIds.includes(row['応募者ID'])) {
             grp.mergedIds.push(row['応募者ID']);
           }
+          if (kKey && !grp.personKeys.includes(kKey)) grp.personKeys.push(kKey);
+          if (aKey && !grp.personKeys.includes(aKey)) grp.personKeys.push(aKey);
           grp.allRows.push(row);
 
           const isHigher = rank > grp.rank || (rank === grp.rank && appTs > grp.appTs);
@@ -1840,7 +1952,7 @@
         }
       }
 
-      // Step 3: Filter Exclusions, Employment Type & Assign to 4 Tabs
+      // Step 3: Filter Exclusions & Classify into 5 Tabs
       let excludedActive = 0;
       let excludedHardNg = 0;
       let excludedDirectOnly = 0;
@@ -1871,6 +1983,7 @@
 
         const roleInfo = resolveRoleAndComplement(r);
         const role = roleInfo.role;
+        const salutationInfo = extractSafeSalutationName(r);
         const pref = extractPrefecture(r['住所(都道府県)'], r['住所']);
         const addr = r['住所'] || '';
         const coords = extractLatLng(r);
@@ -1888,11 +2001,16 @@
         const attendSt = (r['アテンドステータス'] || '').trim();
         const fixNg = (r['FIXNG理由'] || '').trim();
         const attendDate = parseDateSafe(r['アテンド日']);
+        const contactDate = parseDateSafe(r['接触日時'] || r['最終接触日時'] || r['最終更新日時']);
+        const refTouchDate = attendDate || contactDate;
         const contractEndDate = parseDateSafe(r['契約終了日'] || r['終了日']);
-        const appDate = parseDateSafe(r['応募日']);
+        const appDate = parseDateSafe(r['応募日']) || contactDate;
 
-        const daysSinceAttend = attendDate ? diffDays(attendDate, baseDate) : null;
+        const hoursSinceTouch = refTouchDate ? (baseDate - refTouchDate) / (1000 * 60 * 60) : null;
+        const bizDaysSinceTouch = refTouchDate ? countBusinessDaysElapsed(refTouchDate, baseDate) : null;
+        const daysSinceTouch = refTouchDate ? diffDays(refTouchDate, baseDate) : null;
         const daysSinceApp = appDate ? diffDays(appDate, baseDate) : null;
+
         const hasAttended = Boolean(attendDate) || attendSt === 'OK' || st === 'アテンド済' || st === 'FIX待ち';
 
         const isFuture =
@@ -1900,11 +2018,28 @@
           fixNg.includes('未来人材') ||
           (daysUntilStart !== null && daysUntilStart >= 35);
 
-        let tab = 'dig';
+        let tab = null;
         let subLabel = '';
         let phaseCode = '';
 
-        if (isFuture) {
+        // 1. 3営業日以内 未FIX人材 (>= 12 hours and <= 3 business days)
+        if (
+          !isFuture &&
+          hasAttended &&
+          hoursSinceTouch !== null &&
+          hoursSinceTouch >= 12 &&
+          bizDaysSinceTouch !== null &&
+          bizDaysSinceTouch <= 3
+        ) {
+          tab = 'recent3d';
+          const hrRounded = Math.floor(hoursSinceTouch);
+          subLabel = bizDaysSinceTouch === 0
+            ? `打診後後追い（${hrRounded}時間経過）`
+            : `打診後後追い（${bizDaysSinceTouch}営業日経過）`;
+          phaseCode = 'R3D';
+        }
+        // 2. 未来人材
+        else if (isFuture) {
           tab = 'future';
           const d = daysUntilStart;
           if (d === null) {
@@ -1926,45 +2061,45 @@
             subLabel = `長期待機（開始${d}日前）`;
             phaseCode = 'FWAIT';
           }
-        } else if (
+        }
+        // 3. 未FIX人材 (7 to 10 days elapsed from attend/contact)
+        else if (
+          hasAttended &&
+          daysSinceTouch !== null &&
+          daysSinceTouch >= 7 &&
+          daysSinceTouch <= 10
+        ) {
+          tab = 'chance';
+          subLabel = `スイートスポット（面談後${daysSinceTouch}日）`;
+          phaseCode = 'C1';
+        }
+        // 4. 激熱掘起 (Prior touchpoint/interview/contract end, 11-180 days)
+        else if (
           Boolean(contractEndDate) ||
-          (hasAttended && daysSinceAttend !== null && daysSinceAttend > 30) ||
-          (attendSt === 'OK' && (st === '他社決定' || st === '登録辞退'))
+          (hasAttended && daysSinceTouch !== null && daysSinceTouch >= 11 && daysSinceTouch <= 180) ||
+          (attendSt === 'OK' && (st === '他社決定' || st === '登録辞退') && (daysSinceApp === null || daysSinceApp <= 180))
         ) {
           tab = 'hot';
           if (contractEndDate) {
             subLabel = `契約終了・更新期（${formatDateShort(contractEndDate)}）`;
             phaseCode = 'H2';
-          } else if (daysSinceAttend !== null && daysSinceAttend > 30) {
-            subLabel = `面談後${daysSinceAttend}日経過・再打診`;
+          } else if (daysSinceTouch !== null && daysSinceTouch >= 11) {
+            subLabel = `面談後${daysSinceTouch}日経過・再打診`;
             phaseCode = 'H2';
           } else {
             subLabel = `条件把握済・再アプローチ（${st}）`;
             phaseCode = 'H1';
           }
-        } else if (hasAttended) {
-          tab = 'chance';
-          const elapsed = daysSinceAttend !== null ? daysSinceAttend : daysSinceApp;
-          if (elapsed !== null && elapsed >= 7 && elapsed <= 10) {
-            subLabel = `スイートスポット（面談後${elapsed}日）`;
-            phaseCode = 'C1';
-          } else if (elapsed !== null && elapsed <= 30) {
-            subLabel = `未FIXフォロー（面談後${elapsed}日）`;
-            phaseCode = 'C2';
-          } else {
-            subLabel = `未FIXフォロー（${st || 'FIX待ち'}）`;
-            phaseCode = 'C3';
-          }
-        } else {
-          tab = 'dig';
-          if (daysSinceApp !== null && daysSinceApp > 30) {
-            subLabel = `休眠掘り起こし（応募後${daysSinceApp}日）`;
-            phaseCode = 'D1';
-          } else {
-            subLabel = `未面談掘り起こし（${st || '未接触'}${daysSinceApp !== null ? '・' + daysSinceApp + '日' : ''}）`;
-            phaseCode = 'D2';
-          }
         }
+        // 5. 通常掘起 (All remaining eligible candidates with 応募日 >= 45 days ago)
+        else if (daysSinceApp !== null && daysSinceApp >= 45) {
+          tab = 'dig';
+          subLabel = `通常掘り起こし（応募から${daysSinceApp}日経過）`;
+          phaseCode = 'D45';
+        }
+
+        // Skip candidates that do not fall into any of the 5 active outreach buckets
+        if (!tab) continue;
 
         // 5km Dispatched BO matching (Max 3)
         let nearbyDispatchJobs = [];
@@ -2002,11 +2137,15 @@
 
         const prefsText = buildPreferencesText(r);
         const notesSnippet = (r['備考'] || '').replace(/\s+/g, ' ').trim().slice(0, 120);
+        const trackingKeys = [...grp.mergedIds, ...grp.personKeys];
 
         validCandidates.push({
           id: r['応募者ID'] || `ROW-${validCandidates.length + 1}`,
           mergedIds: grp.mergedIds,
+          trackingKeys,
           name: r['氏名'] || '名称未設定',
+          salutation: salutationInfo.salutation,
+          isSurnameOnly: salutationInfo.isSurnameOnly,
           kana: r['フリガナ'] || '',
           ageStr,
           qual,
@@ -2015,7 +2154,6 @@
           role,
           isAutoRole: roleInfo.isAutoRole,
           complementReason: roleInfo.reason,
-          empLabel: (r['区分'] || r['案件種別'] || '派遣/未設定').trim(),
           branch: r['担当支店'] || '未設定',
           attendUser: r['アテンド担当ユーザー'] || '未設定',
           pref,
@@ -2030,7 +2168,8 @@
           prefsText,
           notesSnippet,
           nearbyDispatchJobs,
-          nearbyDirectJobs
+          nearbyDirectJobs,
+          defaultReasonIdx: Math.floor(Math.random() * RECENT_3D_REASONS.length)
         });
       }
 
@@ -2053,10 +2192,147 @@
     }
 
     // =========================================================================
-    // 8. Message Template Generator (Unified Signature: ビースタイル採用担当です)
+    // 8. Persistent History & Cooldown Evaluation (Survives CSV Reload)
     // =========================================================================
-    function generateMessage(c) {
+    function getLatestHistoryRecord(c) {
+      let best = null;
+      for (const k of c.trackingKeys) {
+        const rec = appState.history[k];
+        if (rec && (!best || rec.sentAt > best.sentAt)) {
+          best = rec;
+        }
+      }
+      return best;
+    }
+
+    // Evaluates current visibility & reminder stage for a candidate
+    function evaluateCandidateFlowState(c) {
+      const rec = getLatestHistoryRecord(c);
+      if (!rec) {
+        return { state: 'ready', hidden: false, label: '', remainingDays: 0, remainingHours: 0 };
+      }
+
+      const nowMs = Date.now();
+      const elapsedMs = Math.max(0, nowMs - rec.sentAt);
+
+      // Step 2: 激熱掘起 Next-day reminder logic
+      if (c.tab === 'hot' && rec.stage === 'hot_step1') {
+        if (elapsedMs < ONE_DAY_MS) {
+          const remHours = Math.max(1, Math.ceil((ONE_DAY_MS - elapsedMs) / (1000 * 60 * 60)));
+          return {
+            state: 'hot_wait_tomorrow',
+            hidden: true,
+            label: `翌日リマインド待機中（あと約${remHours}時間）`,
+            remainingDays: 1,
+            remainingHours: remHours
+          };
+        } else if (elapsedMs < THIRTY_DAYS_MS) {
+          return {
+            state: 'hot_remind_due',
+            hidden: false,
+            label: '🔔 翌日リマインド対象（初回送信済）',
+            remainingDays: 0,
+            remainingHours: 0
+          };
+        } else {
+          // Over 30 days since step 1 -> reset back to ready
+          return { state: 'ready', hidden: false, label: '', remainingDays: 0, remainingHours: 0 };
+        }
+      }
+
+      // 30-day cooldown (for hot step 2 reminder sent, or dig sent)
+      if (rec.stage === 'cooldown_30d') {
+        if (elapsedMs < THIRTY_DAYS_MS) {
+          const remDays = Math.max(1, Math.ceil((THIRTY_DAYS_MS - elapsedMs) / ONE_DAY_MS));
+          return {
+            state: 'cooldown_30d',
+            hidden: true,
+            label: `送信済・30日クールダウン中（あと${remDays}日非表示）`,
+            remainingDays: remDays,
+            remainingHours: 0
+          };
+        } else {
+          // 30 days elapsed -> automatically resurface!
+          return { state: 'ready', hidden: false, label: '', remainingDays: 0, remainingHours: 0 };
+        }
+      }
+
+      // Standard completion for recent3d / future / chance
+      if (rec.stage === 'done') {
+        if (elapsedMs < THIRTY_DAYS_MS) {
+          return {
+            state: 'done',
+            hidden: true,
+            label: `対応済（${formatDateShort(new Date(rec.sentAt))}送信）`,
+            remainingDays: 0,
+            remainingHours: 0
+          };
+        }
+      }
+
+      return { state: 'ready', hidden: false, label: '', remainingDays: 0, remainingHours: 0 };
+    }
+
+    function recordCandidateAction(c) {
+      const flow = evaluateCandidateFlowState(c);
+      let nextStage = 'done';
+
+      if (c.tab === 'hot') {
+        if (flow.state === 'hot_remind_due') {
+          nextStage = 'cooldown_30d';
+        } else {
+          nextStage = 'hot_step1';
+        }
+      } else if (c.tab === 'dig') {
+        nextStage = 'cooldown_30d';
+      } else {
+        nextStage = 'done';
+      }
+
+      const payload = {
+        stage: nextStage,
+        sentAt: Date.now(),
+        tab: c.tab,
+        name: c.name
+      };
+
+      for (const k of c.trackingKeys) {
+        appState.history[k] = payload;
+      }
+      saveHistoryToStorage();
+      return nextStage;
+    }
+
+    function clearCandidateHistory(c) {
+      for (const k of c.trackingKeys) {
+        delete appState.history[k];
+      }
+      saveHistoryToStorage();
+    }
+
+    // =========================================================================
+    // 9. Message Template Generator (Safe Surname + Random 3D Reason + Next-Day Remind)
+    // =========================================================================
+    function generateMessage(c, customReasonIdx) {
+      const salutation = c.salutation;
       const areaShort = `${c.pref}${(c.addr || '').replace(c.pref, '').slice(0, 6)}` || 'ご希望エリア';
+
+      // Tab 1: 3営業日以内 未FIX人材
+      if (c.tab === 'recent3d') {
+        const idx = typeof customReasonIdx === 'number' ? customReasonIdx : c.defaultReasonIdx;
+        const reason = RECENT_3D_REASONS[idx % RECENT_3D_REASONS.length];
+        return `${salutation}様\nお世話になっております。ビースタイル採用担当です。\n\n先日はお忙しい中お時間いただきありがとうございました！\nエントリー求人ですが、${reason}と伺っております。\nご案内させていただきました求人については、エントリー希望をもらっておりますが、その後ご検討状況はいかがでしょうか？\nお忙しいところ恐縮ですが、先方からの面談希望などの意向踏まえて返信いただけると幸いです。\n求人メールが届いてない場合、再送しますのでご一報いただけると幸いです。\n\nビースタイル採用担当`;
+      }
+
+      const flow = evaluateCandidateFlowState(c);
+
+      // Tab 4 Step 2: 激熱掘起 翌日リマインド専用文面
+      if (c.tab === 'hot' && flow.state === 'hot_remind_due') {
+        const directReminderLine = c.nearbyDirectJobs.length
+          ? `\n（※なお、ご自宅から2km圏内の直接雇用（紹介）の特別枠「${c.nearbyDirectJobs[0].title}」もまだ空きがございます！）\n`
+          : '';
+        return `${salutation}様\nお世話になっております。ビースタイル採用担当です。\n\n昨日お送りいたしましたご自宅近くの新着求人（5km圏内）の件、ご確認いただけましたでしょうか？${directReminderLine}\nお忙しいところ恐れ入りますが、人気枠のため他の方で埋まってしまう前に一度ご確認いただければと思いご連絡いたしました。\n\n「まだ今の職場を続ける予定」「条件が合えば話だけ聞きたい」など、一言だけでもご返信いただけますと幸いです！\nよろしくお願いいたします。\n\nビースタイル採用担当です`;
+      }
 
       const dispatchBlock = c.nearbyDispatchJobs.length
         ? `\n▼【ご自宅から5km以内の新着・おすすめ派遣枠（${c.role}）】\n` +
@@ -2066,74 +2342,80 @@
         : '';
 
       const directHookBlock = c.nearbyDirectJobs.length
-        ? `\nまた、${c.name}様のご自宅からめちゃくちゃ近い（2km圏内）下記施設様からも、直接雇用（紹介）の特別求人をいただいております！\n` +
+        ? `\nまた、${salutation}様のご自宅からめちゃくちゃ近い（2km圏内）下記施設様からも、直接雇用（紹介）の特別求人をいただいております！\n` +
           c.nearbyDirectJobs.map(d =>
             `★【2km圏内・紹介特別枠】${d.title}（${d.role}／ご自宅から約${d.dist.toFixed(1)}km）`
           ).join('\n') + '\n'
         : '';
 
+      // Tab 2: 未来人材
       if (c.tab === 'future') {
         if (c.phaseCode === 'F2') {
-          return `${c.name}様、こんにちは！ビースタイル採用担当です。\n\n来月あたりから【${c.startDateStr}開始】の${c.role}求人が本格募集スタートになりますが、現職のご退職手続きや有給消化の目処はいかがでしょうか？\nもし開始時期に少し前後がありそうでしたら、今のうちに教えていただけると動きやすいです！${directHookBlock}`;
+          return `${salutation}様、こんにちは！ビースタイル採用担当です。\n\n来月あたりから【${c.startDateStr}開始】の${c.role}求人が本格募集スタートになりますが、現職のご退職手続きや有給消化の目処はいかがでしょうか？\nもし開始時期に少し前後がありそうでしたら、今のうちに教えていただけると動きやすいです！${directHookBlock}`;
         }
         if (c.phaseCode === 'F3') {
-          return `${c.name}様、お疲れ様です！ビースタイル採用担当です。\n\n以前お伺いしていたご希望条件（${c.prefsText || c.role}）に合う好条件枠が【${c.startDateStr}開始】で先行募集スタートしました！${dispatchBlock}${directHookBlock}\n人気枠のため早めに埋まる可能性が高いです。まずは詳細だけでもお送りしましょうか？`;
+          return `${salutation}様、お疲れ様です！ビースタイル採用担当です。\n\n以前お伺いしていたご希望条件（${c.prefsText || c.role}）に合う好条件枠が【${c.startDateStr}開始】で先行募集スタートしました！${dispatchBlock}${directHookBlock}\n人気枠のため早めに埋まる可能性が高いです。まずは詳細だけでもお送りしましょうか？`;
         }
         if (c.phaseCode === 'F4') {
-          return `${c.name}様、お世話になっております！ビースタイル採用担当です。\n\n【${c.startDateStr}】のご入職に向けて、来週あたりで一度職場の見学（顔合わせ）に行ってみませんか？${dispatchBlock}${directHookBlock}\n今なら【来週の火曜 10:00〜】か【木曜 14:00〜】で調整できそうですが、ご都合いかがでしょうか？`;
+          return `${salutation}様、お世話になっております！ビースタイル採用担当です。\n\n【${c.startDateStr}】のご入職に向けて、来週あたりで一度職場の見学（顔合わせ）に行ってみませんか？${dispatchBlock}${directHookBlock}\n今なら【来週の火曜 10:00〜】か【木曜 14:00〜】で調整できそうですが、ご都合いかがでしょうか？`;
         }
-        return `${c.name}様、お世話になっております！ビースタイル採用担当です。\n\nご希望いただいている【${c.startDateStr}頃】開始の求人が少しずつ動き始めましたので、まずは${areaShort}周辺の相場感として参考案件をお送りしますね。${dispatchBlock}${directHookBlock}\nまだ先ですので、まずは「こういう条件があるんだな」くらいで眺めてみてください！`;
+        return `${salutation}様、お世話になっております！ビースタイル採用担当です。\n\nご希望いただいている【${c.startDateStr}頃】開始の求人が少しずつ動き始めましたので、まずは${areaShort}周辺の相場感として参考案件をお送りしますね。${dispatchBlock}${directHookBlock}\nまだ先ですので、まずは「こういう条件があるんだな」くらいで眺めてみてください！`;
       }
 
+      // Tab 3: 未FIX人材 (7-10 days)
       if (c.tab === 'chance') {
         const condLine = c.prefsText ? `（${c.prefsText}）` : '';
-        if (c.phaseCode === 'C1') {
-          return `${c.name}様、お疲れ様です！ビースタイル採用担当です。\n\n他社様でのお話も進んでいる頃かと思いますが、もし「時給が希望に届かない」「なかなか条件に合う求人が出てこない」などあれば、${c.name}様のご希望条件${condLine}に合う${areaShort}周辺の好条件枠をすぐにご案内できますのでぜひ比較してみてください！${dispatchBlock}${directHookBlock}\n気になる求人があれば番号だけでも教えてくださいね！`;
-        }
-        return `${c.name}様、お世話になっております！ビースタイル採用担当です。\n\nその後、お仕事探しの状況はいかがでしょうか？\n以前お伺いしていたご希望条件${condLine}に合う新着の${c.role}枠が${areaShort}周辺で出ましたので共有いたします！${dispatchBlock}${directHookBlock}\nまだ決定前でしたらぜひ一度比較してみてください！`;
+        return `${salutation}様、お疲れ様です！ビースタイル採用担当です。\n\n他社様でのお話も進んでいる頃かと思いますが、もし「時給が希望に届かない」「なかなか条件に合う求人が出てこない」などあれば、${salutation}様のご希望条件${condLine}に合う${areaShort}周辺の好条件枠をすぐにご案内できますのでぜひ比較してみてください！${dispatchBlock}${directHookBlock}\n気になる求人があれば番号だけでも教えてくださいね！`;
       }
 
+      // Tab 4 Step 1: 激熱掘起 初回
       if (c.tab === 'hot') {
         const condLine = c.prefsText ? `（${c.prefsText}）` : '';
-        return `${c.name}様、ご無沙汰しております！ビースタイル採用担当です。\n\nその後、お仕事のご状況や契約更新・今後の働き方についていかがでしょうか？\nちょうど${c.name}様のご希望${condLine}に合う近隣の好条件案件の枠が空いたのですが、情報だけでも見てみませんか？${dispatchBlock}${directHookBlock}`;
+        return `${salutation}様、ご無沙汰しております！ビースタイル採用担当です。\n\nその後、お仕事のご状況や契約更新・今後の働き方についていかがでしょうか？\nちょうど${salutation}様のご希望${condLine}に合う近隣の好条件案件の枠が空いたのですが、情報だけでも見てみませんか？${dispatchBlock}${directHookBlock}`;
       }
 
-      return `${c.name}様、こんにちは！ビースタイル採用担当です。\n\nその後、お仕事探しのご状況はいかがでしょうか？\n本日、${areaShort}周辺で新着の${c.role}枠が出ましたので参考までにお送りしますね。${dispatchBlock}${directHookBlock}\nお電話が難しい場合は、このままLINEに「日勤のみ」「時給〇円以上」など一言だけ返信いただければ条件に合うものをお探しします！`;
+      // Tab 5: 通常掘起 (>= 45 days)
+      return `${salutation}様、こんにちは！ビースタイル採用担当です。\n\nその後、お仕事探しのご状況はいかがでしょうか？\n本日、${areaShort}周辺で新着の${c.role}枠が出ましたので参考までにお送りしますね。${dispatchBlock}${directHookBlock}\nお電話が難しい場合は、このままLINEに「日勤のみ」「時給〇円以上」など一言だけ返信いただければ条件に合うものをお探しします！`;
     }
 
     // =========================================================================
-    // 9. UI Rendering & Filtering
+    // 10. UI Rendering & Filtering
     // =========================================================================
-    function isCandidateDone(c) {
-      for (const id of c.mergedIds) {
-        if (appState.statuses[id] === 'done') return true;
-      }
-      return false;
-    }
-
-    function getFilteredCandidates(targetTab, overrideTodoOnly) {
+    function getFilteredCandidates(targetTab, overrideShowCooldown) {
       const fPref = document.getElementById('filterPref').value;
       const fAttendUser = document.getElementById('filterAttendUser').value;
       const fBranch = document.getElementById('filterBranch').value;
       const fKw = document.getElementById('filterKeyword').value.trim().toLowerCase();
-      const todoOnly = typeof overrideTodoOnly === 'boolean'
-        ? overrideTodoOnly
-        : document.getElementById('filterTodoOnly').checked;
+      const showCooldown = typeof overrideShowCooldown === 'boolean'
+        ? overrideShowCooldown
+        : document.getElementById('filterShowCooldown').checked;
 
-      return appState.candidates.filter(c => {
+      const list = appState.candidates.filter(c => {
         if (targetTab && c.tab !== targetTab) return false;
         if (fPref && c.pref !== fPref) return false;
         if (fAttendUser && c.attendUser !== fAttendUser) return false;
         if (fBranch && c.branch !== fBranch) return false;
 
-        if (todoOnly && isCandidateDone(c)) return false;
+        const flow = evaluateCandidateFlowState(c);
+        if (!showCooldown && flow.hidden) return false;
 
         if (fKw) {
-          const hay = `${c.name} ${c.kana} ${c.id} ${c.pref} ${c.addr} ${c.qual} ${c.notesSnippet}`.toLowerCase();
+          const hay = `${c.name} ${c.salutation} ${c.kana} ${c.id} ${c.pref} ${c.addr} ${c.qual} ${c.notesSnippet}`.toLowerCase();
           if (!hay.includes(fKw)) return false;
         }
         return true;
       });
+
+      // Prioritize Next-Day Reminders at the top of 激熱掘起
+      if (targetTab === 'hot') {
+        list.sort((a, b) => {
+          const fa = evaluateCandidateFlowState(a).state === 'hot_remind_due' ? 0 : 1;
+          const fb = evaluateCandidateFlowState(b).state === 'hot_remind_due' ? 0 : 1;
+          return fa - fb;
+        });
+      }
+
+      return list;
     }
 
     function populateDropdowns() {
@@ -2178,12 +2460,14 @@
     function render() {
       renderTabDetails();
 
-      const tabCounts = { future: 0, chance: 0, hot: 0, dig: 0 };
+      const tabCounts = { recent3d: 0, future: 0, chance: 0, hot: 0, dig: 0 };
       for (const c of appState.candidates) {
-        if (!isCandidateDone(c)) {
+        const flow = evaluateCandidateFlowState(c);
+        if (!flow.hidden) {
           tabCounts[c.tab]++;
         }
       }
+      document.getElementById('cnt-recent3d').textContent = tabCounts.recent3d.toLocaleString();
       document.getElementById('cnt-future').textContent = tabCounts.future.toLocaleString();
       document.getElementById('cnt-chance').textContent = tabCounts.chance.toLocaleString();
       document.getElementById('cnt-hot').textContent = tabCounts.hot.toLocaleString();
@@ -2213,7 +2497,7 @@
         container.innerHTML = `
           <div class="candidate-card" style="text-align:center; padding:36px 16px; color:var(--text-secondary);">
             <div style="font-weight:800; margin-bottom:4px;">該当する対象者がいません</div>
-            <div style="font-size:12px; color:var(--text-muted);">都道府県・アテンド担当・検索キーワード・未対応フィルターを変更してください</div>
+            <div style="font-size:12px; color:var(--text-muted);">フィルター条件を変更するか、「送信後30日以内(クールダウン中)も表示」を確認してください</div>
           </div>
         `;
         return;
@@ -2223,15 +2507,20 @@
     }
 
     function renderCardHtml(c) {
-      const done = isCandidateDone(c);
+      const flow = evaluateCandidateFlowState(c);
       const crmUrl = appState.crmUrlBase || DEFAULT_CRM_URL;
 
       const phaseBadgeClass =
+        c.tab === 'recent3d' ? 'badge-rose' :
         c.tab === 'future' ? 'badge-orange' :
         c.tab === 'chance' ? 'badge-amber' :
-        c.tab === 'hot' ? 'badge-rose' : 'badge-teal';
+        c.tab === 'hot' ? 'badge-dark' : 'badge-teal';
 
       const roleBadgeClass = c.role === '看護' ? 'badge-dark' : 'badge-neutral';
+
+      const flowBadge = flow.label
+        ? `<span class="badge ${flow.state === 'hot_remind_due' ? 'badge-rose' : 'badge-blue'}">${escapeHtml(flow.label)}</span>`
+        : '';
 
       const mergedBadge = c.mergedIds.length > 1
         ? `<span class="badge badge-neutral">名寄せ ${c.mergedIds.length}件統合</span>`
@@ -2261,7 +2550,7 @@
         ? `<div class="pref-summary"><strong>把握済条件：</strong>${escapeHtml(c.prefsText)}</div>`
         : '';
 
-      const directHtml = c.nearbyDirectJobs.length
+      const directHtml = c.nearbyDirectJobs.length && c.tab !== 'recent3d'
         ? `
           <div class="direct-box">
             <div class="box-header">
@@ -2279,7 +2568,7 @@
         : '';
 
       const sortLabel = c.tab === 'future' ? '条件・距離順' : 'BO取得日時順';
-      const dispatchHtml = c.nearbyDispatchJobs.length
+      const dispatchHtml = c.nearbyDispatchJobs.length && c.tab !== 'recent3d'
         ? `
           <div class="dispatch-box">
             <div class="box-header">
@@ -2303,12 +2592,26 @@
         ? `<span>就業希望時期: <strong>${escapeHtml(c.startDateStr)}</strong></span>`
         : `<span>応募日: ${escapeHtml(c.appDateStr || '-')} ／ アテンド日: ${escapeHtml(c.attendDateStr || '-')}</span>`;
 
+      let actionBtnLabel = '送信記録をつける（完了）';
+      if (c.tab === 'hot') {
+        actionBtnLabel = flow.state === 'hot_remind_due'
+          ? 'リマインド済→30日非表示へ'
+          : '初回送信済→翌日リマインドへ';
+      } else if (c.tab === 'dig') {
+        actionBtnLabel = '送信済→30日非表示へ';
+      }
+
+      const resetHistoryBtn = flow.state !== 'ready'
+        ? `<button class="btn btn-outline" style="padding:10px 10px; font-size:12px;" onclick="resetSingleCandidateHistory('${escapeHtml(c.id)}')">履歴解除</button>`
+        : '';
+
       return `
-        <article class="candidate-card ${done ? 'is-done' : ''}">
+        <article class="candidate-card ${flow.state === 'hot_remind_due' ? 'is-remind-due' : ''} ${flow.hidden ? 'is-done' : ''}">
           <div class="card-top">
             <div class="badge-list">
               <span class="badge ${roleBadgeClass}">${escapeHtml(c.role)}</span>
               <span class="badge ${phaseBadgeClass}">${escapeHtml(c.subLabel)}</span>
+              ${flowBadge}
               ${directBadge}
               ${mergedBadge}
             </div>
@@ -2319,8 +2622,8 @@
           </div>
 
           <div class="card-identity">
-            <input type="checkbox" class="card-done-check" ${done ? 'checked' : ''} onchange="setCandidateDone('${escapeHtml(c.id)}', this.checked)" title="対応済みチェック">
             <span class="person-name">${escapeHtml(c.name)}</span>
+            <span class="salutation-tag">宛名: ${escapeHtml(c.salutation)}様（${c.isSurnameOnly ? '名字抽出' : 'フルネーム安全表記'}）</span>
             <span class="person-sub">${escapeHtml(c.kana)}${c.ageStr ? '（' + escapeHtml(c.ageStr) + '）' : ''} ／ ${escapeHtml(c.pref)} ${escapeHtml(c.addr.replace(c.pref, '').slice(0, 12))}</span>
           </div>
 
@@ -2336,12 +2639,13 @@
           ${dispatchHtml}
 
           <div class="card-footer">
-            <button class="btn btn-dark btn-compose" onclick="openMsgModal('${escapeHtml(c.id)}')">
-              文面作成・案件確認
+            <button class="btn ${flow.state === 'hot_remind_due' ? 'btn-orange' : 'btn-dark'} btn-compose" onclick="openMsgModal('${escapeHtml(c.id)}')">
+              ${flow.state === 'hot_remind_due' ? '🔔 翌日リマインド文面作成' : '文面作成・確認'}
             </button>
-            <button class="btn btn-outline btn-check ${done ? 'checked' : ''}" onclick="quickToggleDone('${escapeHtml(c.id)}')">
-              ${done ? '✔ 対応済（戻す）' : '対応済みにする'}
+            <button class="btn btn-outline btn-check" onclick="quickRecordCandidate('${escapeHtml(c.id)}')">
+              ${actionBtnLabel}
             </button>
+            ${resetHistoryBtn}
           </div>
         </article>
       `;
@@ -2356,7 +2660,7 @@
     }
 
     // =========================================================================
-    // 10. Event Handlers, External Links & Modals
+    // 11. Event Handlers, Modals & Shuffle Action
     // =========================================================================
     function switchTab(tab) {
       appState.activeTab = tab;
@@ -2378,22 +2682,26 @@
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    function setCandidateDone(id, isDone) {
-      const c = appState.candidates.find(x => x.id === id);
-      const ids = c ? c.mergedIds : [id];
-      for (const mId of ids) {
-        if (isDone) appState.statuses[mId] = 'done';
-        else delete appState.statuses[mId];
-      }
-      saveStatusesToStorage();
-      render();
-      showToast(isDone ? '対応済みに更新しました' : '未対応に戻しました');
-    }
-
-    function quickToggleDone(id) {
+    function quickRecordCandidate(id) {
       const c = appState.candidates.find(x => x.id === id);
       if (!c) return;
-      setCandidateDone(id, !isCandidateDone(c));
+      const nextStage = recordCandidateAction(c);
+      render();
+      if (nextStage === 'hot_step1') {
+        showToast('初回送信を記録しました（明日リマインド対象として再表示されます）');
+      } else if (nextStage === 'cooldown_30d') {
+        showToast('送信を記録しました（30日間クールダウンで非表示になります）');
+      } else {
+        showToast('送信記録をつけて完了にしました');
+      }
+    }
+
+    function resetSingleCandidateHistory(id) {
+      const c = appState.candidates.find(x => x.id === id);
+      if (!c) return;
+      clearCandidateHistory(c);
+      render();
+      showToast('送信・クールダウン履歴を解除しました');
     }
 
     function onExternalEditClick(id) {
@@ -2405,12 +2713,23 @@
       const c = appState.candidates.find(x => x.id === id);
       if (!c) return;
       appState.activeModalId = id;
+      appState.modalReasonIdx = c.defaultReasonIdx;
 
-      document.getElementById('modalPersonName').textContent = `${c.name} 様（${c.role}）`;
+      const flow = evaluateCandidateFlowState(c);
+      document.getElementById('modalPersonName').textContent = `${c.name}（宛名: ${c.salutation}様）`;
       document.getElementById('modalPersonMeta').textContent = `${c.subLabel} ／ ${c.pref} ／ ID:${c.id}`;
 
+      const shuffleBar = document.getElementById('modalShuffleBar');
+      if (c.tab === 'recent3d') {
+        shuffleBar.style.display = 'flex';
+        document.getElementById('modalReasonBadge').textContent =
+          `自動挿入理由：「${RECENT_3D_REASONS[appState.modalReasonIdx]}」`;
+      } else {
+        shuffleBar.style.display = 'none';
+      }
+
       const dhBox = document.getElementById('modalDirectBox');
-      if (c.nearbyDirectJobs.length) {
+      if (c.nearbyDirectJobs.length && c.tab !== 'recent3d') {
         dhBox.style.display = 'block';
         dhBox.innerHTML = `<div class="box-header"><span>🏠 2km圏内・紹介特別枠（文面に自動挿入済）</span><span>${c.nearbyDirectJobs.length}件</span></div>` +
           c.nearbyDirectJobs.map(d => `
@@ -2424,7 +2743,7 @@
       }
 
       const dpBox = document.getElementById('modalDispatchBox');
-      if (c.nearbyDispatchJobs.length) {
+      if (c.nearbyDispatchJobs.length && c.tab !== 'recent3d' && flow.state !== 'hot_remind_due') {
         dpBox.style.display = 'block';
         dpBox.innerHTML = `<div class="box-header"><span>5km以内の派遣BO案件（BO取得日時順・文面に自動挿入済）</span><span>${c.nearbyDispatchJobs.length}件</span></div>` +
           c.nearbyDispatchJobs.map(j => `
@@ -2437,8 +2756,30 @@
         dpBox.style.display = 'none';
       }
 
-      document.getElementById('modalTextarea').value = generateMessage(c);
+      const primaryBtn = document.getElementById('modalPrimaryActionBtn');
+      if (c.tab === 'hot') {
+        primaryBtn.textContent = flow.state === 'hot_remind_due'
+          ? 'コピーして30日クールダウンへ'
+          : 'コピーして翌日リマインド予約へ';
+      } else if (c.tab === 'dig') {
+        primaryBtn.textContent = 'コピーして30日クールダウンへ';
+      } else {
+        primaryBtn.textContent = 'コピーして送信記録をつける';
+      }
+
+      document.getElementById('modalTextarea').value = generateMessage(c, appState.modalReasonIdx);
       document.getElementById('msgModal').classList.add('open');
+    }
+
+    function shuffleRecent3dReason() {
+      if (!appState.activeModalId) return;
+      const c = appState.candidates.find(x => x.id === appState.activeModalId);
+      if (!c) return;
+      appState.modalReasonIdx = (appState.modalReasonIdx + 1) % RECENT_3D_REASONS.length;
+      c.defaultReasonIdx = appState.modalReasonIdx;
+      document.getElementById('modalReasonBadge').textContent =
+        `自動挿入理由：「${RECENT_3D_REASONS[appState.modalReasonIdx]}」`;
+      document.getElementById('modalTextarea').value = generateMessage(c, appState.modalReasonIdx);
     }
 
     function closeMsgModal() {
@@ -2468,31 +2809,31 @@
       showToast('文面をコピーしました');
     }
 
-    function copyAndMarkDone() {
+    function copyAndRecordAction() {
       const txt = document.getElementById('modalTextarea').value;
       copyTextFallback(txt);
-      if (appState.activeModalId) {
-        setCandidateDone(appState.activeModalId, true);
-      }
+      const id = appState.activeModalId;
       closeMsgModal();
-      showToast('文面をコピーして対応済みにしました');
+      if (id) {
+        quickRecordCandidate(id);
+      }
     }
 
     // =========================================================================
-    // 11. Export & JSON Backup Functions (BOM-prefixed UTF-8 CSV)
+    // 12. CSV Export & Independent History JSON Backup
     // =========================================================================
     function openExportModal() {
-      const todoOnly = document.getElementById('filterTodoOnly').checked;
-      document.getElementById('exportTodoOnlyCheck').checked = todoOnly;
+      const showCd = document.getElementById('filterShowCooldown').checked;
+      document.getElementById('exportIncludeCooldownCheck').checked = showCd;
       refreshExportModalCounts();
       document.getElementById('exportModal').classList.add('open');
     }
 
     function refreshExportModalCounts() {
-      const todoOnly = document.getElementById('exportTodoOnlyCheck').checked;
-      const filteredList = getFilteredCandidates(appState.activeTab, todoOnly);
-      const tabAllList = appState.candidates.filter(c => c.tab === appState.activeTab && (!todoOnly || !isCandidateDone(c)));
-      const masterAllList = appState.candidates.filter(c => !todoOnly || !isCandidateDone(c));
+      const includeCd = document.getElementById('exportIncludeCooldownCheck').checked;
+      const filteredList = getFilteredCandidates(appState.activeTab, includeCd);
+      const tabAllList = appState.candidates.filter(c => c.tab === appState.activeTab && (includeCd || !evaluateCandidateFlowState(c).hidden));
+      const masterAllList = appState.candidates.filter(c => includeCd || !evaluateCandidateFlowState(c).hidden);
 
       document.getElementById('expFilteredCount').textContent = filteredList.length.toLocaleString();
       document.getElementById('expTabAllCount').textContent = tabAllList.length.toLocaleString();
@@ -2524,22 +2865,22 @@
 
     function exportCsvData(mode) {
       const modalOpen = document.getElementById('exportModal').classList.contains('open');
-      const todoOnly = modalOpen
-        ? document.getElementById('exportTodoOnlyCheck').checked
-        : document.getElementById('filterTodoOnly').checked;
+      const includeCd = modalOpen
+        ? document.getElementById('exportIncludeCooldownCheck').checked
+        : document.getElementById('filterShowCooldown').checked;
 
       let targetList = [];
       let scopeLabel = '';
 
       if (mode === 'filtered') {
-        targetList = getFilteredCandidates(appState.activeTab, todoOnly);
+        targetList = getFilteredCandidates(appState.activeTab, includeCd);
         scopeLabel = `${TAB_NAMES[appState.activeTab]}_表示条件`;
       } else if (mode === 'tab_all') {
-        targetList = appState.candidates.filter(c => c.tab === appState.activeTab && (!todoOnly || !isCandidateDone(c)));
+        targetList = appState.candidates.filter(c => c.tab === appState.activeTab && (includeCd || !evaluateCandidateFlowState(c).hidden));
         scopeLabel = `${TAB_NAMES[appState.activeTab]}_全件`;
       } else {
-        targetList = appState.candidates.filter(c => !todoOnly || !isCandidateDone(c));
-        scopeLabel = '全4タブ一括';
+        targetList = appState.candidates.filter(c => includeCd || !evaluateCandidateFlowState(c).hidden);
+        scopeLabel = '全5タブ一括';
       }
 
       if (!targetList.length) {
@@ -2550,10 +2891,11 @@
       const headers = [
         'タブ区分',
         'アプローチフェーズ',
-        '対応状況',
+        '追客・クールダウン状態',
         '応募者ID',
         '統合ID一覧',
         '氏名',
+        '自動抽出宛名',
         'フリガナ',
         '年齢',
         '都道府県',
@@ -2573,7 +2915,7 @@
       const csvLines = [headers.map(escapeCsvCell).join(',')];
 
       for (const c of targetList) {
-        const done = isCandidateDone(c);
+        const flow = evaluateCandidateFlowState(c);
         const directSummary = c.nearbyDirectJobs
           .map(d => `${d.title}(約${d.dist.toFixed(1)}km)`)
           .join(' / ');
@@ -2584,10 +2926,11 @@
         const row = [
           TAB_NAMES[c.tab] || c.tab,
           c.subLabel,
-          done ? '対応済' : '未対応',
+          flow.label || '未送信（対象）',
           c.id,
           c.mergedIds.join(';'),
           c.name,
+          `${c.salutation}様`,
           c.kana,
           c.ageStr,
           c.pref,
@@ -2615,32 +2958,32 @@
       showToast(`${targetList.length.toLocaleString()}件をCSVエクスポートしました`);
     }
 
-    function exportStatusBackupJson() {
+    function exportHistoryBackupJson() {
       const payload = {
-        app: 'bstyle-followup',
+        app: 'bstyle-followup-history',
         exportedAt: new Date().toISOString(),
-        statuses: appState.statuses
+        history: appState.history
       };
       const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
       const dateStr = formatDateShort(appState.baseDate).replace(/\//g, '');
-      triggerDownload(blob, `ビースタイル消込バックアップ_${dateStr}.json`);
-      showToast('消込履歴(JSON)を保存しました');
+      triggerDownload(blob, `ビースタイル送信履歴バックアップ_${dateStr}.json`);
+      showToast('送信・クールダウン履歴(JSON)を保存しました');
     }
 
-    function importStatusBackupJson(ev) {
+    function importHistoryBackupJson(ev) {
       const file = ev.target.files[0];
       if (!file) return;
       const reader = new FileReader();
       reader.onload = function(e) {
         try {
           const parsed = JSON.parse(e.target.result);
-          const incoming = parsed && parsed.statuses ? parsed.statuses : parsed;
+          const incoming = parsed && parsed.history ? parsed.history : parsed;
           if (incoming && typeof incoming === 'object') {
-            appState.statuses = { ...appState.statuses, ...incoming };
-            saveStatusesToStorage();
+            appState.history = { ...appState.history, ...incoming };
+            saveHistoryToStorage();
             render();
             refreshExportModalCounts();
-            showToast('消込履歴を復元しました');
+            showToast('送信・クールダウン履歴を復元しました');
           } else {
             showToast('バックアップJSONの形式が正しくありません');
           }
@@ -2653,7 +2996,7 @@
     }
 
     // =========================================================================
-    // 12. CSV Upload, Settings & Summary Modals
+    // 13. CSV Upload, Settings & Summary Modals
     // =========================================================================
     function openUploadModal() { document.getElementById('uploadModal').classList.add('open'); }
     function closeUploadModal() { document.getElementById('uploadModal').classList.remove('open'); }
@@ -2684,11 +3027,12 @@
 
     function openSummaryModal() {
       const grid = document.getElementById('summaryStatsGrid');
+      const historyCount = Object.keys(appState.history).length;
       grid.innerHTML = `
         <div class="summary-item"><div class="summary-label">CSV総レコード数</div><div class="summary-value">${appState.stats.totalRows.toLocaleString()}件</div></div>
         <div class="summary-item"><div class="summary-label">重複名寄せ統合</div><div class="summary-value">-${appState.stats.mergedCount.toLocaleString()}件</div></div>
         <div class="summary-item"><div class="summary-label">稼働中・FIX済除外</div><div class="summary-value">-${appState.stats.excludedActive.toLocaleString()}名</div></div>
-        <div class="summary-item"><div class="summary-label">ハードNG・紹介専任除外</div><div class="summary-value">-${(appState.stats.excludedHardNg + appState.stats.excludedDirectOnly).toLocaleString()}名</div></div>
+        <div class="summary-item"><div class="summary-label">独立ストレージ蓄積履歴キー</div><div class="summary-value">${historyCount.toLocaleString()}件</div></div>
       `;
 
       const logEl = document.getElementById('mergeLogList');
@@ -2707,6 +3051,7 @@
       document.getElementById('jobMasterSummary').innerHTML = `
         <div>・5km以内検索用（派遣・紹介予定派遣BO）：計 ${appState.dispatchJobMaster.length.toLocaleString()}件（介護: ${careDisp}件 ／ 看護: ${nurseDisp}件）</div>
         <div style="margin-top:4px;">・2km以内特別フック用（紹介求人）：計 ${appState.directJobMaster.length.toLocaleString()}件（介護: ${careDir}件 ／ 看護: ${nurseDir}件）</div>
+        <div style="margin-top:4px; color:var(--orange-hover); font-weight:700;">※送信履歴・翌日リマインド・30日クールダウンはCSVとは独立した領域に永続保存されています。</div>
       `;
 
       document.getElementById('summaryModal').classList.add('open');
@@ -2722,7 +3067,7 @@
     }
 
     function readCsvFile(file) {
-      showToast('CSVを解析しています...');
+      showToast('CSVを解析しています（送信履歴は維持されます）...');
       const reader = new FileReader();
       reader.onload = function(e) {
         const buffer = e.target.result;
@@ -2740,24 +3085,24 @@
         saveCsvRowsToStorage(rows);
         processRawRecords(rows, false);
         closeUploadModal();
-        showToast(`${rows.length.toLocaleString()}件のCSVを読み込みました`);
+        showToast(`${rows.length.toLocaleString()}件のCSVを読み込みました（履歴保持済）`);
       };
       reader.readAsArrayBuffer(file);
     }
 
     function loadBuiltInDemo() {
-      try { localStorage.removeItem(DATA_STORAGE_KEY); } catch (e) {}
+      try { localStorage.removeItem(CSV_CACHE_STORAGE_KEY); } catch (e) {}
       processRawRecords(DEMO_RAW_ROWS, true);
       closeUploadModal();
       showToast('デモデータに戻しました');
     }
 
-    function clearSavedStatuses() {
-      appState.statuses = {};
-      saveStatusesToStorage();
+    function clearPersistedHistory() {
+      appState.history = {};
+      saveHistoryToStorage();
       render();
       closeUploadModal();
-      showToast('対応済チェックをリセットしました');
+      showToast('蓄積された送信・クールダウン履歴をリセットしました');
     }
 
     let toastTimer = null;
@@ -2766,12 +3111,12 @@
       el.textContent = msg;
       el.classList.add('show');
       clearTimeout(toastTimer);
-      toastTimer = setTimeout(() => el.classList.remove('show'), 2400);
+      toastTimer = setTimeout(() => el.classList.remove('show'), 2600);
     }
 
     window.addEventListener('DOMContentLoaded', () => {
       loadPersistedState();
-      document.getElementById('exportTodoOnlyCheck').addEventListener('change', refreshExportModalCounts);
+      document.getElementById('exportIncludeCooldownCheck').addEventListener('change', refreshExportModalCounts);
 
       const savedRows = loadSavedCsvRows();
       if (savedRows) {
