@@ -3,28 +3,34 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>介護・看護派遣 週次フォロー管理（4タブ・5kmBO・2km紹介フック版）</title>
+  <title>ビースタイル 追客・掘り起こし管理</title>
   <style>
     :root {
-      --bg: #f1f5f9;
+      --bg: #f4f4f5;
       --surface: #ffffff;
-      --surface-alt: #f8fafc;
-      --text: #0f172a;
-      --text-muted: #64748b;
-      --border: #e2e8f0;
-      --future: #2563eb;
-      --future-bg: #eff6ff;
-      --chance: #d97706;
-      --chance-bg: #fffbeb;
-      --hot: #e11d48;
-      --hot-bg: #fff1f2;
-      --dig: #0d9488;
-      --dig-bg: #f0fdfa;
-      --ok: #16a34a;
-      --ok-bg: #f0fdf4;
-      --direct: #7c3aed;
-      --direct-bg: #f5f3ff;
-      --radius: 14px;
+      --surface-subtle: #fafafa;
+      --header-bg: #111827;
+      --header-border: #1f2937;
+      --text: #111827;
+      --text-secondary: #4b5563;
+      --text-muted: #9ca3af;
+      --border: #e5e7eb;
+      --border-strong: #d1d5db;
+      --orange: #f97316;
+      --orange-hover: #ea580c;
+      --orange-soft: #fff7ed;
+      --orange-border: #fed7aa;
+      --amber: #d97706;
+      --amber-soft: #fffbeb;
+      --rose: #e11d48;
+      --rose-soft: #fff1f2;
+      --teal: #0d9488;
+      --teal-soft: #f0fdfa;
+      --purple: #7c3aed;
+      --purple-soft: #f5f3ff;
+      --success: #16a34a;
+      --success-soft: #f0fdf4;
+      --radius: 10px;
     }
 
     * {
@@ -34,365 +40,551 @@
 
     body {
       margin: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Inter", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif;
       background: var(--bg);
       color: var(--text);
       font-size: 14px;
-      line-height: 1.45;
+      line-height: 1.5;
       padding-bottom: 84px;
+      -webkit-font-smoothing: antialiased;
     }
 
-    /* Sticky Header */
-    .header {
+    /* Sleek Black & Orange SaaS Header */
+    .site-header {
       position: sticky;
       top: 0;
       z-index: 30;
-      background: #0f172a;
-      color: #fff;
-      padding: 10px 12px 0;
-      box-shadow: 0 2px 10px rgba(15, 23, 42, 0.25);
+      background: var(--header-bg);
+      color: #ffffff;
+      border-bottom: 1px solid var(--header-border);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.16);
+    }
+
+    .header-inner {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 12px 16px 0;
     }
 
     .header-top {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 8px;
-      margin-bottom: 8px;
+      gap: 10px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
     }
 
-    .brand {
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 9px;
       min-width: 0;
     }
 
-    .brand-title {
-      font-size: 14px;
-      font-weight: 800;
+    .brand-mark {
+      width: 28px;
+      height: 28px;
+      border-radius: 7px;
+      background: var(--orange);
+      color: #111827;
+      font-weight: 900;
+      font-size: 15px;
       display: flex;
       align-items: center;
-      gap: 6px;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .brand-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #ffffff;
+      letter-spacing: -0.01em;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
 
-    .badge-mode {
-      background: rgba(59, 130, 246, 0.25);
-      color: #93c5fd;
-      border: 1px solid rgba(59, 130, 246, 0.45);
-      padding: 1px 6px;
+    .data-pill {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
       border-radius: 999px;
-      font-size: 10px;
-      font-weight: 700;
+      background: #1f2937;
+      color: #d1d5db;
+      border: 1px solid #374151;
+      white-space: nowrap;
     }
 
-    .brand-sub {
-      font-size: 10px;
-      color: #94a3b8;
-      margin-top: 1px;
+    .data-pill.is-live {
+      background: rgba(249, 115, 22, 0.18);
+      color: #fdba74;
+      border-color: rgba(249, 115, 22, 0.45);
     }
 
     .header-actions {
       display: flex;
-      gap: 5px;
-      flex-shrink: 0;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
     }
 
-    .btn-top {
-      border: none;
-      border-radius: 9px;
-      padding: 7px 9px;
-      font-size: 11px;
-      font-weight: 700;
-      cursor: pointer;
+    .btn {
       display: inline-flex;
       align-items: center;
-      gap: 3px;
+      justify-content: center;
+      gap: 4px;
+      padding: 7px 11px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid transparent;
+      text-decoration: none;
+      transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
       white-space: nowrap;
     }
 
-    .btn-csv { background: #2563eb; color: #fff; }
-    .btn-csv:active { background: #1d4ed8; }
-    .btn-info { background: #1e293b; color: #e2e8f0; border: 1px solid #334155; }
-
-    /* 4 Main Tabs */
-    .tabs {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 2px;
+    .btn-orange {
+      background: var(--orange);
+      color: #ffffff;
     }
 
-    .tab-btn {
+    .btn-orange:hover {
+      background: var(--orange-hover);
+    }
+
+    .btn-dark {
+      background: #111827;
+      color: #ffffff;
+    }
+
+    .btn-dark:hover {
+      background: #1f2937;
+    }
+
+    .btn-header-ghost {
+      background: #1f2937;
+      color: #f3f4f6;
+      border-color: #374151;
+    }
+
+    .btn-header-ghost:hover {
+      background: #374151;
+      color: #ffffff;
+    }
+
+    .btn-header-orange-outline {
+      background: rgba(249, 115, 22, 0.12);
+      color: #fdba74;
+      border-color: rgba(249, 115, 22, 0.5);
+    }
+
+    .btn-header-orange-outline:hover {
+      background: rgba(249, 115, 22, 0.24);
+      color: #ffffff;
+    }
+
+    .btn-outline {
+      background: var(--surface);
+      color: var(--text-secondary);
+      border-color: var(--border-strong);
+    }
+
+    .btn-outline:hover {
+      background: var(--surface-subtle);
+      color: var(--text);
+    }
+
+    /* Clean SaaS Underline Navigation Tabs */
+    .nav-tabs {
+      display: flex;
+      gap: 4px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    .nav-tabs::-webkit-scrollbar {
+      display: none;
+    }
+
+    .nav-tab {
+      position: relative;
       background: transparent;
       border: none;
       border-bottom: 3px solid transparent;
-      color: #94a3b8;
-      padding: 8px 2px;
+      padding: 10px 14px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #9ca3af;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+      transition: color 0.15s ease, border-color 0.15s ease;
+    }
+
+    @media (max-width: 520px) {
+      .nav-tab {
+        flex: 1;
+        justify-content: center;
+        padding: 10px 4px;
+        font-size: 12px;
+        gap: 4px;
+      }
+    }
+
+    .nav-tab:hover {
+      color: #f3f4f6;
+    }
+
+    .nav-tab.active {
+      color: #ffffff;
+      border-bottom-color: var(--orange);
+    }
+
+    .tab-badge {
       font-size: 11px;
       font-weight: 700;
-      cursor: pointer;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 2px;
-      transition: all 0.15s ease;
-    }
-
-    .tab-label {
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      max-width: 100%;
-    }
-
-    .tab-btn .count {
-      background: #1e293b;
-      color: #cbd5e1;
-      padding: 0 6px;
+      padding: 1px 7px;
       border-radius: 999px;
-      font-size: 10px;
-      font-weight: 800;
+      background: #1f2937;
+      color: #d1d5db;
     }
 
-    .tab-btn.active { color: #fff; }
-    .tab-btn.active[data-tab="future"] { border-bottom-color: #3b82f6; }
-    .tab-btn.active[data-tab="future"] .count { background: var(--future); color: #fff; }
-    .tab-btn.active[data-tab="chance"] { border-bottom-color: #f59e0b; }
-    .tab-btn.active[data-tab="chance"] .count { background: var(--chance); color: #fff; }
-    .tab-btn.active[data-tab="hot"] { border-bottom-color: #f43f5e; }
-    .tab-btn.active[data-tab="hot"] .count { background: var(--hot); color: #fff; }
-    .tab-btn.active[data-tab="dig"] { border-bottom-color: #14b8a6; }
-    .tab-btn.active[data-tab="dig"] .count { background: var(--dig); color: #fff; }
+    .nav-tab.active .tab-badge {
+      background: var(--orange);
+      color: #111827;
+    }
 
-    /* Container */
-    .container {
-      max-width: 780px;
+    /* Main Container */
+    .main-container {
+      max-width: 980px;
       margin: 0 auto;
-      padding: 10px 12px;
+      padding: 14px 16px;
     }
 
-    /* Per-Tab Collapsible Spec Accordion */
-    .spec-accordion {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      margin-bottom: 10px;
-      overflow: hidden;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.03);
-    }
-
-    .spec-toggle {
-      width: 100%;
-      background: var(--surface);
-      border: none;
-      padding: 9px 12px;
-      font-size: 12px;
-      font-weight: 800;
-      color: #334155;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      cursor: pointer;
-      text-align: left;
-    }
-
-    .spec-toggle:active { background: #f8fafc; }
-
-    .spec-body {
-      display: none;
-      padding: 10px 12px 12px;
-      border-top: 1px dashed var(--border);
-      background: #f8fafc;
-      font-size: 12px;
-      color: #334155;
-    }
-
-    .spec-body.open { display: block; }
-    .spec-body ul { margin: 6px 0 0; padding-left: 18px; }
-    .spec-body li { margin-bottom: 4px; }
-
-    /* Filters */
-    .filters {
+    /* Per-Tab Collapsible <details> Criteria Block */
+    details.criteria-details {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 10px;
-      margin-bottom: 10px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+      margin-bottom: 12px;
+      overflow: hidden;
     }
 
-    .filter-grid-3 {
+    details.criteria-details summary {
+      list-style: none;
+      padding: 10px 14px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-secondary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      user-select: none;
+    }
+
+    details.criteria-details summary::-webkit-details-marker {
+      display: none;
+    }
+
+    details.criteria-details summary:hover {
+      background: var(--surface-subtle);
+      color: var(--text);
+    }
+
+    details.criteria-details summary::after {
+      content: "開く ▼";
+      font-size: 11px;
+      color: var(--orange);
+      font-weight: 700;
+    }
+
+    details.criteria-details[open] summary::after {
+      content: "閉じる ▲";
+    }
+
+    .criteria-body {
+      padding: 12px 14px;
+      border-top: 1px solid var(--border);
+      background: #fafafa;
+      font-size: 12px;
+      color: var(--text-secondary);
+      line-height: 1.65;
+    }
+
+    .criteria-body ul {
+      margin: 6px 0 0;
+      padding-left: 18px;
+    }
+
+    .criteria-body li {
+      margin-bottom: 4px;
+    }
+
+    .criteria-body code {
+      background: var(--orange-soft);
+      color: #9a3412;
+      padding: 1px 5px;
+      border-radius: 4px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 11px;
+    }
+
+    /* Filter Panel */
+    .filter-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px;
+      margin-bottom: 12px;
+    }
+
+    .filter-row {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 6px;
-      margin-bottom: 6px;
+      gap: 8px;
+      margin-bottom: 8px;
     }
 
-    @media (max-width: 480px) {
-      .filter-grid-3 {
+    @media (max-width: 640px) {
+      .filter-row {
         grid-template-columns: 1fr;
       }
+    }
+
+    .filter-row-bottom {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .filter-row-bottom input[type="text"] {
+      flex: 1;
+      min-width: 200px;
+    }
+
+    .checkbox-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      cursor: pointer;
+      padding: 6px 10px;
+      border-radius: 8px;
+      background: var(--surface-subtle);
+      border: 1px solid var(--border);
+      white-space: nowrap;
+      user-select: none;
+    }
+
+    .checkbox-label input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--orange);
+      cursor: pointer;
     }
 
     select, input[type="text"], input[type="date"], input[type="url"] {
       width: 100%;
       padding: 8px 10px;
-      border: 1px solid #cbd5e1;
-      border-radius: 10px;
-      font-size: 12px;
-      background: #fff;
+      border: 1px solid var(--border-strong);
+      border-radius: 8px;
+      font-size: 13px;
+      background: var(--surface);
       color: var(--text);
       outline: none;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
     }
 
-    select:focus, input:focus { border-color: var(--future); }
-
-    .status-pills {
-      display: flex;
-      gap: 4px;
-      margin-top: 6px;
+    select:focus, input:focus {
+      border-color: var(--orange);
+      box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.16);
     }
 
-    .pill-btn {
-      flex: 1;
-      padding: 7px 4px;
-      border-radius: 9px;
-      border: 1px solid var(--border);
-      background: var(--surface-alt);
-      color: var(--text-muted);
-      font-size: 11px;
-      font-weight: 700;
-      cursor: pointer;
-      text-align: center;
-    }
-
-    .pill-btn.active {
-      background: #0f172a;
-      color: #fff;
-      border-color: #0f172a;
-    }
-
-    /* List Meta */
-    .list-meta {
+    /* Action Toolbar above cards */
+    .list-toolbar {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-size: 11px;
-      color: var(--text-muted);
-      margin-bottom: 8px;
-      padding: 0 2px;
       flex-wrap: wrap;
-      gap: 4px;
-    }
-
-    /* Candidate Card */
-    .card {
+      gap: 8px;
+      margin-bottom: 10px;
+      padding: 8px 12px;
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 12px;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .toolbar-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .toolbar-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    /* Candidate Card */
+    .candidate-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 4px solid #111827;
+      border-radius: var(--radius);
+      padding: 14px;
       margin-bottom: 10px;
-      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
     }
 
-    .card.is-done {
+    .candidate-card:hover {
+      border-color: var(--border-strong);
+      border-left-color: var(--orange);
+      box-shadow: 0 2px 10px rgba(17, 24, 39, 0.06);
+    }
+
+    .candidate-card.is-done {
       opacity: 0.62;
-      background: #f8fafc;
+      border-left-color: var(--success);
+      background: #fafafa;
     }
 
-    .card-head {
+    .card-top {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
+      gap: 8px;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+    }
+
+    .badge-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      align-items: center;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      line-height: 1.4;
+    }
+
+    .badge-orange { background: var(--orange-soft); color: #c2410c; border: 1px solid var(--orange-border); }
+    .badge-dark { background: #111827; color: #ffffff; }
+    .badge-amber { background: var(--amber-soft); color: var(--amber); }
+    .badge-rose { background: var(--rose-soft); color: var(--rose); }
+    .badge-teal { background: var(--teal-soft); color: var(--teal); }
+    .badge-purple { background: var(--purple-soft); color: var(--purple); border: 1px solid #ddd6fe; }
+    .badge-neutral { background: #f3f4f6; color: var(--text-secondary); }
+    .badge-success { background: var(--success-soft); color: var(--success); }
+
+    .card-links {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .link-chip {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      background: #f3f4f6;
+      border: 1px solid var(--border);
+      padding: 4px 8px;
+      border-radius: 6px;
+      text-decoration: none;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .link-chip:hover {
+      background: #e5e7eb;
+      color: var(--text);
+    }
+
+    .btn-crm-edit {
+      font-size: 11px;
+      font-weight: 700;
+      color: #ffffff;
+      background: #111827;
+      border: 1px solid #111827;
+      padding: 4px 9px;
+      border-radius: 6px;
+      text-decoration: none;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .btn-crm-edit:hover {
+      background: var(--orange);
+      border-color: var(--orange);
+    }
+
+    .card-identity {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
       gap: 8px;
       margin-bottom: 6px;
     }
 
-    .card-badges {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 4px;
-      align-items: center;
-    }
-
-    .tag {
-      display: inline-flex;
-      align-items: center;
-      gap: 3px;
-      padding: 2px 7px;
-      border-radius: 6px;
-      font-size: 11px;
-      font-weight: 700;
-    }
-
-    .tag-future { background: var(--future-bg); color: var(--future); }
-    .tag-chance { background: var(--chance-bg); color: var(--chance); }
-    .tag-hot { background: var(--hot-bg); color: var(--hot); }
-    .tag-dig { background: var(--dig-bg); color: var(--dig); }
-    .tag-gray { background: #f1f5f9; color: #475569; }
-    .tag-warn { background: #fef3c7; color: #92400e; }
-    .tag-danger { background: #fee2e2; color: #b91c1c; }
-    .tag-ok { background: var(--ok-bg); color: var(--ok); }
-    .tag-direct { background: var(--direct-bg); color: var(--direct); border: 1px solid #ddd6fe; }
-
-    .sys-actions {
-      display: flex;
-      gap: 4px;
+    .card-done-check {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--orange);
+      cursor: pointer;
       flex-shrink: 0;
     }
 
-    .sys-link {
-      font-size: 11px;
-      color: var(--future);
-      background: var(--future-bg);
-      padding: 4px 7px;
-      border-radius: 7px;
-      font-weight: 700;
-      border: none;
-      cursor: pointer;
-      white-space: nowrap;
-      text-decoration: none;
-      display: inline-flex;
-      align-items: center;
-      gap: 2px;
+    .person-name {
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--text);
     }
 
-    .card-name-row {
-      display: flex;
-      align-items: baseline;
-      gap: 6px;
-      flex-wrap: wrap;
-      margin-bottom: 4px;
-    }
-
-    .card-name { font-size: 16px; font-weight: 800; }
-    .card-kana { font-size: 11px; color: var(--text-muted); }
-
-    .card-subinfo {
+    .person-sub {
       font-size: 12px;
-      color: #334155;
+      color: var(--text-secondary);
+    }
+
+    .card-meta {
       display: flex;
       flex-wrap: wrap;
-      gap: 4px 10px;
-      margin-bottom: 8px;
+      gap: 4px 14px;
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-bottom: 10px;
     }
 
-    /* Complement Warning Box */
-    .complement-alert {
-      background: #fef2f2;
-      border: 1px solid #fecaca;
-      border-radius: 10px;
+    /* Auto-Complement Warning Banner */
+    .alert-complement {
+      background: var(--amber-soft);
+      border: 1px solid #fde68a;
+      border-radius: 8px;
       padding: 8px 10px;
-      font-size: 11px;
-      color: #991b1b;
-      margin-bottom: 8px;
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-    }
-
-    .complement-alert-row {
+      margin-bottom: 10px;
+      font-size: 12px;
+      color: #92400e;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -400,142 +592,116 @@
       flex-wrap: wrap;
     }
 
-    .btn-fix-crm {
-      background: #dc2626;
-      color: #fff;
+    .btn-fix-link {
+      background: #d97706;
+      color: #ffffff;
       text-decoration: none;
-      padding: 4px 9px;
-      border-radius: 7px;
-      font-weight: 800;
       font-size: 11px;
-      display: inline-flex;
-      align-items: center;
-      gap: 3px;
+      font-weight: 700;
+      padding: 5px 10px;
+      border-radius: 6px;
+      white-space: nowrap;
+      cursor: pointer;
+      border: none;
     }
 
-    .pref-box {
-      background: #fffbeb;
-      border: 1px solid #fde68a;
-      border-radius: 10px;
-      padding: 7px 9px;
+    .btn-fix-link:hover {
+      background: #b45309;
+    }
+
+    /* Known Preferences */
+    .pref-summary {
+      background: #f9fafb;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 7px 10px;
       font-size: 12px;
-      color: #78350f;
-      margin-bottom: 8px;
-    }
-
-    /* 2km Direct-Hire Hook Box */
-    .direct-hook-box {
-      background: var(--direct-bg);
-      border: 1px solid #c4b5fd;
-      border-radius: 10px;
-      padding: 8px 9px;
-      margin-bottom: 8px;
-    }
-
-    .direct-hook-title {
-      font-size: 11px;
-      font-weight: 800;
-      color: #5b21b6;
-      margin-bottom: 4px;
-      display: flex;
-      justify-content: space-between;
-    }
-
-    .direct-hook-item {
-      font-size: 11px;
-      color: #4c1d95;
-      display: flex;
-      justify-content: space-between;
-      gap: 6px;
-      padding-top: 3px;
-      border-top: 1px dashed #ddd6fe;
-    }
-
-    .direct-hook-item:first-of-type { border-top: none; padding-top: 0; }
-
-    /* 5km Dispatch BO Jobs Box */
-    .jobs-box {
-      background: #f0f9ff;
-      border: 1px solid #bae6fd;
-      border-radius: 10px;
-      padding: 7px 9px;
+      color: var(--text-secondary);
       margin-bottom: 10px;
     }
 
-    .jobs-title {
-      font-size: 11px;
-      font-weight: 800;
-      color: #0369a1;
-      margin-bottom: 4px;
+    /* 2km Direct-Hire Hook Block */
+    .direct-box {
+      background: var(--purple-soft);
+      border: 1px solid #ddd6fe;
+      border-radius: 8px;
+      padding: 8px 10px;
+      margin-bottom: 10px;
+    }
+
+    .box-header {
       display: flex;
       justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 4px;
-    }
-
-    .job-item {
-      font-size: 11px;
-      color: #0c4a6e;
-      padding: 4px 0;
-      border-top: 1px dashed #bae6fd;
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 6px;
-    }
-
-    .job-item:first-of-type { border-top: none; padding-top: 0; }
-
-    .job-meta-right {
-      text-align: right;
-      flex-shrink: 0;
-    }
-
-    .job-dist {
-      font-weight: 800;
-      color: #0284c7;
-      display: block;
-    }
-
-    .job-bo-date {
-      font-size: 10px;
-      color: #475569;
-    }
-
-    .card-actions {
-      display: grid;
-      grid-template-columns: 1.4fr 1fr;
-      gap: 6px;
-    }
-
-    .btn-action {
-      border: none;
-      border-radius: 10px;
-      padding: 10px 8px;
-      font-size: 12px;
-      font-weight: 800;
-      cursor: pointer;
-      display: inline-flex;
       align-items: center;
-      justify-content: center;
-      gap: 4px;
+      font-size: 11px;
+      font-weight: 700;
+      margin-bottom: 5px;
     }
 
-    .btn-msg-future { background: var(--future); color: #fff; }
-    .btn-msg-chance { background: var(--chance); color: #fff; }
-    .btn-msg-hot { background: var(--hot); color: #fff; }
-    .btn-msg-dig { background: var(--dig); color: #fff; }
+    .direct-box .box-header { color: var(--purple); }
 
-    .btn-done-toggle {
-      background: #f1f5f9;
-      color: #334155;
-      border: 1px solid #cbd5e1;
+    .job-line {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      padding: 5px 0;
+      border-top: 1px solid rgba(0, 0, 0, 0.06);
     }
 
-    .btn-done-toggle.done {
-      background: var(--ok-bg);
-      color: var(--ok);
-      border-color: #86efac;
+    .job-line:first-of-type {
+      border-top: none;
+      padding-top: 0;
+    }
+
+    /* 5km Dispatch BO Block */
+    .dispatch-box {
+      background: #fffaf5;
+      border: 1px solid var(--orange-border);
+      border-radius: 8px;
+      padding: 8px 10px;
+      margin-bottom: 12px;
+    }
+
+    .dispatch-box .box-header { color: #c2410c; }
+
+    .job-dist-col {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+
+    .job-dist-val {
+      font-weight: 700;
+      color: var(--orange-hover);
+    }
+
+    /* Card Footer Actions */
+    .card-footer {
+      display: flex;
+      gap: 8px;
+    }
+
+    .card-footer .btn-compose {
+      flex: 1.6;
+      padding: 10px 12px;
+      font-size: 13px;
+    }
+
+    .card-footer .btn-check {
+      flex: 1;
+      padding: 10px 12px;
+      font-size: 13px;
+    }
+
+    .btn-check.checked {
+      background: var(--success-soft);
+      color: var(--success);
+      border-color: #bbf7d0;
     }
 
     /* Pagination */
@@ -543,340 +709,408 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 10px;
-      margin: 14px 0;
+      gap: 12px;
+      margin-top: 16px;
     }
 
-    .btn-page {
-      background: #fff;
-      border: 1px solid #cbd5e1;
-      border-radius: 10px;
-      padding: 9px 14px;
-      font-size: 12px;
-      font-weight: 700;
-      cursor: pointer;
+    .btn-page:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
     }
 
-    .btn-page:disabled { opacity: 0.4; cursor: not-allowed; }
-
-    /* Modals */
-    .modal-backdrop {
+    /* Modal */
+    .modal-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(15, 23, 42, 0.6);
+      background: rgba(17, 24, 39, 0.6);
       z-index: 50;
       display: none;
       align-items: flex-end;
       justify-content: center;
     }
 
-    .modal-backdrop.open { display: flex; }
-
-    .modal-sheet {
-      background: #fff;
-      width: 100%;
-      max-width: 680px;
-      max-height: 90vh;
-      border-radius: 20px 20px 0 0;
-      padding: 16px;
-      overflow-y: auto;
-      box-shadow: 0 -4px 25px rgba(0,0,0,0.2);
+    .modal-overlay.open {
+      display: flex;
     }
 
     @media (min-width: 640px) {
-      .modal-backdrop { align-items: center; padding: 16px; }
-      .modal-sheet { border-radius: 20px; }
+      .modal-overlay {
+        align-items: center;
+        padding: 16px;
+      }
     }
 
-    .modal-header {
+    .modal-dialog {
+      background: var(--surface);
+      width: 100%;
+      max-width: 660px;
+      max-height: 90vh;
+      border-radius: 14px 14px 0 0;
+      padding: 18px;
+      overflow-y: auto;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.25);
+    }
+
+    @media (min-width: 640px) {
+      .modal-dialog {
+        border-radius: 14px;
+      }
+    }
+
+    .modal-head {
       display: flex;
       justify-content: space-between;
       align-items: center;
+      padding-bottom: 10px;
       margin-bottom: 12px;
-      padding-bottom: 8px;
       border-bottom: 1px solid var(--border);
     }
 
-    .modal-title { font-size: 15px; font-weight: 800; }
-
-    .btn-close {
-      background: #f1f5f9;
-      border: none;
-      width: 32px;
-      height: 32px;
-      border-radius: 999px;
-      font-size: 16px;
-      font-weight: 700;
-      cursor: pointer;
-    }
-
-    textarea.msg-editor {
-      width: 100%;
-      min-height: 240px;
-      border: 1px solid #cbd5e1;
-      border-radius: 12px;
-      padding: 12px;
-      font-size: 13px;
-      line-height: 1.55;
-      font-family: inherit;
-      resize: vertical;
-      background: #f8fafc;
+    .modal-title {
+      font-size: 15px;
+      font-weight: 800;
       color: var(--text);
-      margin-bottom: 10px;
     }
 
-    .modal-btns {
-      display: grid;
-      grid-template-columns: 1fr 1.5fr;
-      gap: 8px;
-      margin-bottom: 8px;
-    }
-
-    .status-row-modal {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 6px;
-    }
-
-    .dropzone {
-      border: 2px dashed #93c5fd;
-      background: #eff6ff;
-      border-radius: 14px;
-      padding: 20px 14px;
-      text-align: center;
+    .btn-icon-close {
+      background: #f3f4f6;
+      border: none;
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
+      font-size: 15px;
+      color: var(--text-secondary);
       cursor: pointer;
+    }
+
+    textarea.msg-box {
+      width: 100%;
+      min-height: 230px;
+      padding: 12px;
+      border: 1px solid var(--border-strong);
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 13px;
+      line-height: 1.6;
+      color: var(--text);
+      background: #fafafa;
+      resize: vertical;
       margin-bottom: 12px;
     }
 
-    .dropzone.dragover { border-color: #2563eb; background: #dbeafe; }
+    .modal-actions {
+      display: grid;
+      grid-template-columns: 1fr 1.6fr;
+      gap: 8px;
+    }
 
-    .stat-grid {
+    .drop-area {
+      border: 2px dashed var(--border-strong);
+      background: #fafafa;
+      border-radius: 10px;
+      padding: 24px 16px;
+      text-align: center;
+      cursor: pointer;
+      margin-bottom: 12px;
+      transition: border-color 0.15s ease, background 0.15s ease;
+    }
+
+    .drop-area:hover, .drop-area.dragover {
+      border-color: var(--orange);
+      background: var(--orange-soft);
+    }
+
+    .summary-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       gap: 8px;
       margin-bottom: 12px;
     }
 
-    .stat-card {
-      background: #f8fafc;
+    .summary-item {
+      background: #fafafa;
       border: 1px solid var(--border);
-      border-radius: 12px;
+      border-radius: 8px;
       padding: 10px;
     }
 
-    .stat-label { font-size: 11px; color: var(--text-muted); }
-    .stat-val { font-size: 18px; font-weight: 800; color: var(--text); }
+    .summary-label {
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+
+    .summary-value {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--text);
+    }
+
+    .export-card-option {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+      background: #fafafa;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
 
     /* Toast */
     .toast {
       position: fixed;
       bottom: 20px;
       left: 50%;
-      transform: translateX(-50%) translateY(20px);
-      background: #0f172a;
-      color: #fff;
-      padding: 10px 18px;
-      border-radius: 999px;
+      transform: translateX(-50%) translateY(16px);
+      background: #111827;
+      color: #ffffff;
+      border: 1px solid var(--orange);
+      padding: 10px 16px;
+      border-radius: 8px;
       font-size: 12px;
       font-weight: 700;
       opacity: 0;
       pointer-events: none;
-      transition: all 0.2s ease;
+      transition: opacity 0.2s ease, transform 0.2s ease;
       z-index: 100;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
       white-space: nowrap;
     }
 
-    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
   </style>
 </head>
 <body>
 
-  <!-- Header -->
-  <header class="header">
-    <div class="header-top">
-      <div class="brand">
-        <div class="brand-title">
-          週次フォロー＆掘り起こし管理
-          <span class="badge-mode" id="dataModeBadge">デモデータ</span>
+  <!-- Sleek Black & Orange SaaS Header -->
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="header-top">
+        <div class="brand-group">
+          <div class="brand-mark">B</div>
+          <span class="brand-title">ビースタイル 追客・掘り起こし管理</span>
+          <span class="data-pill" id="dataModePill">デモデータ</span>
         </div>
-        <div class="brand-sub">派遣・紹介予定派遣｜5kmBO新着順＋2km紹介特別フック</div>
+        <div class="header-actions">
+          <a class="btn btn-header-orange-outline" href="https://kawazoedaichi.github.io/searchOrder/" target="_blank" rel="noopener noreferrer">案件詳細 ↗</a>
+          <button class="btn btn-header-ghost" onclick="openExportModal()">CSV出力</button>
+          <button class="btn btn-header-ghost" onclick="openSettingsModal()">URL設定</button>
+          <button class="btn btn-orange" onclick="openUploadModal()">CSV読込</button>
+        </div>
       </div>
-      <div class="header-actions">
-        <button class="btn-top btn-info" onclick="openSummaryModal()">📊 内訳</button>
-        <button class="btn-top btn-info" onclick="openSettingsModal()">⚙ URL</button>
-        <button class="btn-top btn-csv" onclick="openUploadModal()">📂 CSV読込</button>
-      </div>
-    </div>
 
-    <!-- 4 Tabs -->
-    <nav class="tabs">
-      <button class="tab-btn active" data-tab="future" onclick="switchTab('future')">
-        <span class="tab-label">🗓️ 未来人材</span>
-        <span class="count" id="cnt-future">0</span>
-      </button>
-      <button class="tab-btn" data-tab="chance" onclick="switchTab('chance')">
-        <span class="tab-label">⚡ ワンちゃん未fix</span>
-        <span class="count" id="cnt-chance">0</span>
-      </button>
-      <button class="tab-btn" data-tab="hot" onclick="switchTab('hot')">
-        <span class="tab-label">🔥 激アツ掘起</span>
-        <span class="count" id="cnt-hot">0</span>
-      </button>
-      <button class="tab-btn" data-tab="dig" onclick="switchTab('dig')">
-        <span class="tab-label">🎣 掘り起こし</span>
-        <span class="count" id="cnt-dig">0</span>
-      </button>
-    </nav>
+      <!-- 4 SaaS Underline Navigation Tabs -->
+      <nav class="nav-tabs" role="tablist">
+        <button class="nav-tab active" data-tab="future" onclick="switchTab('future')">
+          <span>未来人材</span>
+          <span class="tab-badge" id="cnt-future">0</span>
+        </button>
+        <button class="nav-tab" data-tab="chance" onclick="switchTab('chance')">
+          <span>未FIX人材</span>
+          <span class="tab-badge" id="cnt-chance">0</span>
+        </button>
+        <button class="nav-tab" data-tab="hot" onclick="switchTab('hot')">
+          <span>激熱掘起</span>
+          <span class="tab-badge" id="cnt-hot">0</span>
+        </button>
+        <button class="nav-tab" data-tab="dig" onclick="switchTab('dig')">
+          <span>通常掘起</span>
+          <span class="tab-badge" id="cnt-dig">0</span>
+        </button>
+      </nav>
+    </div>
   </header>
 
-  <main class="container">
-    <!-- Per-Tab Collapsible Spec Drawer (Closed by default) -->
-    <section class="spec-accordion">
-      <button class="spec-toggle" onclick="toggleTabSpec()">
-        <span id="specToggleTitle">📖 このタブの抽出基準・アプローチ設計を見る</span>
-        <span id="specArrow">▼ 開く</span>
-      </button>
-      <div class="spec-body" id="specBody"></div>
-    </section>
+  <main class="main-container">
+    <!-- Per-Tab Collapsible <details> Block (Closed by default) -->
+    <details class="criteria-details" id="tabDetailsBox">
+      <summary id="tabDetailsSummary">【未来人材】の抽出基準・アプローチ設計を見る</summary>
+      <div class="criteria-body" id="tabDetailsBody"></div>
+    </details>
 
-    <!-- Filters -->
-    <section class="filters">
-      <div class="filter-grid-3">
+    <!-- Filter Panel -->
+    <section class="filter-panel">
+      <div class="filter-row">
         <select id="filterPref" onchange="resetPageAndRender()">
-          <option value="">🗾 都道府県：すべて</option>
+          <option value="">都道府県：すべて</option>
         </select>
         <select id="filterAttendUser" onchange="resetPageAndRender()">
-          <option value="">👤 アテンド担当：すべて</option>
+          <option value="">アテンド担当ユーザー：すべて</option>
         </select>
         <select id="filterBranch" onchange="resetPageAndRender()">
-          <option value="">🏢 担当支店：すべて</option>
+          <option value="">担当支店：すべて</option>
         </select>
       </div>
-      <div class="filter-grid-3">
-        <select id="filterRole" onchange="resetPageAndRender()">
-          <option value="">🩺 職種：すべて</option>
-          <option value="介護">介護（補完含む）</option>
-          <option value="看護">看護（補完含む）</option>
-        </select>
-        <select id="filterSub" onchange="resetPageAndRender()">
-          <option value="">📌 フェーズ：すべて</option>
-        </select>
-        <input type="date" id="baseDateInput" title="判定基準日" onchange="recomputeBaseDate()">
-      </div>
-      <div>
-        <input type="text" id="filterKeyword" placeholder="🔍 氏名・フリガナ・市区町村・応募者IDで検索..." oninput="resetPageAndRender()">
-      </div>
-      <div class="status-pills">
-        <button class="pill-btn active" data-st="todo" onclick="setStatusFilter('todo')">未対応 (<span id="st-cnt-todo">0</span>)</button>
-        <button class="pill-btn" data-st="unanswered" onclick="setStatusFilter('unanswered')">⏳ 未返信 (<span id="st-cnt-unanswered">0</span>)</button>
-        <button class="pill-btn" data-st="done" onclick="setStatusFilter('done')">✔ 済 (<span id="st-cnt-done">0</span>)</button>
-        <button class="pill-btn" data-st="all" onclick="setStatusFilter('all')">すべて (<span id="st-cnt-all">0</span>)</button>
+      <div class="filter-row-bottom">
+        <input type="text" id="filterKeyword" placeholder="氏名・フリガナ・ID・エリア・資格で検索..." oninput="resetPageAndRender()">
+        <label class="checkbox-label">
+          <input type="checkbox" id="filterTodoOnly" checked onchange="resetPageAndRender()">
+          <span>未対応のみ表示</span>
+        </label>
       </div>
     </section>
 
-    <!-- List Meta -->
-    <div class="list-meta">
-      <span id="listCountLabel">表示中: 0件</span>
-      <span id="nearbyMasterLabel">📍 派遣BO(5km): 0件 / 紹介(2km): 0件</span>
+    <!-- Action Toolbar above Cards -->
+    <div class="list-toolbar">
+      <div class="toolbar-left">
+        <strong id="listCountLabel" style="color:var(--text);">該当: 0件（0件表示）</strong>
+        <span id="masterCountLabel">案件マスタ：派遣BO(5km) 0件 ／ 紹介(2km) 0件</span>
+      </div>
+      <div class="toolbar-right">
+        <button class="btn btn-outline" style="padding:5px 10px; font-size:11px;" onclick="openSummaryModal()">名寄せ内訳</button>
+        <button class="btn btn-dark" style="padding:5px 11px; font-size:11px;" onclick="exportCsvData('filtered')">表示中を即CSV出力</button>
+      </div>
     </div>
 
-    <!-- Cards Container (Strict Max 20 DOM nodes) -->
+    <!-- Cards List (Max 20 per page) -->
     <div id="cardsContainer"></div>
 
     <!-- Pagination -->
     <div class="pagination" id="paginationBar" style="display:none;">
-      <button class="btn-page" id="btnPrevPage" onclick="changePage(-1)">‹ 前へ</button>
-      <span id="pageIndicator" style="font-size:12px; font-weight:700;">1 / 1 ページ</span>
-      <button class="btn-page" id="btnNextPage" onclick="changePage(1)">次へ ›</button>
+      <button class="btn btn-outline btn-page" id="btnPrevPage" onclick="changePage(-1)">← 前へ</button>
+      <span id="pageIndicator" style="font-size:12px; font-weight:700; color:var(--text-secondary);">1 / 1</span>
+      <button class="btn btn-outline btn-page" id="btnNextPage" onclick="changePage(1)">次へ →</button>
     </div>
   </main>
 
-  <!-- Message Modal -->
-  <div class="modal-backdrop" id="msgModal" onclick="if(event.target===this) closeMsgModal()">
-    <div class="modal-sheet">
-      <div class="modal-header">
+  <!-- Message Compose & Job Check Modal -->
+  <div class="modal-overlay" id="msgModal" onclick="if(event.target===this) closeMsgModal()">
+    <div class="modal-dialog">
+      <div class="modal-head">
         <div>
-          <div class="modal-title" id="modalPersonName">文面確認・コピー</div>
-          <div style="font-size:11px; color:var(--text-muted);" id="modalPersonMeta"></div>
+          <div class="modal-title" id="modalPersonName">文面作成・案件確認</div>
+          <div style="font-size:12px; color:var(--text-secondary);" id="modalPersonMeta"></div>
         </div>
-        <button class="btn-close" onclick="closeMsgModal()">✕</button>
+        <button class="btn-icon-close" onclick="closeMsgModal()">✕</button>
       </div>
 
-      <div id="modalDirectHookBox" class="direct-hook-box" style="display:none;"></div>
-      <div id="modalNearbyBox" class="jobs-box" style="display:none;"></div>
+      <div id="modalDirectBox" class="direct-box" style="display:none;"></div>
+      <div id="modalDispatchBox" class="dispatch-box" style="display:none;"></div>
 
-      <textarea id="modalTextarea" class="msg-editor"></textarea>
+      <textarea id="modalTextarea" class="msg-box"></textarea>
 
-      <div class="modal-btns">
-        <button class="btn-action btn-done-toggle" onclick="copyMessageOnly()">📋 コピーのみ</button>
-        <button class="btn-action btn-msg-future" id="modalCopyDoneBtn" onclick="copyAndMarkDone()">📋 コピーして「✔ 済」にする</button>
+      <div class="modal-actions">
+        <button class="btn btn-outline" style="padding:11px;" onclick="copyMessageOnly()">文面をコピー</button>
+        <button class="btn btn-orange" style="padding:11px;" onclick="copyAndMarkDone()">コピーして対応済みにする</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Export & Backup Modal -->
+  <div class="modal-overlay" id="exportModal" onclick="if(event.target===this) closeExportModal()">
+    <div class="modal-dialog">
+      <div class="modal-head">
+        <div class="modal-title">CSVエクスポート・消込データバックアップ</div>
+        <button class="btn-icon-close" onclick="closeExportModal()">✕</button>
+      </div>
+      <p style="font-size:12px; color:var(--text-secondary); margin-top:0;">
+        Excelで文字化けせず開ける<strong>BOM付きUTF-8形式</strong>でCSVを出力します。生成メッセージ文面・5km以内候補案件・2km紹介特別枠もすべて列に含まれます。
+      </p>
+
+      <label class="checkbox-label" style="margin-bottom:12px; width:100%;">
+        <input type="checkbox" id="exportTodoOnlyCheck">
+        <span>未対応（未チェック）のみ出力する</span>
+      </label>
+
+      <div style="display:grid; gap:10px; margin-bottom:16px;">
+        <div class="export-card-option">
+          <div>
+            <div style="font-weight:700; font-size:13px;">1. 現在の表示条件でCSV出力</div>
+            <div style="font-size:11px; color:var(--text-secondary);">現在のタブ＋都道府県・担当者・検索条件を反映（<span id="expFilteredCount">0</span>件）</div>
+          </div>
+          <button class="btn btn-orange" onclick="exportCsvData('filtered')">CSV出力</button>
+        </div>
+
+        <div class="export-card-option">
+          <div>
+            <div style="font-weight:700; font-size:13px;">2. 現在のタブ全件をCSV出力</div>
+            <div style="font-size:11px; color:var(--text-secondary);">現在選択中のタブに該当する全レコード（<span id="expTabAllCount">0</span>件）</div>
+          </div>
+          <button class="btn btn-dark" onclick="exportCsvData('tab_all')">CSV出力</button>
+        </div>
+
+        <div class="export-card-option">
+          <div>
+            <div style="font-weight:700; font-size:13px;">3. 全4タブ一括CSV出力</div>
+            <div style="font-size:11px; color:var(--text-secondary);">未来人材・未FIX人材・激熱掘起・通常掘起の全員（<span id="expMasterAllCount">0</span>件）</div>
+          </div>
+          <button class="btn btn-outline" onclick="exportCsvData('all_tabs')">一括出力</button>
+        </div>
       </div>
 
-      <div class="status-row-modal">
-        <button class="pill-btn" onclick="setModalStatus('todo')">未対応に戻す</button>
-        <button class="pill-btn" onclick="setModalStatus('unanswered')">⏳ 未返信にする</button>
-        <button class="pill-btn" onclick="setModalStatus('done')">✔ 済にする</button>
+      <div style="border-top:1px solid var(--border); padding-top:12px;">
+        <div style="font-size:12px; font-weight:700; margin-bottom:4px;">進捗チェック履歴（消込データ）のJSONエクスポート／インポート</div>
+        <div style="font-size:11px; color:var(--text-secondary); margin-bottom:8px;">
+          別PCやスマホへ作業を引き継ぐ場合、チェック状態をJSONファイルで保存・復元できます。
+        </div>
+        <div style="display:flex; gap:8px;">
+          <button class="btn btn-outline" style="flex:1;" onclick="exportStatusBackupJson()">消込履歴を保存(JSON)</button>
+          <button class="btn btn-outline" style="flex:1;" onclick="document.getElementById('statusBackupInput').click()">消込履歴を復元(JSON)</button>
+          <input type="file" id="statusBackupInput" accept=".json,application/json" style="display:none" onchange="importStatusBackupJson(event)">
+        </div>
       </div>
     </div>
   </div>
 
   <!-- CSV Upload Modal -->
-  <div class="modal-backdrop" id="uploadModal" onclick="if(event.target===this) closeUploadModal()">
-    <div class="modal-sheet">
-      <div class="modal-header">
-        <div class="modal-title">📂 実CSV取り込み（1ファイル完結）</div>
-        <button class="btn-close" onclick="closeUploadModal()">✕</button>
+  <div class="modal-overlay" id="uploadModal" onclick="if(event.target===this) closeUploadModal()">
+    <div class="modal-dialog">
+      <div class="modal-head">
+        <div class="modal-title">CSV読込（1ファイル完結・ブラウザ内処理）</div>
+        <button class="btn-icon-close" onclick="closeUploadModal()">✕</button>
       </div>
-      <p style="font-size:12px; color:#475569; margin-top:0;">
-        基幹システム出力CSV（125列・UTF-8/Shift-JIS自動判定）を1ファイル読み込むだけで、<strong>重複名寄せ・派遣/紹介予定派遣フィルタ・職種自動補完・5km新着BO抽出・2km紹介特別フック</strong>が自動完了します。
+      <p style="font-size:12px; color:var(--text-secondary); margin-top:0;">
+        125列CSV（UTF-8 / Shift-JIS自動判定）を選択してください。データは外部サーバーへ送信されず、お使いの端末のブラウザ内のみで処理・保存されます。
       </p>
-      <div class="dropzone" id="dropzone" onclick="document.getElementById('csvFileInput').click()">
-        <div style="font-size:28px; margin-bottom:6px;">📄</div>
-        <div style="font-weight:800; color:#1e3a8a; margin-bottom:4px;">タップしてCSVファイルを選択</div>
-        <div style="font-size:11px; color:#3b82f6;">PCの場合はドラッグ＆ドロップも可能（6,600件超でも数秒で処理）</div>
+      <div class="drop-area" id="dropzone" onclick="document.getElementById('csvFileInput').click()">
+        <div style="font-weight:800; color:var(--text); margin-bottom:4px;">クリックしてCSVファイルを選択</div>
+        <div style="font-size:12px; color:var(--text-secondary);">またはここにファイルをドラッグ＆ドロップ</div>
         <input type="file" id="csvFileInput" accept=".csv,text/csv" style="display:none" onchange="handleFileSelect(event)">
       </div>
-      <div style="display:flex; justify-content:space-between; gap:8px;">
-        <button class="btn-page" style="flex:1;" onclick="loadBuiltInDemo()">🔄 デモデータに戻す</button>
-        <button class="btn-page" style="flex:1; color:#dc2626;" onclick="clearSavedStatuses()">🗑 消込履歴リセット</button>
+      <div style="display:flex; gap:8px;">
+        <button class="btn btn-outline" style="flex:1;" onclick="loadBuiltInDemo()">デモデータに戻す</button>
+        <button class="btn btn-outline" style="flex:1; color:var(--rose);" onclick="clearSavedStatuses()">対応済チェックをリセット</button>
       </div>
     </div>
   </div>
 
-  <!-- Settings Modal (Placeholder CRM URL Template) -->
-  <div class="modal-backdrop" id="settingsModal" onclick="if(event.target===this) closeSettingsModal()">
-    <div class="modal-sheet">
-      <div class="modal-header">
-        <div class="modal-title">⚙ 元システム求職者詳細URL設定</div>
-        <button class="btn-close" onclick="closeSettingsModal()">✕</button>
+  <!-- URL Settings Modal -->
+  <div class="modal-overlay" id="settingsModal" onclick="if(event.target===this) closeSettingsModal()">
+    <div class="modal-dialog">
+      <div class="modal-head">
+        <div class="modal-title">元データ編集URL設定</div>
+        <button class="btn-icon-close" onclick="closeSettingsModal()">✕</button>
       </div>
-      <p style="font-size:12px; color:#475569; margin-top:0;">
-        各カードの「↗ 元データ修正」リンク先URLを設定できます。<code>{id}</code> の部分に応募者IDが自動差し込みされます。（現在は仮リンクを設定中）
+      <p style="font-size:12px; color:var(--text-secondary); margin-top:0;">
+        「希望日変更・修正 ↗」「元データ修正 ↗」ボタンの遷移先ベースURLを設定します。クリック時に別タブで開くと同時に <code>応募者ID</code> が自動コピーされます。
       </p>
-      <input type="url" id="crmUrlTemplateInput" placeholder="https://example.com/crm/applicants/{id}" style="margin-bottom:10px;">
+      <input type="url" id="crmUrlTemplateInput" placeholder="https://b-style-20260516.duo.arrove.jp/" style="margin-bottom:12px;">
       <div style="display:flex; gap:8px;">
-        <button class="btn-page" style="flex:1;" onclick="resetCrmUrlTemplate()">仮リンクに戻す</button>
-        <button class="btn-action btn-msg-future" style="flex:1.5;" onclick="saveCrmUrlTemplate()">💾 URL設定を保存</button>
+        <button class="btn btn-outline" style="flex:1;" onclick="resetCrmUrlTemplate()">初期値に戻す</button>
+        <button class="btn btn-orange" style="flex:1.5;" onclick="saveCrmUrlTemplate()">設定を保存</button>
       </div>
     </div>
   </div>
 
   <!-- Summary Modal -->
-  <div class="modal-backdrop" id="summaryModal" onclick="if(event.target===this) closeSummaryModal()">
-    <div class="modal-sheet">
-      <div class="modal-header">
-        <div class="modal-title">📊 名寄せ・除外・5kmBO＆2km紹介マスタ内訳</div>
-        <button class="btn-close" onclick="closeSummaryModal()">✕</button>
+  <div class="modal-overlay" id="summaryModal" onclick="if(event.target===this) closeSummaryModal()">
+    <div class="modal-dialog">
+      <div class="modal-head">
+        <div class="modal-title">重複名寄せ・除外・案件マスタ内訳</div>
+        <button class="btn-icon-close" onclick="closeSummaryModal()">✕</button>
       </div>
-      <div class="stat-grid" id="summaryStatsGrid"></div>
-      <div style="background:#f8fafc; border:1px solid var(--border); border-radius:12px; padding:10px; font-size:12px; margin-bottom:10px;">
-        <div style="font-weight:800; margin-bottom:4px;">🔗 重複名寄せ統合ログ（抜粋）</div>
-        <div id="mergeLogList" style="color:#475569; max-height:130px; overflow-y:auto;"></div>
+      <div class="summary-grid" id="summaryStatsGrid"></div>
+      <div style="background:#fafafa; border:1px solid var(--border); border-radius:8px; padding:10px; font-size:12px; margin-bottom:10px;">
+        <div style="font-weight:700; margin-bottom:4px;">重複名寄せ統合ログ（抜粋）</div>
+        <div id="mergeLogList" style="color:var(--text-secondary); max-height:140px; overflow-y:auto;"></div>
       </div>
-      <div style="background:#f0f9ff; border:1px solid #bae6fd; border-radius:12px; padding:10px; font-size:12px;">
-        <div style="font-weight:800; color:#0369a1; margin-bottom:4px;">📍 1CSV自動構築 案件マスタ内訳</div>
-        <div id="jobMasterSummary" style="color:#0c4a6e;"></div>
+      <div style="background:#fafafa; border:1px solid var(--border); border-radius:8px; padding:10px; font-size:12px;">
+        <div style="font-weight:700; margin-bottom:4px;">同一CSVから抽出した近隣マッチング用案件マスタ</div>
+        <div id="jobMasterSummary" style="color:var(--text-secondary);"></div>
       </div>
     </div>
   </div>
@@ -886,80 +1120,83 @@
 
   <script>
     // =========================================================================
-    // 1. Tab-Specific Requirement Specs (Closed by default; opened per tab)
+    // 1. Per-Tab Criteria & Workflow Rules (<details> closed by default)
     // =========================================================================
+    const TAB_NAMES = {
+      future: '未来人材',
+      chance: '未FIX人材',
+      hot: '激熱掘起',
+      dig: '通常掘起'
+    };
+
     const TAB_SPECS = {
       future: {
-        title: '📖 【未来人材】の抽出基準・週次アプローチ設計',
+        summary: '【未来人材】の抽出基準・アプローチ設計を見る',
         html: `
-          <div><strong>【対象】</strong> 派遣・紹介予定派遣の介護/看護スタッフで、開始希望日まで90日以上先（<code>ステータス=未来人材</code> / <code>FIXNG理由=未来人材</code> / 未来日付登録）の層。</div>
+          <div><strong>抽出対象：</strong>派遣・紹介予定派遣の介護／看護スタッフのうち、就業開始希望日（<code>即日か就業可能時期</code> または <code>備考</code> 記載日）が基準日から <strong>35日以上先</strong>、または <code>ステータス=未来人材</code> の求職者。</div>
           <ul>
-            <li><strong>① 初期アプローチ（相場観の目線合わせ）</strong>：23区 <code>84〜90日前</code> ／ 市部・他県 <code>91〜97日前</code> → <strong>5km以内の参考案件</strong>を打診。</li>
-            <li><strong>② 温度感・状況確認（スクリーニング）</strong>：23区 <code>63〜69日前</code> ／ 市部・他県 <code>70〜76日前</code> → <strong>案件は送らず</strong>退職交渉や開始日のズレを確認。</li>
-            <li><strong>③ 本格打診・オファー</strong>：23区 <code>49〜55日前</code> ／ 市部・他県 <code>56〜62日前</code> → 把握済み条件に合う5km以内の好条件枠を先行案内。</li>
-            <li><strong>④ 顔合わせ日程回収</strong>：23区 <code>35〜41日前</code> ／ 市部・他県 <code>42〜48日前</code> → 2択日程提示で職場見学へ誘導。</li>
-            <li><strong>🏠 2km以内・紹介特別フック</strong>：自宅から2km以内にマッチする紹介案件がある場合は「家からめちゃくちゃ近い直接雇用求人」も同時提案。</li>
+            <li><strong>初期アプローチ（84〜97日前）</strong>：相場観の目線合わせとして、自宅から5km以内の参考案件を打診。</li>
+            <li><strong>温度感確認（63〜76日前）</strong>：案件は送らず、退職交渉・有給消化の進捗と開始時期のズレを確認。</li>
+            <li><strong>本格打診（49〜62日前）</strong>：希望条件に合う5km以内の好条件枠を先行募集としてオファー。</li>
+            <li><strong>顔合わせ日程回収（35〜48日前）</strong>：具体的な2択日程を提示し、職場見学（顔合わせ）を確定。</li>
+            <li><strong>希望日変更時</strong>：各カードの <code>希望日変更・修正 ↗</code> から基幹システムを修正してください。</li>
           </ul>
         `
       },
       chance: {
-        title: '📖 【ワンちゃんある未fix】の抽出基準・アプローチ設計',
+        summary: '【未FIX人材】の抽出基準・アプローチ設計を見る',
         html: `
-          <div><strong>【対象】</strong> <code>アテンドステータス=OK</code> で、まだ他社決定や辞退に至っておらず未確定のまま止まっている層（<code>FIX待ち</code>・<code>アテンド後不通</code>・ハードNGなしの<code>保留/対象外</code>など）。</div>
+          <div><strong>抽出対象：</strong>面談・接触済み（<code>アテンド日</code> あり、または <code>FIX待ち</code> / <code>アテンド済</code> / <code>アテンドステータス=OK</code>）で、まだFIXに至っていない層。</div>
           <ul>
-            <li><strong>⚡ 応募から 7〜10日後（最優先スイートスポット）</strong>：他社面談に行ったが「時給が低い」「提案が来ない」「微妙」と感じて比較検討している層に、<strong>BO取得日時が新しい順の5km以内案件（最大3件）</strong>をぶつけて一気にひっくり返す。</li>
-            <li><strong>⏳ 応募から 11〜30日後（FIX待ち滞留）</strong>：他社に決められる前に、BO取得日時が新しい5km以内の新着枠を再提案。</li>
-            <li><strong>🏠 2km以内・紹介特別フック</strong>：自宅から2km以内にマッチする紹介案件がある場合は特別フックとして文面に自動差し込み。</li>
+            <li><strong>スイートスポット（経過 7〜10日）</strong>：他社と比較検討し「時給・条件が合わない」「提案が少ない」と感じ始める最優先タイミング。<strong>BO取得日時が新しい順の5km以内派遣BO（最大3件）</strong>で即提案。</li>
+            <li><strong>その他未FIX（経過 30日以内）</strong>：他社決定前に新着BOを定期フォロー。</li>
+            <li><strong>2km圏内 紹介特別フック</strong>：自宅から2km以内にマッチする紹介（直接雇用）求人がある場合は特別枠を自動挿入。</li>
           </ul>
         `
       },
       hot: {
-        title: '📖 【激アツ掘り起こし】の抽出基準・アプローチ設計',
+        summary: '【激熱掘起】の抽出基準・アプローチ設計を見る',
         html: `
-          <div><strong>【対象】</strong> <code>アテンドステータス=OK</code> かつ、一度は他社決定や辞退で離脱した層（<code>他社決定</code>・<code>登録辞退</code>）。</div>
+          <div><strong>抽出対象：</strong>過去面談済み（<code>アテンド日</code> あり・30日超経過、または <code>契約終了日</code> あり、あるいは過去 <code>他社決定</code> / <code>登録辞退</code> で希望条件把握済み）の再接触期待値が高い層。</div>
           <ul>
-            <li><strong>① 初期ギャップ確認（<code>FIX日</code>から 14〜21日後）</strong>：※<code>FIX日</code>が空欄の場合は <code>アテンド日</code>から <code>21〜28日後</code> で判定。他社入職直後の「思っていたのと違う」を拾い上げ。</li>
-            <li><strong>② 契約更新・見直し期（<code>FIX日</code>から 45〜60日後）</strong>：初回契約の更新確認が入る直前に、<strong>BO取得日時が新しい順の5km以内好条件枠（最大3件）</strong>＋2km以内紹介特別枠をぶつけて乗り換え提案。</li>
+            <li><strong>初期ギャップ・契約満了フォロー</strong>：他社就業後の違和感や契約終了タイミングを狙い、<strong>BO取得日時が新しい順の5km以内好条件枠（最大3件）</strong>を打診。</li>
+            <li><strong>2km圏内 紹介特別フック</strong>：自宅から2km以内の直接雇用求人がある場合は特別オファーとして併記。</li>
           </ul>
         `
       },
       dig: {
-        title: '📖 【掘り起こし】の抽出基準・アプローチ設計',
+        summary: '【通常掘起】の抽出基準・アプローチ設計を見る',
         html: `
-          <div><strong>【対象】</strong> 詳細条件がまだわかっていない未面談層（<code>2.アテンド待ち / 誘致待ち</code>・<code>4.アテンドNG(条件不一致)</code>・<code>5.接触待ち / 接触NG / 不通 / 未対応</code>）。</div>
+          <div><strong>抽出対象：</strong>未面談・長期休眠層（最終接触・応募から30日超経過、<code>アテンド待ち</code>・<code>誘致待ち</code>・<code>接触待ち</code>・<code>不通</code> など、ハードNG以外の休眠リード）。</div>
           <ul>
-            <li><strong>⚡ 応募から 7〜10日後（未接触・アテンド待ち）</strong>：他社比較中の層に「LINEで『日勤のみ』『時給〇円以上』など一言返すだけでOK」と返信ハードルを下げつつ、<strong>BO取得日時が新しい順の5km以内案件（最大3件）</strong>を送付。</li>
-            <li><strong>🔄 14〜30日後（4.アテンドNG）</strong>：前回の条件不一致をカバーする新着BO（5km以内）を提示。</li>
-            <li><strong>📩 30〜45日後（5.接触NG・不通）</strong>：時期が変わって再検討し始めた層へのライトな追いLINE。</li>
+            <li><strong>返信ハードル低下＋新着BO提示</strong>：「LINEで一言返すだけでOK」と負担を下げつつ、<strong>BO取得日時が新しい順の5km以内案件（最大3件）</strong>を提示して反応を引き出します。</li>
           </ul>
         `
       }
     };
 
     // =========================================================================
-    // 2. Constants & Ranking Definitions
+    // 2. Constants & Status Rankings
     // =========================================================================
-    const STORAGE_KEY = 'bstyle_followup_4tabs_v2';
-    const URL_STORAGE_KEY = 'bstyle_crm_url_tpl_v1';
-    const DEFAULT_CRM_URL_TEMPLATE = 'https://example.com/crm/applicants/{id}';
+    const DATA_STORAGE_KEY = 'bstyle_csv_rows_v4';
+    const STATUS_STORAGE_KEY = 'bstyle_done_ids_v4';
+    const URL_STORAGE_KEY = 'bstyle_crm_base_url_v4';
+    const DEFAULT_CRM_URL = 'https://b-style-20260516.duo.arrove.jp/';
     const PAGE_SIZE = 20;
-
-    const TOKYO_23 = [
-      '千代田区','中央区','港区','新宿区','文京区','台東区','墨田区','江東区',
-      '品川区','目黒区','大田区','世田谷区','渋谷区','中野区','杉並区','豊島区',
-      '北区','荒川区','板橋区','練馬区','足立区','葛飾区','江戸川区'
-    ];
 
     const STATUS_RANK = {
       '稼働中': 180,
+      '入職済': 175,
       '入職待ち': 170,
+      '内定': 165,
       '内定待ち': 160,
+      'FIX済': 158,
+      '職見済': 155,
       '職見待ち': 150,
       'FIX待ち': 140,
-      '終了待ち': 130,
-      '退職済み': 120,
-      '未来人材': 110,
-      '他社決定': 100,
+      'アテンド済': 135,
+      '未来人材': 125,
+      '他社決定': 110,
       'アテンド待ち': 90,
       '誘致待ち': 80,
       '接触待ち': 70,
@@ -972,31 +1209,42 @@
     };
 
     const ACTIVE_EXCLUDE_STATUSES = new Set([
-      '稼働中', '入職待ち', '内定待ち', '職見待ち', '終了待ち', '退職済み'
+      '稼働中', '入職済', '入職待ち', '内定', '内定待ち', 'FIX済', '職見済', '職見待ち', '終了待ち', '辞退/NG確定'
     ]);
 
     const HARD_NG_KEYWORDS = [
       '年齢', '就業不可', '人物懸念', '紹介不可', '経験資格なし', '経験・資格なし'
     ];
 
+    // Fallback BOs used ONLY if imported CSV contains zero lat/lng coordinates
+    const FALLBACK_SAMPLE_BOS = [
+      { title: 'チャームスイート世田谷三軒茶屋', sub: '【派遣】有料老人ホーム介護職（時給1,750円・日勤可）', role: '介護', emp: 'dispatch', lat: 35.6442, lng: 139.6695, boTs: Date.parse('2026-11-12T16:00:00'), boDateStr: '2026/11/12' },
+      { title: '特別養護老人ホーム 世田谷太子堂（正社員）', sub: '【紹介】特養での介護職（月給28.5万円〜・三軒茶屋駅徒歩5分）', role: '介護', emp: 'direct', lat: 35.6451, lng: 139.6725, boTs: Date.parse('2026-11-12T10:00:00'), boDateStr: '2026/11/12' },
+      { title: 'ツクイ江東東雲デイサービス', sub: '【派遣】デイサービス看護師（時給2,300円・日勤のみ）', role: '看護', emp: 'dispatch', lat: 35.6460, lng: 139.8020, boTs: Date.parse('2026-11-12T17:45:00'), boDateStr: '2026/11/12' },
+      { title: '豊洲ベイサイドクリニック（日勤常勤）', sub: '【紹介】クリニック看護師（年収480万円〜・豊洲駅徒歩3分）', role: '看護', emp: 'direct', lat: 35.6495, lng: 139.7960, boTs: Date.parse('2026-11-12T14:00:00'), boDateStr: '2026/11/12' },
+      { title: 'チャームスイート川口栄町', sub: '【派遣】有料老人ホーム介護職（時給1,700円・駅徒歩4分）', role: '介護', emp: 'dispatch', lat: 35.8032, lng: 139.7185, boTs: Date.parse('2026-11-12T09:30:00'), boDateStr: '2026/11/12' },
+      { title: '特別養護老人ホーム 川崎駅前苑', sub: '【派遣】特養での介護職（時給1,750円・駅徒歩4分）', role: '介護', emp: 'dispatch', lat: 35.5315, lng: 139.6980, boTs: Date.parse('2026-11-10T13:15:00'), boDateStr: '2026/11/10' }
+    ];
+
     // =========================================================================
-    // 3. Built-in Realistic Sample Dataset (All 4 Tabs, Complement, 5km BO, 2km Direct)
+    // 3. Built-in Demo Dataset
     // =========================================================================
     const DEMO_RAW_ROWS = [
-      // Tab 1: 未来人材 (東京23区: 86日前 -> Phase 1)
+      // Tab 1: 未来人材
       {
         応募者ID: '01M4F101', 氏名: '高橋 美咲', フリガナ: 'タカハシ ミサキ', 生年月日: '1988-05-14',
-        '住所(都道府県)': '東京都', 住所: '東京都世田谷区三軒茶屋2-14-8', 緯度: '35.6436', 経度: '139.6710',
+        '住所(都道府県)': '東京都', 住所: '東京都世田谷区三軒茶屋2-14-8', 電話番号: '090-1111-2222', メールアドレス: 'takahashi.m@example.com',
+        緯度: '35.6436', 経度: '139.6710',
         区分: '派遣', 職種詳細: '介護士', 資格: '介護福祉士',
         担当支店: '東京東', アテンド担当ユーザー: '山上 健太',
         応募日: '2026-10-25', アテンド日: '2026-10-28', BO取得日時: '2026-11-11 15:20', ステータス: '未来人材',
-        接触ステータス: 'OK', 誘致ステータス: 'OK', アテンドステータス: 'OK',
+        アテンドステータス: 'OK',
         即日か就業可能時期: '2027-02-07', 週勤務可能日数: '4', 希望する施設形態: '有料老人ホーム', 希望時給: '1750円',
         '勤務可能シフト(早番)': '可', '勤務可能シフト(日勤)': '可',
         事業所: 'ベネッセスタイルケア グランダ三軒茶屋',
         備考: '現職の有給消化後、2月7日〜開始希望。日勤・早番メイン希望。'
       },
-      // Direct-hire (紹介) job within 2km of 三軒茶屋 (for 2km special hook test!)
+      // Direct-hire (紹介) job within 2km of 三軒茶屋
       {
         応募者ID: '01M4JOB_D1', 氏名: '（求人レコード）', フリガナ: '', 生年月日: '',
         '住所(都道府県)': '東京都', 住所: '東京都世田谷区太子堂2-10-3', 緯度: '35.6451', 経度: '139.6725',
@@ -1005,33 +1253,34 @@
         事業所: '特別養護老人ホーム 世田谷太子堂（正社員・賞与4.0ヶ月）',
         備考: '【正社員・紹介】特養での介護職（月給28.5万円〜・三軒茶屋駅徒歩5分）'
       },
-      // Tab 1: 未来人材 (千葉県: 73日前 -> Phase 2)
       {
         応募者ID: '01M4F102', 氏名: '斎藤 健一', フリガナ: 'サイトウ ケンイチ', 生年月日: '1980-12-09',
-        '住所(都道府県)': '千葉県', 住所: '千葉県船橋市本町4-12-5', 緯度: '35.7015', 経度: '139.9852',
+        '住所(都道府県)': '千葉県', 住所: '千葉県船橋市本町4-12-5', 電話番号: '080-2222-3333', メールアドレス: 'saito.k@example.com',
+        緯度: '35.7015', 経度: '139.9852',
         区分: '派遣', 職種詳細: '介護士', 資格: '初任者研修',
         担当支店: '東京東', アテンド担当ユーザー: '河添 遥',
         応募日: '2026-10-20', アテンド日: '2026-10-23', BO取得日時: '2026-11-08 11:10', ステータス: '未来人材',
-        接触ステータス: 'OK', 誘致ステータス: 'OK', アテンドステータス: 'OK',
-        即日か就業可能時期: '2027-01-25', 週勤務可能日数: '5', 希望する施設形態: '介護老人保健施設', 希望時給: '1650円',
+        アテンドステータス: 'OK',
+        即日か就業可能時期: '2027-01-10', 週勤務可能日数: '5', 希望する施設形態: '介護老人保健施設', 希望時給: '1650円',
         '勤務可能シフト(日勤)': '可', '勤務可能シフト(遅番)': '可',
         事業所: 'ケアホーム船橋本町',
-        備考: '1月末退職予定。車通勤可の施設希望。'
+        備考: '1月10日開始希望。車通勤可の施設希望。'
       },
-      // Tab 2: ワンちゃんある未fix (職種詳細="その他" & 資格="正看護師" -> 自動補完:看護＋元データ修正警告)
+      // Tab 2: 未FIX人材 (職種詳細="その他" & 資格="正看護師" -> 自動補完:看護 + isAutoRole=true)
       {
         応募者ID: '01M4C201', 氏名: '加藤 智子', フリガナ: 'カトウ トモコ', 生年月日: '1982-02-17',
-        '住所(都道府県)': '東京都', 住所: '東京都江東区東雲1-9-10', 緯度: '35.6455', 経度: '139.8032',
+        '住所(都道府県)': '東京都', 住所: '東京都江東区東雲1-9-10', 電話番号: '090-3333-4444', メールアドレス: 'kato.t@example.com',
+        緯度: '35.6455', 経度: '139.8032',
         区分: '派遣', 職種詳細: 'その他', 資格: '正看護師',
         担当支店: '東京東', アテンド担当ユーザー: '河添 遥',
-        応募日: '2026-11-05', アテンド日: '2026-11-07', BO取得日時: '2026-11-12 17:45', ステータス: 'FIX待ち',
-        接触ステータス: 'OK', 誘致ステータス: 'OK', アテンドステータス: 'OK',
+        応募日: '2026-11-04', アテンド日: '2026-11-05', BO取得日時: '2026-11-12 17:45', ステータス: 'FIX待ち',
+        アテンドステータス: 'OK',
         即日か就業可能時期: '即日', 週勤務可能日数: '3', 希望する施設形態: 'デイサービス', 希望時給: '2250円',
         '勤務可能シフト(日勤)': '可', '勤務可能シフト(半日)': '可',
         事業所: 'ツクイ江東東雲デイサービス',
         備考: 'NEW 【派遣社員】デイサービス看護師（時給2,300円・扶養内・日勤のみ）'
       },
-      // Direct-hire (紹介) Nursing job within 2km of 東雲 (for 2km special hook test!)
+      // Direct-hire (紹介) Nursing job within 2km of 東雲
       {
         応募者ID: '01M4JOB_D2', 氏名: '（求人レコード）', フリガナ: '', 生年月日: '',
         '住所(都道府県)': '東京都', 住所: '東京都江東区豊洲5-5-1', 緯度: '35.6495', 経度: '139.7960',
@@ -1040,87 +1289,78 @@
         事業所: '豊洲ベイサイドクリニック（日勤常勤・オンコールなし）',
         備考: '【正社員・紹介】クリニック看護師（年収480万円〜・豊洲駅徒歩3分）'
       },
-      // Tab 2: ワンちゃんある未fix (埼玉県・応募から9日後: 他社比較中)
       {
         応募者ID: '01M4C202', 氏名: '田村 沙織', フリガナ: 'タムラ サオリ', 生年月日: '1990-04-22',
-        '住所(都道府県)': '埼玉県', 住所: '埼玉県川口市栄町3-8-15', 緯度: '35.8032', 経度: '139.7185',
+        '住所(都道府県)': '埼玉県', 住所: '埼玉県川口市栄町3-8-15', 電話番号: '080-4444-5555', メールアドレス: 'tamura.s@example.com',
+        緯度: '35.8032', 経度: '139.7185',
         区分: '紹介予定派遣', 職種詳細: '介護士', 資格: '実務者研修',
         担当支店: '埼玉', アテンド担当ユーザー: '清水 大輔',
-        応募日: '2026-11-04', アテンド日: '2026-11-06', BO取得日時: '2026-11-12 09:30', ステータス: 'FIX待ち',
-        接触ステータス: 'OK', 誘致ステータス: 'OK', アテンドステータス: 'OK',
+        応募日: '2026-11-03', アテンド日: '2026-11-05', BO取得日時: '2026-11-12 09:30', ステータス: 'FIX待ち',
+        アテンドステータス: 'OK',
         即日か就業可能時期: '即日', 週勤務可能日数: '4', 希望する施設形態: '有料老人ホーム', 希望時給: '1680円',
         '勤務可能シフト(早番)': '可', '勤務可能シフト(日勤)': '可',
         事業所: 'チャームスイート川口栄町',
         備考: 'NEW 【派遣社員】有料老人ホーム介護職（時給1,700円・駅徒歩4分）'
       },
-      // Tab 3: 激アツ掘り起こし (他社決定 / FIX日から17日後 -> ①初期ギャップ確認)
+      // Tab 3: 激熱掘起 (アテンド日 >30日前)
       {
         応募者ID: '01M4H301', 氏名: '中村 佳奈', フリガナ: 'ナカムラ カナ', 生年月日: '1986-07-11',
-        '住所(都道府県)': '東京都', 住所: '東京都世田谷区太子堂4-1-1', 緯度: '35.6442', 経度: '139.6695',
+        '住所(都道府県)': '東京都', 住所: '東京都世田谷区太子堂4-1-1', 電話番号: '090-5555-6666', メールアドレス: 'nakamura.k@example.com',
+        緯度: '35.6442', 経度: '139.6695',
         区分: '派遣', 職種詳細: '介護士', 資格: '介護福祉士',
         担当支店: '東京東', アテンド担当ユーザー: '山上 健太',
-        応募日: '2026-10-20', アテンド日: '2026-10-23', FIX日: '2026-10-27', BO取得日時: '2026-11-12 16:00', ステータス: '他社決定',
-        接触ステータス: 'OK', 誘致ステータス: 'OK', アテンドステータス: 'OK',
+        応募日: '2026-10-01', アテンド日: '2026-10-05', BO取得日時: '2026-11-12 16:00', ステータス: '他社決定',
+        アテンドステータス: 'OK',
         即日か就業可能時期: '即日', 週勤務可能日数: '4', 希望する施設形態: '有料老人ホーム', 希望時給: '1750円',
         '勤務可能シフト(早番)': '可', '勤務可能シフト(日勤)': '可',
         事業所: 'チャームスイート世田谷三軒茶屋',
         備考: 'NEW 【派遣社員】有料老人ホームでの介護業務（時給1,750円・日勤のみ可）'
       },
-      // Tab 3: 激アツ掘り起こし (他社決定 / FIX日から48日後 -> ②契約更新期)
       {
         応募者ID: '01M4H302', 氏名: '吉田 陽子', フリガナ: 'ヨシダ ヨウコ', 生年月日: '1974-09-30',
-        '住所(都道府県)': '神奈川県', 住所: '神奈川県川崎市川崎区駅前本町11-2', 緯度: '35.5315', 経度: '139.6980',
+        '住所(都道府県)': '神奈川県', 住所: '神奈川県川崎市川崎区駅前本町11-2', 電話番号: '080-6666-7777', メールアドレス: 'yoshida.y@example.com',
+        緯度: '35.5315', 経度: '139.6980',
         区分: '派遣', 職種詳細: '介護士', 資格: '介護福祉士',
         担当支店: '神奈川', アテンド担当ユーザー: '小田 彩乃',
-        応募日: '2026-09-20', アテンド日: '2026-09-23', FIX日: '2026-09-26', BO取得日時: '2026-11-10 13:15', ステータス: '他社決定',
-        接触ステータス: 'OK', 誘致ステータス: 'OK', アテンドステータス: 'OK',
+        応募日: '2026-09-15', アテンド日: '2026-09-18', 契約終了日: '2026-11-10', BO取得日時: '2026-11-10 13:15', ステータス: '他社決定',
+        アテンドステータス: 'OK',
         即日か就業可能時期: '即日', 週勤務可能日数: '5', 希望する施設形態: '特別養護老人ホーム', 希望時給: '1720円',
         '勤務可能シフト(日勤)': '可', '勤務可能シフト(遅番)': '可',
         事業所: '特別養護老人ホーム 川崎駅前苑',
         備考: 'NEW 【派遣社員】特養での介護職（時給1,750円・駅徒歩4分）'
       },
-      // Tab 4: 掘り起こし (職種詳細="その他" & 資格="無資格" -> 自動補完:介護＋元データ修正警告)
+      // Tab 4: 通常掘起 (職種詳細="その他" & 無資格 -> 自動補完:介護 + isAutoRole=true)
       {
         応募者ID: '01M4D401', 氏名: '山本 ゆかり', フリガナ: 'ヤマモト ユカリ', 生年月日: '1975-09-12',
-        '住所(都道府県)': '埼玉県', 住所: '埼玉県川口市本町4-3-12', 緯度: '35.8005', 経度: '139.7210',
+        '住所(都道府県)': '埼玉県', 住所: '埼玉県川口市本町4-3-12', 電話番号: '090-7777-8888', メールアドレス: 'yamamoto.y@example.com',
+        緯度: '35.8005', 経度: '139.7210',
         区分: '派遣', 職種詳細: 'その他', 資格: '無資格',
         担当支店: '埼玉', アテンド担当ユーザー: '清水 大輔',
-        応募日: '2026-11-05', アテンド日: '', BO取得日時: '2026-11-11 18:00', ステータス: 'アテンド待ち',
-        接触ステータス: 'OK', 誘致ステータス: 'OK', アテンドステータス: '',
+        応募日: '2026-09-25', アテンド日: '', BO取得日時: '2026-11-11 18:00', ステータス: 'アテンド待ち',
         即日か就業可能時期: '即日', 事業所: 'SOMPOケア ラヴィーレ川口',
         備考: 'NEW 【派遣社員】有料老人ホーム介護職（時給1,680円・週3日〜）'
       },
-      // Tab 4: 掘り起こし (4.アテンドNG - 条件不一致 / 22日後)
-      {
-        応募者ID: '01M4D402', 氏名: '木村 由美子', フリガナ: 'キムラ ユミコ', 生年月日: '1973-11-19',
-        '住所(都道府県)': '東京都', 住所: '東京都世田谷区若林1-18-4', 緯度: '35.6458', 経度: '139.6625',
-        区分: '派遣', 職種詳細: '介護士', 資格: '初任者研修',
-        担当支店: '東京東', アテンド担当ユーザー: '山上 健太',
-        応募日: '2026-10-22', アテンド日: '', BO取得日時: '2026-11-12 11:20', ステータス: 'アテンドNG',
-        接触ステータス: 'OK', 誘致ステータス: 'OK', アテンドステータス: 'NG',
-        アテンドNG理由詳細: '希望時給1750円以上・日勤固定の求人が当時不足',
-        即日か就業可能時期: '即日', 事業所: 'ニチイケアセンター世田谷若林',
-        備考: 'NEW 【派遣社員】グループホーム介護職（時給1,760円・日勤専従）'
-      },
-      // Tab 4: 掘り起こし (5.接触待ち - 重複2件統合テスト)
+      // Duplicate merge test (中島 栄子)
       {
         応募者ID: '01M4D991', 氏名: '中島 栄子', フリガナ: 'ナカジマ エイコ', 生年月日: '1968-10-07',
-        '住所(都道府県)': '東京都', 住所: '東京都江東区有明3-7-11', 緯度: '35.6345', 経度: '139.7930',
+        '住所(都道府県)': '東京都', 住所: '東京都江東区有明3-7-11', 電話番号: '090-8888-9999', メールアドレス: 'nakajima.e@example.com',
+        緯度: '35.6345', 経度: '139.7930',
         区分: '派遣', 職種詳細: '看護師', 資格: '正看護師',
         担当支店: '東京東', アテンド担当ユーザー: '河添 遥',
-        応募日: '2026-08-10', BO取得日時: '2026-08-10 10:00', ステータス: '対象外', 接触ステータス: 'NG',
+        応募日: '2026-08-10', BO取得日時: '2026-08-10 10:00', ステータス: '対象外',
         事業所: '有明クリニック健診センター',
         備考: 'NEW 【派遣社員】健診クリニック看護師（時給2,200円・日勤のみ）'
       },
       {
         応募者ID: '01M4D403', 氏名: '中島 栄子', フリガナ: 'ナカジマ エイコ', 生年月日: '1968-10-07',
-        '住所(都道府県)': '東京都', 住所: '東京都江東区有明3-7-11', 緯度: '35.6345', 経度: '139.7930',
+        '住所(都道府県)': '東京都', 住所: '東京都江東区有明3-7-11', 電話番号: '090-8888-9999', メールアドレス: 'nakajima.e@example.com',
+        緯度: '35.6345', 経度: '139.7930',
         区分: '派遣', 職種詳細: '看護師', 資格: '正看護師',
         担当支店: '東京東', アテンド担当ユーザー: '河添 遥',
-        応募日: '2026-11-05', BO取得日時: '2026-11-05 09:00', ステータス: '接触待ち', 接触ステータス: '未対応',
+        応募日: '2026-10-05', BO取得日時: '2026-10-05 09:00', ステータス: '接触待ち',
         備考: 'Web応募（看護師・日勤希望）'
       },
-      // Duplicate Exclusion Test: 過去「アテンド待ち」＋別IDで「稼働中」 -> 自動除外
+      // Duplicate active exclusion test (服部 咲良)
       {
         応募者ID: '01M4X001', 氏名: '服部 咲良', フリガナ: 'ハットリ サクラ', 生年月日: '2002-12-08',
         '住所(都道府県)': '東京都', 住所: '東京都世田谷区駒沢2-11-1', 緯度: '35.6315', 経度: '139.6610',
@@ -1133,28 +1373,26 @@
         区分: '派遣', 職種詳細: '介護士', 担当支店: '東京東', アテンド担当ユーザー: '山上 健太',
         応募日: '2026-10-01', ステータス: '稼働中', 事業所: '駒沢介護福祉センター'
       },
-      // Hard NG Exclusion Test: 年齢NG
+      // Hard NG exclusion test
       {
         応募者ID: '01M4X003', 氏名: '中林 やす江', フリガナ: 'ナカバヤシ ヤスエ', 生年月日: '1952-07-04',
         '住所(都道府県)': '千葉県', 住所: '千葉県市川市八幡2-10-2', 緯度: '35.7215', 経度: '139.9270',
         区分: '派遣', 職種詳細: '介護士', 担当支店: '東京東', アテンド担当ユーザー: '小田 彩乃',
-        応募日: '2026-11-02', ステータス: '対象外', 誘致NG理由詳細: '年齢NG（74歳）'
+        応募日: '2026-10-02', ステータス: '対象外', 誘致NG理由詳細: '年齢NG（74歳）'
       }
     ];
 
     // =========================================================================
-    // 4. Global App State
+    // 4. Application State
     // =========================================================================
     let appState = {
       isDemo: true,
-      baseDate: '2026-11-13',
+      baseDate: new Date(2026, 10, 13), // 2026-11-13
       activeTab: 'future',
-      specOpen: false,
-      statusFilter: 'todo',
       currentPage: 1,
       candidates: [],
-      dispatchJobMaster: [], // 派遣・紹介予定派遣 (5km以内検索用)
-      directJobMaster: [],   // 紹介 (2km以内特別フック用)
+      dispatchJobMaster: [],
+      directJobMaster: [],
       stats: {
         totalRows: 0,
         mergedCount: 0,
@@ -1164,34 +1402,49 @@
       },
       mergeLogs: [],
       statuses: {},
-      crmUrlTemplate: DEFAULT_CRM_URL_TEMPLATE,
+      crmUrlBase: DEFAULT_CRM_URL,
       activeModalId: null
     };
 
     // =========================================================================
-    // 5. Normalization, Date Math & Haversine Distance
+    // 5. Storage, Normalization, Date & Haversine Math
     // =========================================================================
-    function loadSettingsAndStatuses() {
+    function loadPersistedState() {
       try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        appState.statuses = raw ? JSON.parse(raw) : {};
+        const rawSt = localStorage.getItem(STATUS_STORAGE_KEY);
+        appState.statuses = rawSt ? JSON.parse(rawSt) : {};
       } catch (e) {
         appState.statuses = {};
       }
       try {
         const savedUrl = localStorage.getItem(URL_STORAGE_KEY);
-        if (savedUrl) appState.crmUrlTemplate = savedUrl;
+        if (savedUrl) appState.crmUrlBase = savedUrl;
       } catch (e) {}
     }
 
     function saveStatusesToStorage() {
       try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(appState.statuses));
+        localStorage.setItem(STATUS_STORAGE_KEY, JSON.stringify(appState.statuses));
       } catch (e) {}
     }
 
-    function buildCrmUrl(applicantId) {
-      return (appState.crmUrlTemplate || DEFAULT_CRM_URL_TEMPLATE).replace(/\{id\}/g, encodeURIComponent(applicantId));
+    function saveCsvRowsToStorage(rows) {
+      try {
+        localStorage.setItem(DATA_STORAGE_KEY, JSON.stringify(rows));
+      } catch (e) {
+        // Ignore quota exceeded if CSV is huge
+      }
+    }
+
+    function loadSavedCsvRows() {
+      try {
+        const raw = localStorage.getItem(DATA_STORAGE_KEY);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw);
+        return Array.isArray(parsed) && parsed.length ? parsed : null;
+      } catch (e) {
+        return null;
+      }
     }
 
     function normalizeKana(str) {
@@ -1216,6 +1469,15 @@
       const m = str.match(/(\d{4})[\/\-年](\d{1,2})[\/\-月](\d{1,2})/);
       if (!m) return str.trim();
       return `${m[1]}-${m[2].padStart(2, '0')}-${m[3].padStart(2, '0')}`;
+    }
+
+    function calcAge(dobStr, refDate) {
+      const d = parseDateSafe(dobStr);
+      if (!d || !refDate) return '';
+      let age = refDate.getFullYear() - d.getFullYear();
+      const m = refDate.getMonth() - d.getMonth();
+      if (m < 0 || (m === 0 && refDate.getDate() < d.getDate())) age--;
+      return age >= 0 && age < 120 ? `${age}歳` : '';
     }
 
     function extractPrefecture(prefCol, fullAddr) {
@@ -1251,52 +1513,31 @@
       return Math.round((b - a) / ms);
     }
 
-    function isTokyo23(pref, addr) {
-      const full = `${pref || ''}${addr || ''}`;
-      if (full.includes('東京')) {
-        return TOKYO_23.some(ward => full.includes(ward));
-      }
-      return TOKYO_23.some(ward => (addr || '').startsWith(ward));
-    }
-
-    /**
-     * Resolve Role (介護 or 看護) with Auto-Complement rule:
-     * - If 職種詳細 is 看護/看護師 -> 看護
-     * - If 職種詳細 is 介護/介護士 -> 介護
-     * - If 職種詳細 is その他 or blank -> check 資格 for 正看護師/准看護師 -> 看護, else 介護 + isAutoComplemented=true
-     */
     function resolveRoleAndComplement(row) {
       const detail = (row['職種詳細'] || '').trim();
       const qual = (row['資格'] || row['保有資格'] || '').trim();
 
-      if (detail.includes('看護') || detail.includes('准看') || detail.includes('正看')) {
-        return { role: '看護', isAutoComplemented: false, reason: '' };
+      if (detail === '看護師' || detail.includes('看護') || detail.includes('准看') || detail.includes('正看')) {
+        return { role: '看護', isAutoRole: false, reason: '' };
       }
-      if (detail.includes('介護')) {
-        return { role: '介護', isAutoComplemented: false, reason: '' };
+      if (detail === '介護士' || detail.includes('介護')) {
+        return { role: '介護', isAutoRole: false, reason: '' };
       }
 
-      // 「その他」または空欄の場合の自動補完
-      if (qual.includes('正看護師') || qual.includes('准看護師') || qual.includes('看護師')) {
+      if (qual.includes('正看護師') || qual.includes('准看護師')) {
         return {
           role: '看護',
-          isAutoComplemented: true,
+          isAutoRole: true,
           reason: `職種詳細「${detail || '空欄'}」→ 資格(${qual})より「看護」へ自動補完`
         };
       }
       return {
         role: '介護',
-        isAutoComplemented: true,
+        isAutoRole: true,
         reason: `職種詳細「${detail || '空欄'}」→ 一旦「介護」へ自動補完`
       };
     }
 
-    /**
-     * Classify Employment Type:
-     * - 'dispatch': 派遣 or 紹介予定派遣
-     * - 'direct': 紹介 (Direct hire only)
-     * - 'unknown': empty/unassigned before contact
-     */
     function classifyEmploymentType(row) {
       const emp = `${row['区分'] || ''} ${row['案件種別'] || ''} ${row['雇用形態'] || ''}`.trim();
       if (!emp) return 'unknown';
@@ -1319,7 +1560,7 @@
     }
 
     // =========================================================================
-    // 6. Fast RFC4180 CSV Parser
+    // 6. RFC4180 CSV Parser
     // =========================================================================
     function parseCsvText(text) {
       const rows = [];
@@ -1383,7 +1624,7 @@
     }
 
     // =========================================================================
-    // 7. Core Engine: Deduplication, 5km BO Master, 2km Direct Hook, 4-Tab Logic
+    // 7. Core Engine: Deduplication, 5km Dispatched BOs, 2km Direct Hook, 4 Tabs
     // =========================================================================
     function extractLatLng(row) {
       let lat = parseFloat(row['緯度'] || row['lat'] || '');
@@ -1429,6 +1670,17 @@
       return new Date(0);
     }
 
+    function determineReferenceDate(rawRows) {
+      let latest = null;
+      for (const r of rawRows) {
+        for (const col of ['応募日', 'アテンド日', 'BO取得日時', '最終更新日時']) {
+          const d = parseDateSafe(r[col]);
+          if (d && (!latest || d > latest)) latest = d;
+        }
+      }
+      return latest || new Date();
+    }
+
     function buildPreferencesText(row) {
       const parts = [];
       const shifts = [];
@@ -1449,17 +1701,20 @@
       const st = (row['ステータス'] || '').trim();
       let rank = STATUS_RANK[st] || 5;
       if ((row['アテンドステータス'] || '').trim() === 'OK') rank += 25;
+      if ((row['アテンド日'] || '').trim()) rank += 15;
       if ((row['誘致ステータス'] || '').trim() === 'OK') rank += 10;
       if ((row['接触ステータス'] || '').trim() === 'OK') rank += 5;
       return rank;
     }
 
     function processRawRecords(rawRows, isDemoMode) {
-      const baseDate = parseDateSafe(appState.baseDate) || new Date();
+      const baseDate = isDemoMode ? new Date(2026, 10, 13) : determineReferenceDate(rawRows);
+      appState.baseDate = baseDate;
+
       const dispatchJobMap = new Map();
       const directJobMap = new Map();
 
-      // Step 1: Build 5km Dispatch BO Master & 2km Direct-Hire (紹介) Master from same CSV
+      // Step 1: Extract BOs & Job Orders from CSV
       for (const row of rawRows) {
         const coords = extractLatLng(row);
         if (!coords) continue;
@@ -1509,10 +1764,18 @@
         }
       }
 
+      // Fallback sample BOs if CSV lacks lat/lon job rows
+      if (dispatchJobMap.size === 0 && directJobMap.size === 0) {
+        for (const fb of FALLBACK_SAMPLE_BOS) {
+          if (fb.emp === 'direct') directJobMap.set(`${fb.role}|${fb.title}`, fb);
+          else dispatchJobMap.set(`${fb.role}|${fb.title}`, fb);
+        }
+      }
+
       const dispatchJobMaster = Array.from(dispatchJobMap.values());
       const directJobMaster = Array.from(directJobMap.values());
 
-      // Step 2: Deduplicate unique 応募者IDs via (DOB + Kana) OR (DOB + Address >= 5 chars)
+      // Step 2: Deduplicate unique persons via (生年月日 + フリガナ) OR (生年月日 + 住所)
       const groups = [];
       const kanaIndex = new Map();
       const addrIndex = new Map();
@@ -1577,7 +1840,7 @@
         }
       }
 
-      // Step 3: Filter Exclusions, Employment Type & Classify into 4 Tabs
+      // Step 3: Filter Exclusions, Employment Type & Assign to 4 Tabs
       let excludedActive = 0;
       let excludedHardNg = 0;
       let excludedDirectOnly = 0;
@@ -1587,13 +1850,11 @@
         const r = grp.canonical;
         const st = (r['ステータス'] || '').trim();
 
-        // Exclude active / in-progress
         if (ACTIVE_EXCLUDE_STATUSES.has(st)) {
           excludedActive++;
           continue;
         }
 
-        // Exclude hard NGs
         const ngText = grp.allRows
           .map(x => `${x['誘致NG理由'] || ''} ${x['誘致NG理由詳細'] || ''} ${x['アテンドNG理由詳細'] || ''} ${x['FIXNG理由'] || ''}`)
           .join(' ');
@@ -1602,7 +1863,6 @@
           continue;
         }
 
-        // Employment type filter: keep 派遣 / 紹介予定派遣 (or unknown before contact); exclude 紹介 only
         const empType = classifyEmploymentType(r);
         if (empType === 'direct') {
           excludedDirectOnly++;
@@ -1613,10 +1873,10 @@
         const role = roleInfo.role;
         const pref = extractPrefecture(r['住所(都道府県)'], r['住所']);
         const addr = r['住所'] || '';
-        const tokyo23 = isTokyo23(pref, addr);
         const coords = extractLatLng(r);
+        const ageStr = calcAge(r['生年月日'], baseDate);
+        const qual = (r['資格'] || r['保有資格'] || '').trim();
 
-        // Start date calculation
         const availRaw = r['即日か就業可能時期'] || '';
         let startDate = parseDateSafe(availRaw);
         if (!startDate && r['備考']) {
@@ -1627,13 +1887,18 @@
 
         const attendSt = (r['アテンドステータス'] || '').trim();
         const fixNg = (r['FIXNG理由'] || '').trim();
+        const attendDate = parseDateSafe(r['アテンド日']);
+        const contractEndDate = parseDateSafe(r['契約終了日'] || r['終了日']);
+        const appDate = parseDateSafe(r['応募日']);
+
+        const daysSinceAttend = attendDate ? diffDays(attendDate, baseDate) : null;
+        const daysSinceApp = appDate ? diffDays(appDate, baseDate) : null;
+        const hasAttended = Boolean(attendDate) || attendSt === 'OK' || st === 'アテンド済' || st === 'FIX待ち';
+
         const isFuture =
           st === '未来人材' ||
           fixNg.includes('未来人材') ||
-          (daysUntilStart !== null && daysUntilStart >= 90);
-
-        const appDate = parseDateSafe(r['応募日']);
-        const daysSinceApp = appDate ? diffDays(appDate, baseDate) : null;
+          (daysUntilStart !== null && daysUntilStart >= 35);
 
         let tab = 'dig';
         let subLabel = '';
@@ -1643,75 +1908,65 @@
           tab = 'future';
           const d = daysUntilStart;
           if (d === null) {
-            subLabel = '時期要確認';
+            subLabel = '未来人材（開始時期要確認）';
             phaseCode = 'F0';
-          } else if (tokyo23) {
-            if (d >= 84 && d <= 90) { subLabel = '①初期アプローチ(23区)'; phaseCode = 'F1'; }
-            else if (d >= 63 && d <= 69) { subLabel = '②状況確認(23区)'; phaseCode = 'F2'; }
-            else if (d >= 49 && d <= 55) { subLabel = '③本格打診・オファー(23区)'; phaseCode = 'F3'; }
-            else if (d >= 35 && d <= 41) { subLabel = '④顔合わせ日程回収(23区)'; phaseCode = 'F4'; }
-            else { subLabel = `待機中(残${d}日・23区)`; phaseCode = 'FWAIT'; }
+          } else if (d >= 84 && d <= 97) {
+            subLabel = `初期アプローチ（開始${d}日前）`;
+            phaseCode = 'F1';
+          } else if (d >= 63 && d <= 76) {
+            subLabel = `温度感確認（開始${d}日前）`;
+            phaseCode = 'F2';
+          } else if (d >= 49 && d <= 62) {
+            subLabel = `本格打診（開始${d}日前）`;
+            phaseCode = 'F3';
+          } else if (d >= 35 && d <= 48) {
+            subLabel = `顔合わせ日程回収（開始${d}日前）`;
+            phaseCode = 'F4';
           } else {
-            if (d >= 91 && d <= 97) { subLabel = '①初期アプローチ(市部他県)'; phaseCode = 'F1'; }
-            else if (d >= 70 && d <= 76) { subLabel = '②状況確認(市部他県)'; phaseCode = 'F2'; }
-            else if (d >= 56 && d <= 62) { subLabel = '③本格打診・オファー(市部他県)'; phaseCode = 'F3'; }
-            else if (d >= 42 && d <= 48) { subLabel = '④顔合わせ日程回収(市部他県)'; phaseCode = 'F4'; }
-            else { subLabel = `待機中(残${d}日・市部他県)`; phaseCode = 'FWAIT'; }
+            subLabel = `長期待機（開始${d}日前）`;
+            phaseCode = 'FWAIT';
           }
-        } else if (attendSt === 'OK' && (st === '他社決定' || st === '登録辞退')) {
+        } else if (
+          Boolean(contractEndDate) ||
+          (hasAttended && daysSinceAttend !== null && daysSinceAttend > 30) ||
+          (attendSt === 'OK' && (st === '他社決定' || st === '登録辞退'))
+        ) {
           tab = 'hot';
-          const fixDate = parseDateSafe(r['FIX日']);
-          const attendDate = parseDateSafe(r['アテンド日']);
-          if (fixDate) {
-            const elapsedFix = diffDays(fixDate, baseDate);
-            if (elapsedFix >= 45) {
-              subLabel = `②契約更新期(FIX後${elapsedFix}日)`;
-              phaseCode = 'H2';
-            } else {
-              subLabel = `①初期ギャップ確認(FIX後${elapsedFix}日)`;
-              phaseCode = 'H1';
-            }
+          if (contractEndDate) {
+            subLabel = `契約終了・更新期（${formatDateShort(contractEndDate)}）`;
+            phaseCode = 'H2';
+          } else if (daysSinceAttend !== null && daysSinceAttend > 30) {
+            subLabel = `面談後${daysSinceAttend}日経過・再打診`;
+            phaseCode = 'H2';
           } else {
-            const elapsedAtt = attendDate ? diffDays(attendDate, baseDate) : null;
-            if (elapsedAtt !== null && elapsedAtt >= 52) {
-              subLabel = `②契約更新期(面談後${elapsedAtt}日)`;
-              phaseCode = 'H2';
-            } else {
-              subLabel = `①初期ギャップ確認(${elapsedAtt !== null ? '面談後' + elapsedAtt + '日' : st})`;
-              phaseCode = 'H1';
-            }
+            subLabel = `条件把握済・再アプローチ（${st}）`;
+            phaseCode = 'H1';
           }
-        } else if (attendSt === 'OK') {
+        } else if (hasAttended) {
           tab = 'chance';
-          if (daysSinceApp !== null && daysSinceApp >= 7 && daysSinceApp <= 10) {
-            subLabel = `⚡他社比較スイートスポット(応募${daysSinceApp}日)`;
+          const elapsed = daysSinceAttend !== null ? daysSinceAttend : daysSinceApp;
+          if (elapsed !== null && elapsed >= 7 && elapsed <= 10) {
+            subLabel = `スイートスポット（面談後${elapsed}日）`;
             phaseCode = 'C1';
-          } else if (daysSinceApp !== null && daysSinceApp >= 11 && daysSinceApp <= 30) {
-            subLabel = `⏳FIX待ち滞留(応募${daysSinceApp}日)`;
+          } else if (elapsed !== null && elapsed <= 30) {
+            subLabel = `未FIXフォロー（面談後${elapsed}日）`;
             phaseCode = 'C2';
           } else {
-            subLabel = `未fixフォロー(${st || 'FIX待ち'}${daysSinceApp !== null ? '・' + daysSinceApp + '日' : ''})`;
+            subLabel = `未FIXフォロー（${st || 'FIX待ち'}）`;
             phaseCode = 'C3';
           }
         } else {
           tab = 'dig';
-          if (attendSt === 'NG' || st === 'アテンドNG') {
-            subLabel = `4.アテンドNG(条件不一致${daysSinceApp !== null ? '・' + daysSinceApp + '日' : ''})`;
-            phaseCode = 'D4';
-          } else if (daysSinceApp !== null && daysSinceApp >= 7 && daysSinceApp <= 10) {
-            subLabel = `⚡他社比較＆一言回収(応募${daysSinceApp}日)`;
+          if (daysSinceApp !== null && daysSinceApp > 30) {
+            subLabel = `休眠掘り起こし（応募後${daysSinceApp}日）`;
             phaseCode = 'D1';
-          } else if (st === 'アテンド待ち' || st === '誘致待ち' || (r['誘致ステータス'] || '').trim() === 'OK') {
-            subLabel = `2.アテンド・誘致待ち(${daysSinceApp !== null ? daysSinceApp + '日' : '未接続'})`;
-            phaseCode = 'D2';
           } else {
-            subLabel = `5.${st || '接触待ち・不通'}(${daysSinceApp !== null ? daysSinceApp + '日' : ''})`;
-            phaseCode = 'D5';
+            subLabel = `未面談掘り起こし（${st || '未接触'}${daysSinceApp !== null ? '・' + daysSinceApp + '日' : ''}）`;
+            phaseCode = 'D2';
           }
         }
 
-        // 5km Dispatch/Temp-to-Perm BO matching (Max 3)
-        // Sorted by NEWEST BO acquisition date first for chance / hot / dig; distance first for future
+        // 5km Dispatched BO matching (Max 3)
         let nearbyDispatchJobs = [];
         if (coords && dispatchJobMaster.length > 0) {
           const matches = [];
@@ -1730,7 +1985,7 @@
           nearbyDispatchJobs = matches.slice(0, 3);
         }
 
-        // 2km Direct-Hire (紹介) special hook matching (Max 2)
+        // 2km Direct-Hire (紹介) Special Hook matching
         let nearbyDirectJobs = [];
         if (coords && directJobMaster.length > 0) {
           const dMatches = [];
@@ -1746,33 +2001,34 @@
         }
 
         const prefsText = buildPreferencesText(r);
+        const notesSnippet = (r['備考'] || '').replace(/\s+/g, ' ').trim().slice(0, 120);
 
         validCandidates.push({
           id: r['応募者ID'] || `ROW-${validCandidates.length + 1}`,
           mergedIds: grp.mergedIds,
           name: r['氏名'] || '名称未設定',
           kana: r['フリガナ'] || '',
-          dob: normalizeDob(r['生年月日']),
+          ageStr,
+          qual,
+          phone: r['電話番号'] || r['携帯電話番号'] || '',
+          email: r['メールアドレス'] || r['メール'] || '',
           role,
-          isAutoComplemented: roleInfo.isAutoComplemented,
+          isAutoRole: roleInfo.isAutoRole,
           complementReason: roleInfo.reason,
           empLabel: (r['区分'] || r['案件種別'] || '派遣/未設定').trim(),
           branch: r['担当支店'] || '未設定',
           attendUser: r['アテンド担当ユーザー'] || '未設定',
           pref,
           addr,
-          areaLabel: tokyo23 ? '東京23区' : '市部・他県',
           status: st || '未設定',
           appDateStr: r['応募日'] || '',
           attendDateStr: r['アテンド日'] || '',
-          fixDateStr: r['FIX日'] || '',
           startDateStr: startDate ? formatDateShort(startDate) : (availRaw || '未定'),
-          daysUntilStart,
-          daysSinceApp,
           tab,
           subLabel,
           phaseCode,
           prefsText,
+          notesSnippet,
           nearbyDispatchJobs,
           nearbyDirectJobs
         });
@@ -1797,7 +2053,7 @@
     }
 
     // =========================================================================
-    // 8. Message Template Generator (5km BO + 2km Direct Hook + Uniform Signature)
+    // 8. Message Template Generator (Unified Signature: ビースタイル採用担当です)
     // =========================================================================
     function generateMessage(c) {
       const areaShort = `${c.pref}${(c.addr || '').replace(c.pref, '').slice(0, 6)}` || 'ご希望エリア';
@@ -1839,27 +2095,45 @@
 
       if (c.tab === 'hot') {
         const condLine = c.prefsText ? `（${c.prefsText}）` : '';
-        if (c.phaseCode === 'H2') {
-          return `${c.name}様、ご無沙汰しております！ビースタイル採用担当です。\n\nそろそろ現在の職場の契約更新や今後の働き方を考え始める頃かと思いご連絡しました。\nちょうど${c.name}様のご希望${condLine}に合う近隣の好条件案件の枠が空いたのですが、情報だけでも見てみませんか？${dispatchBlock}${directHookBlock}`;
-        }
-        return `${c.name}様、お久しぶりです！ビースタイル採用担当です。\n\nその後、新しい職場のお仕事には慣れましたでしょうか？\n以前お伺いしていた${c.name}様の希望条件${condLine}はしっかり把握しておりますので、もし「思っていたのと少し違うな…」などあればいつでもご相談くださいね！${directHookBlock}`;
+        return `${c.name}様、ご無沙汰しております！ビースタイル採用担当です。\n\nその後、お仕事のご状況や契約更新・今後の働き方についていかがでしょうか？\nちょうど${c.name}様のご希望${condLine}に合う近隣の好条件案件の枠が空いたのですが、情報だけでも見てみませんか？${dispatchBlock}${directHookBlock}`;
       }
 
-      // Tab 4: 掘り起こし
-      if (c.phaseCode === 'D4') {
-        return `${c.name}様、お世話になっております！ビースタイル採用担当です。\n\n前回はご希望に合う求人がすぐにご案内できず申し訳ございませんでした。\n本日、${areaShort}周辺で新着の${c.role}枠が出たのですが、まだお仕事探しは続けていらっしゃいますか？${dispatchBlock}${directHookBlock}\nこのままLINEに「日勤のみ」「時給〇円以上」など一言だけ返信いただければ条件に合うものをお探しします！`;
-      }
-      return `${c.name}様、こんにちは！ビースタイル採用担当です。\n\n先日はお電話が繋がらず失礼いたしました。他社様でもご検討中かもしれませんが、まだ詳しいご希望条件をお伺いできていないため、まずは${areaShort}近くの人気求人をお送りしますね。${dispatchBlock}${directHookBlock}\nお電話が難しい場合は、このままLINEに「日勤のみ」「時給〇円以上」など一言だけ返信いただければ条件に合うものをお探しします！`;
+      return `${c.name}様、こんにちは！ビースタイル採用担当です。\n\nその後、お仕事探しのご状況はいかがでしょうか？\n本日、${areaShort}周辺で新着の${c.role}枠が出ましたので参考までにお送りしますね。${dispatchBlock}${directHookBlock}\nお電話が難しい場合は、このままLINEに「日勤のみ」「時給〇円以上」など一言だけ返信いただければ条件に合うものをお探しします！`;
     }
 
     // =========================================================================
-    // 9. UI Rendering & Filtering (Strict Max 20 DOM Cards)
+    // 9. UI Rendering & Filtering
     // =========================================================================
-    function getCandidateEffectiveStatus(c) {
+    function isCandidateDone(c) {
       for (const id of c.mergedIds) {
-        if (appState.statuses[id]) return appState.statuses[id];
+        if (appState.statuses[id] === 'done') return true;
       }
-      return 'todo';
+      return false;
+    }
+
+    function getFilteredCandidates(targetTab, overrideTodoOnly) {
+      const fPref = document.getElementById('filterPref').value;
+      const fAttendUser = document.getElementById('filterAttendUser').value;
+      const fBranch = document.getElementById('filterBranch').value;
+      const fKw = document.getElementById('filterKeyword').value.trim().toLowerCase();
+      const todoOnly = typeof overrideTodoOnly === 'boolean'
+        ? overrideTodoOnly
+        : document.getElementById('filterTodoOnly').checked;
+
+      return appState.candidates.filter(c => {
+        if (targetTab && c.tab !== targetTab) return false;
+        if (fPref && c.pref !== fPref) return false;
+        if (fAttendUser && c.attendUser !== fAttendUser) return false;
+        if (fBranch && c.branch !== fBranch) return false;
+
+        if (todoOnly && isCandidateDone(c)) return false;
+
+        if (fKw) {
+          const hay = `${c.name} ${c.kana} ${c.id} ${c.pref} ${c.addr} ${c.qual} ${c.notesSnippet}`.toLowerCase();
+          if (!hay.includes(fKw)) return false;
+        }
+        return true;
+      });
     }
 
     function populateDropdowns() {
@@ -1869,91 +2143,44 @@
 
       const pSel = document.getElementById('filterPref');
       const curP = pSel.value;
-      pSel.innerHTML = `<option value="">🗾 都道府県：すべて</option>` +
-        prefs.map(p => `<option value="${p}">${p}</option>`).join('');
+      pSel.innerHTML = `<option value="">都道府県：すべて</option>` +
+        prefs.map(p => `<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`).join('');
       if (prefs.includes(curP)) pSel.value = curP;
 
       const uSel = document.getElementById('filterAttendUser');
       const curU = uSel.value;
-      uSel.innerHTML = `<option value="">👤 アテンド担当：すべて</option>` +
-        attendUsers.map(u => `<option value="${u}">${u}</option>`).join('');
+      uSel.innerHTML = `<option value="">アテンド担当ユーザー：すべて</option>` +
+        attendUsers.map(u => `<option value="${escapeHtml(u)}">${escapeHtml(u)}</option>`).join('');
       if (attendUsers.includes(curU)) uSel.value = curU;
 
       const bSel = document.getElementById('filterBranch');
       const curB = bSel.value;
-      bSel.innerHTML = `<option value="">🏢 担当支店：すべて</option>` +
-        branches.map(b => `<option value="${b}">${b}</option>`).join('');
+      bSel.innerHTML = `<option value="">担当支店：すべて</option>` +
+        branches.map(b => `<option value="${escapeHtml(b)}">${escapeHtml(b)}</option>`).join('');
       if (branches.includes(curB)) bSel.value = curB;
-
-      updateSubFilterOptions();
     }
 
-    function updateSubFilterOptions() {
-      const subSel = document.getElementById('filterSub');
-      if (appState.activeTab === 'future') {
-        subSel.innerHTML = `
-          <option value="">📌 フェーズ：すべて</option>
-          <option value="F1">① 初期アプローチ</option>
-          <option value="F2">② 状況確認</option>
-          <option value="F3">③ 本格打診・オファー</option>
-          <option value="F4">④ 顔合わせ日程回収</option>
-          <option value="FWAIT">待機中（レンジ外）</option>
-        `;
-      } else if (appState.activeTab === 'chance') {
-        subSel.innerHTML = `
-          <option value="">📌 区分：すべて</option>
-          <option value="C1">⚡ 応募7〜10日(スイートスポット)</option>
-          <option value="C2">⏳ 応募11〜30日(FIX待ち滞留)</option>
-          <option value="C3">その他未fixフォロー</option>
-        `;
-      } else if (appState.activeTab === 'hot') {
-        subSel.innerHTML = `
-          <option value="">📌 タイミング：すべて</option>
-          <option value="H1">① 初期ギャップ確認(14〜21日)</option>
-          <option value="H2">② 契約更新期(45〜60日)</option>
-        `;
-      } else {
-        subSel.innerHTML = `
-          <option value="">📌 区分：すべて</option>
-          <option value="D1">⚡ 応募7〜10日(他社比較・一言回収)</option>
-          <option value="D4">4. アテンドNG(条件不一致)</option>
-          <option value="D2">2. アテンド・誘致待ち</option>
-          <option value="D5">5. 接触待ち・不通</option>
-        `;
-      }
-    }
-
-    function renderSpecDrawer() {
+    function renderTabDetails() {
       const spec = TAB_SPECS[appState.activeTab];
-      document.getElementById('specToggleTitle').textContent = spec.title;
-      const body = document.getElementById('specBody');
-      body.innerHTML = spec.html;
-      body.classList.toggle('open', appState.specOpen);
-      document.getElementById('specArrow').textContent = appState.specOpen ? '▲ 閉じる' : '▼ 開く';
-    }
-
-    function toggleTabSpec() {
-      appState.specOpen = !appState.specOpen;
-      renderSpecDrawer();
+      document.getElementById('tabDetailsSummary').textContent = spec.summary;
+      document.getElementById('tabDetailsBody').innerHTML = spec.html;
     }
 
     function updateHeaderAndSummary() {
-      const badge = document.getElementById('dataModeBadge');
-      badge.textContent = appState.isDemo ? 'デモデータ' : '本番CSV読込済';
-      badge.style.background = appState.isDemo ? 'rgba(59, 130, 246, 0.25)' : 'rgba(22, 163, 74, 0.3)';
-      badge.style.color = appState.isDemo ? '#93c5fd' : '#86efac';
+      const pill = document.getElementById('dataModePill');
+      pill.textContent = appState.isDemo ? 'デモデータ' : 'CSV読込済';
+      pill.classList.toggle('is-live', !appState.isDemo);
 
-      document.getElementById('nearbyMasterLabel').textContent =
-        `📍 派遣BO(5km): ${appState.dispatchJobMaster.length.toLocaleString()}件 / 紹介(2km): ${appState.directJobMaster.length.toLocaleString()}件`;
+      document.getElementById('masterCountLabel').textContent =
+        `案件マスタ：派遣BO(5km) ${appState.dispatchJobMaster.length.toLocaleString()}件 ／ 紹介(2km) ${appState.directJobMaster.length.toLocaleString()}件`;
     }
 
     function render() {
-      renderSpecDrawer();
+      renderTabDetails();
 
-      // Update 4 tab uncompleted badge counts
       const tabCounts = { future: 0, chance: 0, hot: 0, dig: 0 };
       for (const c of appState.candidates) {
-        if (getCandidateEffectiveStatus(c) !== 'done') {
+        if (!isCandidateDone(c)) {
           tabCounts[c.tab]++;
         }
       }
@@ -1962,56 +2189,19 @@
       document.getElementById('cnt-hot').textContent = tabCounts.hot.toLocaleString();
       document.getElementById('cnt-dig').textContent = tabCounts.dig.toLocaleString();
 
-      // Apply filters
-      const fPref = document.getElementById('filterPref').value;
-      const fAttendUser = document.getElementById('filterAttendUser').value;
-      const fBranch = document.getElementById('filterBranch').value;
-      const fRole = document.getElementById('filterRole').value;
-      const fSub = document.getElementById('filterSub').value;
-      const fKw = document.getElementById('filterKeyword').value.trim().toLowerCase();
-
-      const tabMatched = appState.candidates.filter(c => {
-        if (c.tab !== appState.activeTab) return false;
-        if (fPref && c.pref !== fPref) return false;
-        if (fAttendUser && c.attendUser !== fAttendUser) return false;
-        if (fBranch && c.branch !== fBranch) return false;
-        if (fRole && c.role !== fRole) return false;
-        if (fSub && c.phaseCode !== fSub) return false;
-        if (fKw) {
-          const hay = `${c.name} ${c.kana} ${c.addr} ${c.id}`.toLowerCase();
-          if (!hay.includes(fKw)) return false;
-        }
-        return true;
-      });
-
-      // Status counts
-      const stCounts = { todo: 0, unanswered: 0, done: 0, all: tabMatched.length };
-      for (const c of tabMatched) {
-        stCounts[getCandidateEffectiveStatus(c)]++;
-      }
-      document.getElementById('st-cnt-todo').textContent = stCounts.todo.toLocaleString();
-      document.getElementById('st-cnt-unanswered').textContent = stCounts.unanswered.toLocaleString();
-      document.getElementById('st-cnt-done').textContent = stCounts.done.toLocaleString();
-      document.getElementById('st-cnt-all').textContent = stCounts.all.toLocaleString();
-
-      const finalItems = tabMatched.filter(c => {
-        if (appState.statusFilter === 'all') return true;
-        return getCandidateEffectiveStatus(c) === appState.statusFilter;
-      });
-
-      // Strict max 20 DOM cards per page
-      const totalPages = Math.max(1, Math.ceil(finalItems.length / PAGE_SIZE));
+      const filtered = getFilteredCandidates(appState.activeTab);
+      const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
       if (appState.currentPage > totalPages) appState.currentPage = totalPages;
       const startIdx = (appState.currentPage - 1) * PAGE_SIZE;
-      const pageItems = finalItems.slice(startIdx, startIdx + PAGE_SIZE);
+      const pageItems = filtered.slice(startIdx, startIdx + PAGE_SIZE);
 
       document.getElementById('listCountLabel').textContent =
-        `該当: ${finalItems.length.toLocaleString()}件（${pageItems.length}件表示）`;
+        `該当: ${filtered.length.toLocaleString()}件（${pageItems.length}件表示）`;
 
       const pagBar = document.getElementById('paginationBar');
-      if (finalItems.length > PAGE_SIZE) {
+      if (filtered.length > PAGE_SIZE) {
         pagBar.style.display = 'flex';
-        document.getElementById('pageIndicator').textContent = `${appState.currentPage} / ${totalPages} ページ`;
+        document.getElementById('pageIndicator').textContent = `${appState.currentPage} / ${totalPages}`;
         document.getElementById('btnPrevPage').disabled = appState.currentPage <= 1;
         document.getElementById('btnNextPage').disabled = appState.currentPage >= totalPages;
       } else {
@@ -2021,10 +2211,9 @@
       const container = document.getElementById('cardsContainer');
       if (pageItems.length === 0) {
         container.innerHTML = `
-          <div class="card" style="text-align:center; padding:32px 16px; color:var(--text-muted);">
-            <div style="font-size:28px; margin-bottom:6px;">📭</div>
-            <div style="font-weight:700;">該当する対象者がいません</div>
-            <div style="font-size:12px; margin-top:4px;">都道府県・アテンド担当・ステータス条件を変更してください</div>
+          <div class="candidate-card" style="text-align:center; padding:36px 16px; color:var(--text-secondary);">
+            <div style="font-weight:800; margin-bottom:4px;">該当する対象者がいません</div>
+            <div style="font-size:12px; color:var(--text-muted);">都道府県・アテンド担当・検索キーワード・未対応フィルターを変更してください</div>
           </div>
         `;
         return;
@@ -2034,73 +2223,75 @@
     }
 
     function renderCardHtml(c) {
-      const st = getCandidateEffectiveStatus(c);
-      const isDone = st === 'done';
-      const tabTagClass = `tag-${c.tab}`;
-      const btnMsgClass = `btn-msg-${c.tab}`;
-      const crmUrl = buildCrmUrl(c.id);
+      const done = isCandidateDone(c);
+      const crmUrl = appState.crmUrlBase || DEFAULT_CRM_URL;
+
+      const phaseBadgeClass =
+        c.tab === 'future' ? 'badge-orange' :
+        c.tab === 'chance' ? 'badge-amber' :
+        c.tab === 'hot' ? 'badge-rose' : 'badge-teal';
+
+      const roleBadgeClass = c.role === '看護' ? 'badge-dark' : 'badge-neutral';
 
       const mergedBadge = c.mergedIds.length > 1
-        ? `<span class="tag tag-warn">🔗 名寄せ(${c.mergedIds.length}件統合)</span>`
+        ? `<span class="badge badge-neutral">名寄せ ${c.mergedIds.length}件統合</span>`
         : '';
 
-      const directHookBadge = c.nearbyDirectJobs.length
-        ? `<span class="tag tag-direct">🏠 2km圏内・紹介特別枠あり</span>`
+      const directBadge = c.nearbyDirectJobs.length
+        ? `<span class="badge badge-purple">🏠 2km圏内・紹介特別枠あり</span>`
         : '';
 
-      const statusBadge = st === 'done'
-        ? `<span class="tag tag-ok">✔ 済</span>`
-        : st === 'unanswered'
-          ? `<span class="tag tag-warn">⏳ 未返信</span>`
-          : '';
+      const futureEditBtn = c.tab === 'future'
+        ? `<a class="btn-crm-edit" href="${escapeHtml(crmUrl)}" target="_blank" rel="noopener noreferrer" onclick="onExternalEditClick('${escapeHtml(c.id)}')">希望日変更・修正 ↗</a>`
+        : '';
 
-      const complementHtml = c.isAutoComplemented
+      const autoRoleHtml = c.isAutoRole
         ? `
-          <div class="complement-alert">
-            <div class="complement-alert-row">
-              <span>⚠️ <strong>職種自動補完（${escapeHtml(c.role)}）：</strong>ステータスや職種が違う可能性があるため元データを直してください</span>
-              <a class="btn-fix-crm" href="${escapeHtml(crmUrl)}" target="_blank" rel="noopener noreferrer">↗ 元データ修正</a>
+          <div class="alert-complement">
+            <div>
+              <strong>⚠️ 職種自動補完：ステータスや職種が違う可能性があるため元データを直してください</strong>
+              <div style="font-size:11px; opacity:0.85;">${escapeHtml(c.complementReason)}</div>
             </div>
-            <div style="font-size:10px; color:#7f1d1d;">判定根拠: ${escapeHtml(c.complementReason)}</div>
+            <a class="btn-fix-link" href="${escapeHtml(crmUrl)}" target="_blank" rel="noopener noreferrer" onclick="onExternalEditClick('${escapeHtml(c.id)}')">元データ修正 ↗</a>
           </div>
         `
         : '';
 
       const prefHtml = c.prefsText
-        ? `<div class="pref-box">✅ <strong>把握済条件:</strong> ${escapeHtml(c.prefsText)}</div>`
+        ? `<div class="pref-summary"><strong>把握済条件：</strong>${escapeHtml(c.prefsText)}</div>`
         : '';
 
       const directHtml = c.nearbyDirectJobs.length
         ? `
-          <div class="direct-hook-box">
-            <div class="direct-hook-title">
-              <span>🏠 ご自宅から2km以内の紹介特別求人（フック提案）</span>
+          <div class="direct-box">
+            <div class="box-header">
+              <span>🏠 2km圏内・紹介特別枠（直接雇用フック対象）</span>
               <span>${c.nearbyDirectJobs.length}件</span>
             </div>
             ${c.nearbyDirectJobs.map(d => `
-              <div class="direct-hook-item">
-                <span>★ ${escapeHtml(d.title)}</span>
-                <span style="font-weight:800; white-space:nowrap;">約${d.dist.toFixed(1)}km</span>
+              <div class="job-line">
+                <span>${escapeHtml(d.title)}</span>
+                <span style="font-weight:700; white-space:nowrap;">約${d.dist.toFixed(1)}km</span>
               </div>
             `).join('')}
           </div>
         `
         : '';
 
-      const jobsSortLabel = c.tab === 'future' ? '距離・条件順' : 'BO取得日時が新しい順';
-      const jobsHtml = c.nearbyDispatchJobs.length
+      const sortLabel = c.tab === 'future' ? '条件・距離順' : 'BO取得日時順';
+      const dispatchHtml = c.nearbyDispatchJobs.length
         ? `
-          <div class="jobs-box">
-            <div class="jobs-title">
-              <span>📍 5km以内の派遣・紹介予定派遣BO（${c.role}／${jobsSortLabel}）</span>
+          <div class="dispatch-box">
+            <div class="box-header">
+              <span>5km以内の派遣・紹介予定派遣BO（${c.role}・${sortLabel}）</span>
               <span>${c.nearbyDispatchJobs.length}件</span>
             </div>
             ${c.nearbyDispatchJobs.map(j => `
-              <div class="job-item">
+              <div class="job-line">
                 <span>${escapeHtml(j.title)}</span>
-                <div class="job-meta-right">
-                  <span class="job-dist">約${j.dist.toFixed(1)}km</span>
-                  ${j.boDateStr ? `<span class="job-bo-date">BO:${escapeHtml(j.boDateStr)}</span>` : ''}
+                <div class="job-dist-col">
+                  <span class="job-dist-val">約${j.dist.toFixed(1)}km</span>
+                  ${j.boDateStr ? `<span>BO:${escapeHtml(j.boDateStr)}</span>` : ''}
                 </div>
               </div>
             `).join('')}
@@ -2109,49 +2300,47 @@
         : '';
 
       const dateMeta = c.tab === 'future'
-        ? `<span>🗓️ 開始予定: <strong>${escapeHtml(c.startDateStr)}</strong></span>`
-        : c.tab === 'hot' && c.fixDateStr
-          ? `<span>📅 FIX日: ${escapeHtml(c.fixDateStr)}</span>`
-          : `<span>📅 応募: ${escapeHtml(c.appDateStr || '-')}</span>`;
+        ? `<span>就業希望時期: <strong>${escapeHtml(c.startDateStr)}</strong></span>`
+        : `<span>応募日: ${escapeHtml(c.appDateStr || '-')} ／ アテンド日: ${escapeHtml(c.attendDateStr || '-')}</span>`;
 
       return `
-        <article class="card ${isDone ? 'is-done' : ''}">
-          <div class="card-head">
-            <div class="card-badges">
-              <span class="tag ${tabTagClass}">${escapeHtml(c.subLabel)}</span>
-              <span class="tag tag-gray">${escapeHtml(c.pref)}（${escapeHtml(c.areaLabel)}）</span>
-              ${directHookBadge}
+        <article class="candidate-card ${done ? 'is-done' : ''}">
+          <div class="card-top">
+            <div class="badge-list">
+              <span class="badge ${roleBadgeClass}">${escapeHtml(c.role)}</span>
+              <span class="badge ${phaseBadgeClass}">${escapeHtml(c.subLabel)}</span>
+              ${directBadge}
               ${mergedBadge}
-              ${statusBadge}
             </div>
-            <div class="sys-actions">
-              <button class="sys-link" onclick="copySystemId('${escapeHtml(c.id)}')" title="IDコピー">ID:${escapeHtml(c.id)}</button>
-              <a class="sys-link" href="${escapeHtml(crmUrl)}" target="_blank" rel="noopener noreferrer" title="元システムを開く">↗ 詳細</a>
+            <div class="card-links">
+              <button class="link-chip" onclick="copySystemId('${escapeHtml(c.id)}')" title="IDをコピー">ID: ${escapeHtml(c.id)}</button>
+              ${futureEditBtn}
             </div>
           </div>
 
-          <div class="card-name-row">
-            <span class="card-name">${escapeHtml(c.name)}</span>
-            <span class="card-kana">${escapeHtml(c.kana)}（${escapeHtml(c.role)}／${escapeHtml(c.empLabel)}）</span>
+          <div class="card-identity">
+            <input type="checkbox" class="card-done-check" ${done ? 'checked' : ''} onchange="setCandidateDone('${escapeHtml(c.id)}', this.checked)" title="対応済みチェック">
+            <span class="person-name">${escapeHtml(c.name)}</span>
+            <span class="person-sub">${escapeHtml(c.kana)}${c.ageStr ? '（' + escapeHtml(c.ageStr) + '）' : ''} ／ ${escapeHtml(c.pref)} ${escapeHtml(c.addr.replace(c.pref, '').slice(0, 12))}</span>
           </div>
 
-          <div class="card-subinfo">
-            <span>📍 ${escapeHtml(c.addr || c.pref || '住所未登録')}</span>
+          <div class="card-meta">
             ${dateMeta}
-            <span>👤 アテンド: ${escapeHtml(c.attendUser)}（${escapeHtml(c.branch)}）</span>
+            <span>資格: ${escapeHtml(c.qual || '未登録')}</span>
+            <span>担当: ${escapeHtml(c.attendUser)}（${escapeHtml(c.branch)}）</span>
           </div>
 
-          ${complementHtml}
+          ${autoRoleHtml}
           ${prefHtml}
           ${directHtml}
-          ${jobsHtml}
+          ${dispatchHtml}
 
-          <div class="card-actions">
-            <button class="btn-action ${btnMsgClass}" onclick="openMsgModal('${escapeHtml(c.id)}')">
-              💬 文面作成・コピー
+          <div class="card-footer">
+            <button class="btn btn-dark btn-compose" onclick="openMsgModal('${escapeHtml(c.id)}')">
+              文面作成・案件確認
             </button>
-            <button class="btn-action btn-done-toggle ${isDone ? 'done' : ''}" onclick="quickToggleDone('${escapeHtml(c.id)}')">
-              ${isDone ? '✔ 対応済（戻す）' : '✔ 済にする'}
+            <button class="btn btn-outline btn-check ${done ? 'checked' : ''}" onclick="quickToggleDone('${escapeHtml(c.id)}')">
+              ${done ? '✔ 対応済（戻す）' : '対応済みにする'}
             </button>
           </div>
         </article>
@@ -2167,22 +2356,14 @@
     }
 
     // =========================================================================
-    // 10. Event Handlers
+    // 10. Event Handlers, External Links & Modals
     // =========================================================================
     function switchTab(tab) {
       appState.activeTab = tab;
-      document.querySelectorAll('.tab-btn').forEach(btn => {
+      document.querySelectorAll('.nav-tab').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.tab === tab);
       });
-      updateSubFilterOptions();
-      resetPageAndRender();
-    }
-
-    function setStatusFilter(st) {
-      appState.statusFilter = st;
-      document.querySelectorAll('.pill-btn[data-st]').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.st === st);
-      });
+      document.getElementById('tabDetailsBox').removeAttribute('open');
       resetPageAndRender();
     }
 
@@ -2197,35 +2378,27 @@
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    function recomputeBaseDate() {
-      const val = document.getElementById('baseDateInput').value;
-      if (!val) return;
-      appState.baseDate = val;
-      if (appState.isDemo) {
-        processRawRecords(DEMO_RAW_ROWS, true);
-      } else if (window._lastImportedRows) {
-        processRawRecords(window._lastImportedRows, false);
-      }
-    }
-
-    function setCandidateStatus(id, newStatus) {
+    function setCandidateDone(id, isDone) {
       const c = appState.candidates.find(x => x.id === id);
       const ids = c ? c.mergedIds : [id];
       for (const mId of ids) {
-        if (newStatus === 'todo') delete appState.statuses[mId];
-        else appState.statuses[mId] = newStatus;
+        if (isDone) appState.statuses[mId] = 'done';
+        else delete appState.statuses[mId];
       }
       saveStatusesToStorage();
       render();
+      showToast(isDone ? '対応済みに更新しました' : '未対応に戻しました');
     }
 
     function quickToggleDone(id) {
       const c = appState.candidates.find(x => x.id === id);
       if (!c) return;
-      const cur = getCandidateEffectiveStatus(c);
-      const next = cur === 'done' ? 'todo' : 'done';
-      setCandidateStatus(id, next);
-      showToast(next === 'done' ? '✔ 「済」に更新しました' : '未対応に戻しました');
+      setCandidateDone(id, !isCandidateDone(c));
+    }
+
+    function onExternalEditClick(id) {
+      copyTextFallback(id);
+      showToast(`応募者ID「${id}」をコピーしました（別タブで編集画面を開きます）`);
     }
 
     function openMsgModal(id) {
@@ -2234,27 +2407,34 @@
       appState.activeModalId = id;
 
       document.getElementById('modalPersonName').textContent = `${c.name} 様（${c.role}）`;
-      document.getElementById('modalPersonMeta').textContent = `${c.subLabel} ｜ ${c.pref} ｜ ID:${c.id}`;
+      document.getElementById('modalPersonMeta').textContent = `${c.subLabel} ／ ${c.pref} ／ ID:${c.id}`;
 
-      const copyDoneBtn = document.getElementById('modalCopyDoneBtn');
-      copyDoneBtn.className = `btn-action btn-msg-${c.tab}`;
-
-      const dhBox = document.getElementById('modalDirectHookBox');
+      const dhBox = document.getElementById('modalDirectBox');
       if (c.nearbyDirectJobs.length) {
         dhBox.style.display = 'block';
-        dhBox.innerHTML = `<div class="direct-hook-title"><span>🏠 2km圏内・紹介特別フック（文面差し込み済）</span><span>${c.nearbyDirectJobs.length}件</span></div>` +
-          c.nearbyDirectJobs.map(d => `<div class="direct-hook-item"><span>★ ${escapeHtml(d.title)}</span><span>約${d.dist.toFixed(1)}km</span></div>`).join('');
+        dhBox.innerHTML = `<div class="box-header"><span>🏠 2km圏内・紹介特別枠（文面に自動挿入済）</span><span>${c.nearbyDirectJobs.length}件</span></div>` +
+          c.nearbyDirectJobs.map(d => `
+            <div class="job-line">
+              <span>${escapeHtml(d.title)}（約${d.dist.toFixed(1)}km）</span>
+              <a class="link-chip" href="https://kawazoedaichi.github.io/searchOrder/" target="_blank" rel="noopener noreferrer">案件詳細 ↗</a>
+            </div>
+          `).join('');
       } else {
         dhBox.style.display = 'none';
       }
 
-      const nbBox = document.getElementById('modalNearbyBox');
+      const dpBox = document.getElementById('modalDispatchBox');
       if (c.nearbyDispatchJobs.length) {
-        nbBox.style.display = 'block';
-        nbBox.innerHTML = `<div class="jobs-title"><span>📍 5km以内の派遣BO案件（文面差し込み済）</span><span>${c.nearbyDispatchJobs.length}件</span></div>` +
-          c.nearbyDispatchJobs.map(j => `<div class="job-item"><span>${escapeHtml(j.title)}</span><span class="job-dist">約${j.dist.toFixed(1)}km</span></div>`).join('');
+        dpBox.style.display = 'block';
+        dpBox.innerHTML = `<div class="box-header"><span>5km以内の派遣BO案件（BO取得日時順・文面に自動挿入済）</span><span>${c.nearbyDispatchJobs.length}件</span></div>` +
+          c.nearbyDispatchJobs.map(j => `
+            <div class="job-line">
+              <span>${escapeHtml(j.title)}（約${j.dist.toFixed(1)}km${j.boDateStr ? '／BO:' + j.boDateStr : ''}）</span>
+              <a class="link-chip" href="https://kawazoedaichi.github.io/searchOrder/" target="_blank" rel="noopener noreferrer">案件詳細 ↗</a>
+            </div>
+          `).join('');
       } else {
-        nbBox.style.display = 'none';
+        dpBox.style.display = 'none';
       }
 
       document.getElementById('modalTextarea').value = generateMessage(c);
@@ -2279,37 +2459,207 @@
 
     function copySystemId(id) {
       copyTextFallback(id);
-      showToast(`元システム用ID「${id}」をコピーしました`);
+      showToast(`応募者ID「${id}」をコピーしました`);
     }
 
     function copyMessageOnly() {
       const txt = document.getElementById('modalTextarea').value;
       copyTextFallback(txt);
-      showToast('📋 文面をコピーしました');
+      showToast('文面をコピーしました');
     }
 
     function copyAndMarkDone() {
       const txt = document.getElementById('modalTextarea').value;
       copyTextFallback(txt);
       if (appState.activeModalId) {
-        setCandidateStatus(appState.activeModalId, 'done');
+        setCandidateDone(appState.activeModalId, true);
       }
       closeMsgModal();
-      showToast('📋 コピーして「✔ 済」にしました！');
+      showToast('文面をコピーして対応済みにしました');
     }
 
-    function setModalStatus(st) {
-      if (!appState.activeModalId) return;
-      setCandidateStatus(appState.activeModalId, st);
-      closeMsgModal();
-      showToast(st === 'done' ? '✔ 済にしました' : st === 'unanswered' ? '⏳ 未返信にしました' : '未対応に戻しました');
+    // =========================================================================
+    // 11. Export & JSON Backup Functions (BOM-prefixed UTF-8 CSV)
+    // =========================================================================
+    function openExportModal() {
+      const todoOnly = document.getElementById('filterTodoOnly').checked;
+      document.getElementById('exportTodoOnlyCheck').checked = todoOnly;
+      refreshExportModalCounts();
+      document.getElementById('exportModal').classList.add('open');
     }
 
+    function refreshExportModalCounts() {
+      const todoOnly = document.getElementById('exportTodoOnlyCheck').checked;
+      const filteredList = getFilteredCandidates(appState.activeTab, todoOnly);
+      const tabAllList = appState.candidates.filter(c => c.tab === appState.activeTab && (!todoOnly || !isCandidateDone(c)));
+      const masterAllList = appState.candidates.filter(c => !todoOnly || !isCandidateDone(c));
+
+      document.getElementById('expFilteredCount').textContent = filteredList.length.toLocaleString();
+      document.getElementById('expTabAllCount').textContent = tabAllList.length.toLocaleString();
+      document.getElementById('expMasterAllCount').textContent = masterAllList.length.toLocaleString();
+    }
+
+    function closeExportModal() {
+      document.getElementById('exportModal').classList.remove('open');
+    }
+
+    function escapeCsvCell(val) {
+      const str = String(val === null || val === undefined ? '' : val);
+      if (/[",\r\n]/.test(str)) {
+        return `"${str.replace(/"/g, '""')}"`;
+      }
+      return str;
+    }
+
+    function triggerDownload(blob, filename) {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    function exportCsvData(mode) {
+      const modalOpen = document.getElementById('exportModal').classList.contains('open');
+      const todoOnly = modalOpen
+        ? document.getElementById('exportTodoOnlyCheck').checked
+        : document.getElementById('filterTodoOnly').checked;
+
+      let targetList = [];
+      let scopeLabel = '';
+
+      if (mode === 'filtered') {
+        targetList = getFilteredCandidates(appState.activeTab, todoOnly);
+        scopeLabel = `${TAB_NAMES[appState.activeTab]}_表示条件`;
+      } else if (mode === 'tab_all') {
+        targetList = appState.candidates.filter(c => c.tab === appState.activeTab && (!todoOnly || !isCandidateDone(c)));
+        scopeLabel = `${TAB_NAMES[appState.activeTab]}_全件`;
+      } else {
+        targetList = appState.candidates.filter(c => !todoOnly || !isCandidateDone(c));
+        scopeLabel = '全4タブ一括';
+      }
+
+      if (!targetList.length) {
+        showToast('出力対象のデータが0件です');
+        return;
+      }
+
+      const headers = [
+        'タブ区分',
+        'アプローチフェーズ',
+        '対応状況',
+        '応募者ID',
+        '統合ID一覧',
+        '氏名',
+        'フリガナ',
+        '年齢',
+        '都道府県',
+        '住所',
+        '電話番号',
+        'メールアドレス',
+        '判定職種',
+        '職種要確認フラグ',
+        '就業希望時期',
+        'アテンド担当',
+        '担当支店',
+        '2km以内紹介特別枠',
+        '5km以内候補案件(最大3件・BO取得順)',
+        '生成メッセージ文面'
+      ];
+
+      const csvLines = [headers.map(escapeCsvCell).join(',')];
+
+      for (const c of targetList) {
+        const done = isCandidateDone(c);
+        const directSummary = c.nearbyDirectJobs
+          .map(d => `${d.title}(約${d.dist.toFixed(1)}km)`)
+          .join(' / ');
+        const dispatchSummary = c.nearbyDispatchJobs
+          .map((j, idx) => `${idx + 1}.${j.title}(約${j.dist.toFixed(1)}km${j.boDateStr ? '・BO:' + j.boDateStr : ''})`)
+          .join(' / ');
+
+        const row = [
+          TAB_NAMES[c.tab] || c.tab,
+          c.subLabel,
+          done ? '対応済' : '未対応',
+          c.id,
+          c.mergedIds.join(';'),
+          c.name,
+          c.kana,
+          c.ageStr,
+          c.pref,
+          c.addr,
+          c.phone,
+          c.email,
+          c.role,
+          c.isAutoRole ? '要確認(職種自動補完)' : '',
+          c.startDateStr,
+          c.attendUser,
+          c.branch,
+          directSummary,
+          dispatchSummary,
+          generateMessage(c)
+        ];
+        csvLines.push(row.map(escapeCsvCell).join(','));
+      }
+
+      const bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
+      const blob = new Blob([bom, csvLines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+      const dateStr = formatDateShort(appState.baseDate).replace(/\//g, '');
+      triggerDownload(blob, `ビースタイル追客_${scopeLabel}_${dateStr}.csv`);
+
+      closeExportModal();
+      showToast(`${targetList.length.toLocaleString()}件をCSVエクスポートしました`);
+    }
+
+    function exportStatusBackupJson() {
+      const payload = {
+        app: 'bstyle-followup',
+        exportedAt: new Date().toISOString(),
+        statuses: appState.statuses
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+      const dateStr = formatDateShort(appState.baseDate).replace(/\//g, '');
+      triggerDownload(blob, `ビースタイル消込バックアップ_${dateStr}.json`);
+      showToast('消込履歴(JSON)を保存しました');
+    }
+
+    function importStatusBackupJson(ev) {
+      const file = ev.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const parsed = JSON.parse(e.target.result);
+          const incoming = parsed && parsed.statuses ? parsed.statuses : parsed;
+          if (incoming && typeof incoming === 'object') {
+            appState.statuses = { ...appState.statuses, ...incoming };
+            saveStatusesToStorage();
+            render();
+            refreshExportModalCounts();
+            showToast('消込履歴を復元しました');
+          } else {
+            showToast('バックアップJSONの形式が正しくありません');
+          }
+        } catch (err) {
+          showToast('JSONファイルの読み込みに失敗しました');
+        }
+      };
+      reader.readAsText(file);
+      ev.target.value = '';
+    }
+
+    // =========================================================================
+    // 12. CSV Upload, Settings & Summary Modals
+    // =========================================================================
     function openUploadModal() { document.getElementById('uploadModal').classList.add('open'); }
     function closeUploadModal() { document.getElementById('uploadModal').classList.remove('open'); }
 
     function openSettingsModal() {
-      document.getElementById('crmUrlTemplateInput').value = appState.crmUrlTemplate;
+      document.getElementById('crmUrlTemplateInput').value = appState.crmUrlBase;
       document.getElementById('settingsModal').classList.add('open');
     }
     function closeSettingsModal() { document.getElementById('settingsModal').classList.remove('open'); }
@@ -2317,35 +2667,35 @@
     function saveCrmUrlTemplate() {
       const val = document.getElementById('crmUrlTemplateInput').value.trim();
       if (!val) return;
-      appState.crmUrlTemplate = val;
+      appState.crmUrlBase = val;
       try { localStorage.setItem(URL_STORAGE_KEY, val); } catch (e) {}
       closeSettingsModal();
       render();
-      showToast('💾 元システムURL設定を保存しました');
+      showToast('URL設定を保存しました');
     }
 
     function resetCrmUrlTemplate() {
-      appState.crmUrlTemplate = DEFAULT_CRM_URL_TEMPLATE;
-      document.getElementById('crmUrlTemplateInput').value = DEFAULT_CRM_URL_TEMPLATE;
+      appState.crmUrlBase = DEFAULT_CRM_URL;
+      document.getElementById('crmUrlTemplateInput').value = DEFAULT_CRM_URL;
       try { localStorage.removeItem(URL_STORAGE_KEY); } catch (e) {}
       render();
-      showToast('仮リンク設定に戻しました');
+      showToast('初期URLに戻しました');
     }
 
     function openSummaryModal() {
       const grid = document.getElementById('summaryStatsGrid');
       grid.innerHTML = `
-        <div class="stat-card"><div class="stat-label">CSV総レコード数</div><div class="stat-val">${appState.stats.totalRows.toLocaleString()}件</div></div>
-        <div class="stat-card"><div class="stat-label">重複名寄せ統合</div><div class="stat-val" style="color:var(--chance);">-${appState.stats.mergedCount.toLocaleString()}件</div></div>
-        <div class="stat-card"><div class="stat-label">稼働中・選考中除外</div><div class="stat-val">-${appState.stats.excludedActive.toLocaleString()}名</div></div>
-        <div class="stat-card"><div class="stat-label">ハードNG・紹介専任除外</div><div class="stat-val">-${(appState.stats.excludedHardNg + appState.stats.excludedDirectOnly).toLocaleString()}名</div></div>
+        <div class="summary-item"><div class="summary-label">CSV総レコード数</div><div class="summary-value">${appState.stats.totalRows.toLocaleString()}件</div></div>
+        <div class="summary-item"><div class="summary-label">重複名寄せ統合</div><div class="summary-value">-${appState.stats.mergedCount.toLocaleString()}件</div></div>
+        <div class="summary-item"><div class="summary-label">稼働中・FIX済除外</div><div class="summary-value">-${appState.stats.excludedActive.toLocaleString()}名</div></div>
+        <div class="summary-item"><div class="summary-label">ハードNG・紹介専任除外</div><div class="summary-value">-${(appState.stats.excludedHardNg + appState.stats.excludedDirectOnly).toLocaleString()}名</div></div>
       `;
 
       const logEl = document.getElementById('mergeLogList');
       if (appState.mergeLogs.length === 0) {
         logEl.innerHTML = '重複レコードはありませんでした。';
       } else {
-        logEl.innerHTML = appState.mergeLogs.slice(0, 30).map(l => `<div style="padding:2px 0; border-bottom:1px dashed #e2e8f0;">・${escapeHtml(l)}</div>`).join('') +
+        logEl.innerHTML = appState.mergeLogs.slice(0, 30).map(l => `<div style="padding:3px 0; border-bottom:1px solid var(--border);">・${escapeHtml(l)}</div>`).join('') +
           (appState.mergeLogs.length > 30 ? `<div style="margin-top:4px; font-weight:700;">...他 ${appState.mergeLogs.length - 30} 件統合</div>` : '');
       }
 
@@ -2355,8 +2705,8 @@
       const nurseDir = appState.directJobMaster.filter(j => j.role === '看護').length;
 
       document.getElementById('jobMasterSummary').innerHTML = `
-        <div>・<strong>5km以内検索用（派遣・紹介予定派遣BO）</strong>：計 ${appState.dispatchJobMaster.length.toLocaleString()}件（介護: ${careDisp}件 / 看護: ${nurseDisp}件）</div>
-        <div style="margin-top:4px;">・<strong>2km以内特別フック用（紹介求人）</strong>：計 ${appState.directJobMaster.length.toLocaleString()}件（介護: ${careDir}件 / 看護: ${nurseDir}件）</div>
+        <div>・5km以内検索用（派遣・紹介予定派遣BO）：計 ${appState.dispatchJobMaster.length.toLocaleString()}件（介護: ${careDisp}件 ／ 看護: ${nurseDisp}件）</div>
+        <div style="margin-top:4px;">・2km以内特別フック用（紹介求人）：計 ${appState.directJobMaster.length.toLocaleString()}件（介護: ${careDir}件 ／ 看護: ${nurseDir}件）</div>
       `;
 
       document.getElementById('summaryModal').classList.add('open');
@@ -2372,7 +2722,7 @@
     }
 
     function readCsvFile(file) {
-      showToast('CSVを解析中...');
+      showToast('CSVを解析しています...');
       const reader = new FileReader();
       reader.onload = function(e) {
         const buffer = e.target.result;
@@ -2384,19 +2734,19 @@
         }
         const rows = parseCsvText(text);
         if (!rows.length) {
-          showToast('⚠️ CSVの読み込みに失敗しました');
+          showToast('CSVの読み込みに失敗しました');
           return;
         }
-        window._lastImportedRows = rows;
+        saveCsvRowsToStorage(rows);
         processRawRecords(rows, false);
         closeUploadModal();
-        showToast(`✅ ${rows.length.toLocaleString()}件のCSVを読み込みました！`);
+        showToast(`${rows.length.toLocaleString()}件のCSVを読み込みました`);
       };
       reader.readAsArrayBuffer(file);
     }
 
     function loadBuiltInDemo() {
-      window._lastImportedRows = null;
+      try { localStorage.removeItem(DATA_STORAGE_KEY); } catch (e) {}
       processRawRecords(DEMO_RAW_ROWS, true);
       closeUploadModal();
       showToast('デモデータに戻しました');
@@ -2407,7 +2757,7 @@
       saveStatusesToStorage();
       render();
       closeUploadModal();
-      showToast('消込履歴をリセットしました');
+      showToast('対応済チェックをリセットしました');
     }
 
     let toastTimer = null;
@@ -2416,13 +2766,19 @@
       el.textContent = msg;
       el.classList.add('show');
       clearTimeout(toastTimer);
-      toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
+      toastTimer = setTimeout(() => el.classList.remove('show'), 2400);
     }
 
     window.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('baseDateInput').value = appState.baseDate;
-      loadSettingsAndStatuses();
-      processRawRecords(DEMO_RAW_ROWS, true);
+      loadPersistedState();
+      document.getElementById('exportTodoOnlyCheck').addEventListener('change', refreshExportModalCounts);
+
+      const savedRows = loadSavedCsvRows();
+      if (savedRows) {
+        processRawRecords(savedRows, false);
+      } else {
+        processRawRecords(DEMO_RAW_ROWS, true);
+      }
 
       const dz = document.getElementById('dropzone');
       ['dragenter', 'dragover'].forEach(ev => {
