@@ -90,7 +90,7 @@
       </button>
       <div id="guideBody" class="hidden px-4 pb-3 pt-1 border-t border-gray-100 text-xs text-gray-600 space-y-1.5 bg-orange-50/40">
         <p id="guideDesc"></p>
-        <p class="text-[11px] text-gray-500">※ CSVのB列（最終ステータス）を参照し、「3日以内 未FIX人材」「未FIX人材」はB列＝「FIX待ち」のみ抽出します。また、同一CSV内で「稼働中・就業中・職見待ち・内定待ち・決定」と電話番号が一致する場合は自動除外されます。</p>
+        <p class="text-[11px] text-gray-500">※ CSVのB列（最終ステータス）を参照し、「3日以内 未FIX人材」「未FIX人材」はB列＝「FIX待ち」のみ抽出します。また、searchOrderの公開案件データ（jobs.json）および高精度座標辞書（coords_dict.json）を自動取得し、自宅住所から本当に5km以内（紹介は2km以内）の案件だけを直線距離計算して表示します。</p>
       </div>
     </div>
 
@@ -145,7 +145,7 @@
       <div class="flex flex-wrap items-center gap-2">
         <span class="font-bold text-gray-900" id="resultCountText">該当: 0件</span>
         <span class="text-gray-400">|</span>
-        <span id="jobMasterSummary">案件マスタ：派遣BO(5km) 0件 ／ 紹介(2km) 0件</span>
+        <span id="jobMasterSummary" class="font-semibold text-emerald-700">searchOrder案件同期中...</span>
         <span id="autoExcludedSummary" class="text-rose-600 font-medium"></span>
       </div>
       <div class="text-[11px] text-gray-500">
@@ -204,7 +204,7 @@
         <div class="bg-orange-50 border border-orange-200 rounded-xl p-3 flex items-center justify-between gap-2">
           <div>
             <p class="font-bold text-gray-900">1. Refoから全列CSVをダウンロード</p>
-            <p class="text-[11px] text-gray-600">B列（2列目）を「最終ステータス」として自動参照します</p>
+            <p class="text-[11px] text-gray-600">B列（2列目）を「最終ステータス」として自動参照し、自宅座標を自動算出します</p>
           </div>
           <a href="https://refo.link/haken-oubo/applications" target="_blank" rel="noopener noreferrer"
              class="px-3 py-2 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-orange-400 font-bold whitespace-nowrap shadow-sm">
@@ -220,7 +220,7 @@
         <div class="bg-zinc-900 text-white rounded-xl p-3.5 space-y-2">
           <div class="flex items-center justify-between">
             <span class="font-bold text-orange-400">📦 チーム配布・軽量化用 data.js 書き出し</span>
-            <span class="text-[10px] text-zinc-400">軽量圧縮＋最新案件マスタ同梱</span>
+            <span class="text-[10px] text-zinc-400">軽量圧縮＋算出座標同梱</span>
           </div>
           <p class="text-[11px] text-zinc-300">読み込んだ全列CSVを軽量圧縮した別ファイル（<code class="text-orange-300">data.js</code>）として保存します。</p>
           <button type="button" onclick="exportDataJsFile()" class="w-full py-2 rounded-lg bg-orange-500 hover:bg-orange-600 text-zinc-950 font-black transition">
@@ -281,7 +281,7 @@
                   <th class="px-2.5 py-2">宛名</th>
                   <th class="px-2.5 py-2">電話番号</th>
                   <th class="px-2.5 py-2">担当支店</th>
-                  <th class="px-2.5 py-2">候補BO(住所入)</th>
+                  <th class="px-2.5 py-2">候補BO(距離・住所入)</th>
                 </tr>
               </thead>
               <tbody id="exportPreviewBody" class="divide-y divide-gray-200 bg-white"></tbody>
@@ -307,10 +307,15 @@
   <div id="urlModal" class="hidden fixed inset-0 z-50 modal-backdrop flex items-center justify-center p-3">
     <div class="bg-white rounded-2xl max-w-xl w-full shadow-2xl border border-gray-200 overflow-hidden">
       <div class="bg-zinc-950 text-white px-5 py-3.5 flex items-center justify-between">
-        <h2 class="font-bold text-base">外部データURL・案件マスタ（searchOrder）連携設定</h2>
+        <h2 class="font-bold text-base">searchOrder 案件マスタ自動連携・外部データ設定</h2>
         <button type="button" onclick="closeModal('urlModal')" class="text-gray-400 hover:text-white text-xl font-bold px-2">×</button>
       </div>
       <div class="p-5 space-y-4 text-xs">
+        <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-3 space-y-1.5">
+          <p class="font-bold text-emerald-900">✅ searchOrder 公開データとの自動連携（標準装備）</p>
+          <p class="text-[11px] text-emerald-800">起動時に自動で <code class="bg-white px-1 rounded">https://kawazoedaichi.github.io/searchOrder/jobs.json</code> と <code class="bg-white px-1 rounded">coords_dict.json</code> を取得し、求職者の自宅住所から直線距離を計算します。</p>
+          <button type="button" onclick="syncFromSearchOrderPublic(true)" class="mt-1 px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold">🔄 今すぐ searchOrder 最新案件を再同期する</button>
+        </div>
         <div>
           <label class="block font-bold text-gray-800 mb-1">① 外部求職者データURL（別サイトの data.js / JSON）</label>
           <div class="flex gap-2">
@@ -319,16 +324,10 @@
           </div>
         </div>
         <div class="border-t border-gray-200 pt-3 space-y-2">
-          <label class="block font-bold text-gray-800">② 案件マスタ（searchOrder側データ）のURLまたはCSV取込</label>
+          <label class="block font-bold text-gray-800">② カスタム案件マスタURL（変更する場合のみ）</label>
           <div class="flex gap-2">
-            <input type="text" id="jobMasterUrlInput" placeholder="https://kawazoedaichi.github.io/searchOrder/data.js" class="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-xs" />
+            <input type="text" id="jobMasterUrlInput" value="https://kawazoedaichi.github.io/searchOrder/jobs.json" class="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-xs" />
             <button type="button" onclick="fetchJobMasterFromUrl()" class="px-3.5 py-2 rounded-lg bg-orange-500 text-zinc-950 font-black">URLから同期</button>
-          </div>
-          <div class="pt-1">
-            <button type="button" onclick="document.getElementById('jobCsvInput').click()" class="w-full py-2 rounded-lg border border-dashed border-gray-400 hover:border-orange-500 text-gray-700 font-bold bg-gray-50">
-              📂 または searchOrder に使った案件CSVを直接選択して住所反映
-            </button>
-            <input type="file" id="jobCsvInput" accept=".csv" class="hidden" onchange="handleJobCsvImport(event)" />
           </div>
         </div>
       </div>
@@ -342,7 +341,7 @@
         <button type="button" onclick="closeModal('githubModal')" class="text-gray-400 hover:text-white text-xl font-bold px-2">×</button>
       </div>
       <div class="p-5 space-y-3 text-xs">
-        <p class="text-gray-600 leading-relaxed">大容量対応の Git Data API（Base64エンコード方式）を使用し、現在読み込んでいる全列CSV・案件マスタを軽量圧縮して GitHub 上の <strong><code>data.js</code></strong> へ直接自動アップロードします。</p>
+        <p class="text-gray-600 leading-relaxed">大容量対応の Git Data API（Base64エンコード方式）を使用し、現在読み込んでいる全列CSV・座標データを軽量圧縮して GitHub 上の <strong><code>data.js</code></strong> へ直接自動アップロードします。</p>
         <div class="space-y-2 bg-gray-50 p-3.5 rounded-xl border border-gray-200">
           <div>
             <label class="block font-bold text-gray-700 mb-0.5">GitHub リポジトリ（オーナー/リポジトリ名）</label>
@@ -434,16 +433,33 @@
   var SQ = String.fromCharCode(39);
   var AMP = String.fromCharCode(38);
 
+  var SEARCH_ORDER_JOBS_URL = 'https://kawazoedaichi.github.io/searchOrder/jobs.json';
+  var SEARCH_ORDER_DICT_URL = 'https://kawazoedaichi.github.io/searchOrder/coords_dict.json';
+
   var STORAGE_KEYS = {
     ACTION_LOGS: 'bstyle_staff_action_logs_v4',
     EXCLUDED_LIST: 'bstyle_staff_excluded_v4',
     CANDIDATE_CACHE: 'bstyle_staff_candidates_v4',
-    JOB_MASTER_CACHE: 'bstyle_staff_jobs_v4',
     SETTINGS: 'bstyle_staff_settings_v4'
   };
 
   var KANTO_BRANCHES = ['東京東', '本社', '埼玉', '神奈川'];
   var ACTIVE_OR_PENDING_KEYWORDS = ['稼働中', '稼動中', '就業中', '職見待ち', '職場見学待ち', '職見', '内定待ち', '採用待ち', '入社待ち', '決定', '成約'];
+
+  var PREF_COORDS = {
+    "北海道":[43.0642,141.3469],"青森県":[40.8244,140.74],"岩手県":[39.7036,141.1527],"宮城県":[38.2688,140.8721],
+    "秋田県":[39.7186,140.1024],"山形県":[38.2404,140.3633],"福島県":[37.75,140.4678],"茨城県":[36.3418,140.4468],
+    "栃木県":[36.5657,139.8836],"群馬県":[36.3907,139.0604],"埼玉県":[35.8569,139.6489],"千葉県":[35.6051,140.1233],
+    "東京都":[35.6895,139.6917],"神奈川県":[35.4478,139.6425],"新潟県":[37.9026,139.0232],"富山県":[36.6953,137.2113],
+    "石川県":[36.5947,136.6256],"福井県":[36.0652,136.2216],"山梨県":[35.6642,138.5684],"長野県":[36.6513,138.181],
+    "岐阜県":[35.3912,136.7223],"静岡県":[34.9769,138.3831],"愛知県":[35.1802,136.9066],"三重県":[34.7303,136.5086],
+    "滋賀県":[35.0045,135.8686],"京都府":[35.0214,135.7556],"大阪府":[34.6863,135.52],"兵庫県":[34.6913,135.183],
+    "奈良県":[34.6851,135.8327],"和歌山県":[34.226,135.1675],"鳥取県":[35.5039,134.2377],"島根県":[35.4723,133.0505],
+    "岡山県":[34.6618,133.9344],"広島県":[34.3966,132.4596],"山口県":[34.1859,131.4706],"徳島県":[34.0658,134.5593],
+    "香川県":[34.3401,134.0434],"愛媛県":[33.8416,132.7657],"高知県":[33.5597,133.5311],"福岡県":[33.6064,130.4183],
+    "佐賀県":[33.2494,130.2988],"長崎県":[32.7448,129.8737],"熊本県":[32.7898,130.7417],"大分県":[33.2382,131.6126],
+    "宮崎県":[31.9111,131.4239],"鹿児島県":[31.5602,130.5581],"沖縄県":[26.2124,127.6809]
+  };
 
   var state = {
     currentTab: 'within3days',
@@ -455,8 +471,10 @@
     autoExcludedCount: 0,
     mergedDupCount: 0,
     csvHeaders: [],
-    dispatchJobs: [],
-    directJobs: [],
+    townCoordsDict: {},
+    dictReady: false,
+    searchOrderJobs: [],
+    jobsReady: false,
     slideReasons: [
       '先方にて充足してしまった',
       '他社で決定してしまった',
@@ -467,7 +485,7 @@
     excludedMap: {},
     settings: {
       externalDataUrl: '',
-      jobMasterUrl: '',
+      jobMasterUrl: SEARCH_ORDER_JOBS_URL,
       ghRepo: 'kawazoedaichi/staff',
       ghBranch: 'main',
       ghPath: 'data.js',
@@ -488,6 +506,275 @@
     return btoa(bin);
   }
 
+  // IndexedDB（searchOrderの軽量キャッシュ）
+  function idbGet(key) {
+    return new Promise(function(resolve) {
+      try {
+        var req = indexedDB.open('bstyleStaffGeoDB', 1);
+        req.onupgradeneeded = function() { req.result.createObjectStore('kv'); };
+        req.onsuccess = function() {
+          var tx = req.result.transaction('kv', 'readonly');
+          var g = tx.objectStore('kv').get(key);
+          g.onsuccess = function() { resolve(g.result || null); };
+          g.onerror = function() { resolve(null); };
+        };
+        req.onerror = function() { resolve(null); };
+      } catch (e) { resolve(null); }
+    });
+  }
+  function idbSet(key, val) {
+    return new Promise(function(resolve) {
+      try {
+        var req = indexedDB.open('bstyleStaffGeoDB', 1);
+        req.onupgradeneeded = function() { req.result.createObjectStore('kv'); };
+        req.onsuccess = function() {
+          var tx = req.result.transaction('kv', 'readwrite');
+          tx.objectStore('kv').put(val, key);
+          tx.oncomplete = function() { resolve(true); };
+          tx.onerror = function() { resolve(false); };
+        };
+        req.onerror = function() { resolve(false); };
+      } catch (e) { resolve(false); }
+    });
+  }
+
+  // searchOrderと同じ町丁目正規化＆座標辞書検索
+  function kanjiChomeToNum(str) {
+    if (!str) return '';
+    var digitMap = { '〇':'0', '一':'1', '二':'2', '三':'3', '四':'4', '五':'5', '六':'6', '七':'7', '八':'8', '九':'9' };
+    var s = String(str).normalize('NFKC')
+      .replace(/[‐‑‒–—―ー−]/g, '-')
+      .replace(/ヶ/g, 'ケ').replace(/之/g, 'ノ').replace(/ッ/g, 'ツ');
+    s = s.replace(/十([一二三四五六七八九])丁目/g, function(_, d) { return '1' + digitMap[d] + '-'; });
+    s = s.replace(/([二三四五六七八九])十([一二三四五六七八九])丁目/g, function(_, d1, d2) { return digitMap[d1] + digitMap[d2] + '-'; });
+    s = s.replace(/([二三四五六七八九])十丁目/g, function(_, d) { return digitMap[d] + '0-'; });
+    s = s.replace(/十丁目/g, '10-');
+    s = s.replace(/([一二三四五六七八九])丁目/g, function(_, d) { return digitMap[d] + '-'; });
+    s = s.replace(/(\d+)丁目/g, '$1-');
+    return s;
+  }
+
+  function extractPrefFromAddress(addr, prefHint) {
+    if (prefHint && state.townCoordsDict[prefHint]) return prefHint;
+    if (prefHint && PREF_COORDS[prefHint]) return prefHint;
+    var s = String(addr || '');
+    var prefs = Object.keys(PREF_COORDS);
+    for (var i = 0; i < prefs.length; i++) {
+      if (s.indexOf(prefs[i]) !== -1) return prefs[i];
+    }
+    return prefHint || '';
+  }
+
+  function lookupCoordsFromDict(prefHint, address) {
+    var pref = extractPrefFromAddress(address, prefHint);
+    if (!pref || !state.townCoordsDict[pref]) {
+      if (pref && PREF_COORDS[pref]) {
+        return { lat: PREF_COORDS[pref][0], lng: PREF_COORDS[pref][1], isCoarse: true, matched: pref };
+      }
+      return null;
+    }
+    var prefObj = state.townCoordsDict[pref];
+    var sortedCityKeys = Object.keys(prefObj).sort(function(a, b) { return b.length - a.length; });
+    var cityKey = null;
+    var addrStr = String(address || '');
+
+    for (var i = 0; i < sortedCityKeys.length; i++) {
+      var k = sortedCityKeys[i];
+      var shortK = k.replace(/^.*郡/, '');
+      if (addrStr.indexOf(k) !== -1 || (shortK.length >= 2 && addrStr.indexOf(shortK) !== -1)) {
+        cityKey = k;
+        break;
+      }
+    }
+
+    if (!cityKey) {
+      if (PREF_COORDS[pref]) return { lat: PREF_COORDS[pref][0], lng: PREF_COORDS[pref][1], isCoarse: true, matched: pref };
+      return null;
+    }
+
+    var townsObj = prefObj[cityKey];
+    var townKeys = Object.keys(townsObj).sort(function(a, b) { return b.length - a.length; });
+    var addrBody = addrStr.replace(pref, '').replace(cityKey, '').trim();
+    var normAddr = kanjiChomeToNum(addrBody);
+
+    for (var j = 0; j < townKeys.length; j++) {
+      var t = townKeys[j];
+      var normT = kanjiChomeToNum(t);
+      if (addrBody.indexOf(t) !== -1 || normAddr.indexOf(normT) !== -1) {
+        return { lat: townsObj[t][0], lng: townsObj[t][1], isCoarse: false, matched: pref + cityKey + t };
+      }
+    }
+
+    for (var j2 = 0; j2 < townKeys.length; j2++) {
+      var t2 = townKeys[j2];
+      var strippedT = t2.replace(/^(大字|字)/, '');
+      if (strippedT.length >= 2) {
+        var normStripped = kanjiChomeToNum(strippedT);
+        if (addrBody.indexOf(strippedT) !== -1 || normAddr.indexOf(normStripped) !== -1) {
+          return { lat: townsObj[t2][0], lng: townsObj[t2][1], isCoarse: false, matched: pref + cityKey + t2 };
+        }
+      }
+    }
+
+    var addrBaseName = normAddr.replace(/[0-9\-]+.*$/, '').trim();
+    if (addrBaseName.length >= 2) {
+      var sameBase = townKeys.filter(function(t3) {
+        var baseT = kanjiChomeToNum(t3).replace(/^(大字|字)/, '').replace(/\d+-$/, '');
+        return baseT === addrBaseName;
+      });
+      if (sameBase.length > 0) {
+        var sLat = 0, sLng = 0;
+        sameBase.forEach(function(t3) { sLat += townsObj[t3][0]; sLng += townsObj[t3][1]; });
+        return {
+          lat: Number((sLat / sameBase.length).toFixed(6)),
+          lng: Number((sLng / sameBase.length).toFixed(6)),
+          isCoarse: false,
+          matched: pref + cityKey + addrBaseName
+        };
+      }
+    }
+
+    if (townKeys.length > 0) {
+      var sumLat = 0, sumLng = 0;
+      townKeys.forEach(function(t4) { sumLat += townsObj[t4][0]; sumLng += townsObj[t4][1]; });
+      return {
+        lat: Number((sumLat / townKeys.length).toFixed(5)),
+        lng: Number((sumLng / townKeys.length).toFixed(5)),
+        isCoarse: false,
+        matched: pref + cityKey
+      };
+    }
+    return null;
+  }
+
+  function calcDistanceKm(lat1, lon1, lat2, lon2) {
+    if (lat1 == null || lon1 == null || lat2 == null || lon2 == null) return null;
+    var R = 6371;
+    var dLat = (lat2 - lat1) * Math.PI / 180;
+    var dLon = (lon2 - lon1) * Math.PI / 180;
+    var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  }
+
+  function formatSearchOrderJobAddress(j) {
+    var pref = j.pref || '';
+    var city = j.city || '';
+    var addr = j.address || '';
+    if (pref && addr.indexOf(pref) === 0) addr = addr.slice(pref.length);
+    if (city && addr.indexOf(city) === 0) addr = addr.slice(city.length);
+    return pref + city + addr;
+  }
+
+  function formatBoDateShort(dateStr, ts) {
+    var t = ts;
+    if (!t && dateStr) {
+      var m1 = String(dateStr).match(/(\d{1,2})月\s*(\d{1,2}),\s*(\d{4})/);
+      if (m1) return m1[3] + '/' + m1[1] + '/' + m1[2];
+      var p = Date.parse(String(dateStr).replace(/\//g, '-'));
+      if (!isNaN(p)) t = p;
+    }
+    if (t && t > 0) {
+      var d = new Date(t);
+      return d.getFullYear() + '/' + (d.getMonth() + 1) + '/' + d.getDate();
+    }
+    return String(dateStr || '-').slice(0, 10);
+  }
+
+  // searchOrder の jobs.json と coords_dict.json を自動同期
+  window.syncFromSearchOrderPublic = async function(showAlert) {
+    var summaryEl = document.getElementById('jobMasterSummary');
+    if (summaryEl) summaryEl.textContent = 'searchOrder 案件・座標辞書を同期中...';
+
+    try {
+      // 1. キャッシュから即読込
+      var cachedDict = await idbGet('coords_dict_v1');
+      if (cachedDict && cachedDict.data) {
+        state.townCoordsDict = cachedDict.data;
+        state.dictReady = true;
+      }
+      var cachedJobs = await idbGet('searchOrder_jobs_v1');
+      if (cachedJobs && Array.isArray(cachedJobs.jobs) && cachedJobs.jobs.length > 0) {
+        state.searchOrderJobs = cachedJobs.jobs;
+        state.jobsReady = true;
+        recomputeAllCandidateCoords();
+        renderList();
+      }
+
+      // 2. リモートから最新を取得（Parallel）
+      var jobsUrl = state.settings.jobMasterUrl || SEARCH_ORDER_JOBS_URL;
+      var results = await Promise.all([
+        fetch(SEARCH_ORDER_DICT_URL, { cache: 'no-cache' }).then(function(r) { return r.ok ? r.json() : null; }).catch(function() { return null; }),
+        fetch(jobsUrl, { cache: 'no-cache' }).then(function(r) { return r.ok ? r.json() : null; }).catch(function() { return null; })
+      ]);
+
+      var remoteDict = results[0];
+      var remoteJobs = results[1];
+
+      if (remoteDict && typeof remoteDict === 'object' && Object.keys(remoteDict).length > 0) {
+        state.townCoordsDict = remoteDict;
+        state.dictReady = true;
+        await idbSet('coords_dict_v1', { ts: Date.now(), data: remoteDict });
+      }
+
+      if (Array.isArray(remoteJobs) && remoteJobs.length > 0) {
+        // 案件側にも座標補完
+        var normalizedJobs = remoteJobs.map(function(j, idx) {
+          var fullAddr = formatSearchOrderJobAddress(j);
+          var lat = j.lat;
+          var lng = j.lng;
+          if ((lat == null || lng == null || isNaN(lat) || isNaN(lng)) && state.dictReady) {
+            var c = lookupCoordsFromDict(j.pref, fullAddr);
+            if (c) { lat = c.lat; lng = c.lng; }
+          }
+          return {
+            id: j.id || ('SO-' + idx),
+            name: j.facility || j.name || '施設名未設定',
+            address: fullAddr,
+            pref: j.pref || '',
+            jobType: j.jobType || '介護',
+            empType: j.empType || '派遣',
+            empTypes: Array.isArray(j.empTypes) ? j.empTypes : [j.empType || '派遣'],
+            shifts: Array.isArray(j.shifts) ? j.shifts : [],
+            date: j.date || '',
+            timestamp: j.timestamp || 0,
+            lat: lat,
+            lng: lng
+          };
+        });
+        state.searchOrderJobs = normalizedJobs;
+        state.jobsReady = true;
+        await idbSet('searchOrder_jobs_v1', { ts: Date.now(), jobs: normalizedJobs });
+      }
+
+      recomputeAllCandidateCoords();
+      renderList();
+
+      if (showAlert) {
+        closeModal('urlModal');
+        showPopup('searchOrder 同期完了！', 'searchOrder の最新案件 ' + state.searchOrderJobs.length.toLocaleString() + ' 件と高精度座標辞書を同期しました。' + LF + '求職者の自宅住所から直線距離（5km以内・2km以内）を再計算しました。');
+      }
+    } catch (e) {
+      console.warn('searchOrder同期エラー:', e);
+      if (summaryEl) summaryEl.textContent = '案件マスタ：同期待機（ネットワーク確認）';
+    }
+  };
+
+  function recomputeAllCandidateCoords() {
+    if (!state.mergedCandidates || state.mergedCandidates.length === 0) return;
+    state.mergedCandidates.forEach(function(c) {
+      var found = lookupCoordsFromDict(c.pref, c.address);
+      if (found) {
+        c.lat = found.lat;
+        c.lng = found.lng;
+        c.coordMatched = found.matched;
+        c.isCoarseCoord = found.isCoarse;
+      }
+    });
+  }
+
   function loadPersistentStorage() {
     try { var l = localStorage.getItem(STORAGE_KEYS.ACTION_LOGS); if (l) state.actionLogs = JSON.parse(l); } catch (e) {}
     try { var x = localStorage.getItem(STORAGE_KEYS.EXCLUDED_LIST); if (x) state.excludedMap = JSON.parse(x); } catch (e) {}
@@ -496,7 +783,7 @@
     var elExt = document.getElementById('externalDataUrlInput');
     if (elExt) elExt.value = state.settings.externalDataUrl || '';
     var elJob = document.getElementById('jobMasterUrlInput');
-    if (elJob) elJob.value = state.settings.jobMasterUrl || '';
+    if (elJob) elJob.value = state.settings.jobMasterUrl || SEARCH_ORDER_JOBS_URL;
     var elRepo = document.getElementById('ghRepoInput');
     if (elRepo) elRepo.value = state.settings.ghRepo || 'kawazoedaichi/staff';
     var elBr = document.getElementById('ghBranchInput');
@@ -516,37 +803,6 @@
   }
 
   function loadInitialData() {
-    var cachedJobs = null;
-    try { cachedJobs = localStorage.getItem(STORAGE_KEYS.JOB_MASTER_CACHE); } catch (e) {}
-    if (cachedJobs) {
-      try {
-        var pj = JSON.parse(cachedJobs);
-        state.dispatchJobs = pj.dispatchJobs || [];
-        state.directJobs = pj.directJobs || [];
-      } catch (e) {}
-    } else if (window.BSTYLE_APP_DATA) {
-      state.dispatchJobs = window.BSTYLE_APP_DATA.dispatchJobs || [];
-      state.directJobs = window.BSTYLE_APP_DATA.directJobs || [];
-      if (window.BSTYLE_APP_DATA.slideReasons) state.slideReasons = window.BSTYLE_APP_DATA.slideReasons;
-    }
-
-    if (state.dispatchJobs.length === 0) {
-      state.dispatchJobs = [
-        { id: 'BO-901', name: 'ベネッセスタイルケア グランダ三軒茶屋', address: '東京都世田谷区三軒茶屋1-12-8', jobType: '介護', distKm: 0.0, boDate: '2026/11/11', wage: '時給1,750円〜', shift: '早番・日勤・遅番' },
-        { id: 'BO-902', name: 'チャームスイート世田谷三軒茶屋', address: '東京都世田谷区太子堂2-14-3', jobType: '介護', distKm: 0.2, boDate: '2026/11/12', wage: '時給1,800円〜', shift: '日勤のみ可' },
-        { id: 'BO-903', name: '駒沢介護福祉センター', address: '東京都世田谷区駒沢2-18-5', jobType: '介護', distKm: 1.6, boDate: '2026/10/01', wage: '時給1,700円〜', shift: '週3〜OK' },
-        { id: 'BO-904', name: '大宮駅西口内科・リハビリクリニック', address: '埼玉県さいたま市大宮区桜木町2-4-1', jobType: '看護', distKm: 0.4, boDate: '2026/11/12', wage: '時給2,350円〜', shift: '日勤・残業ほぼなし' },
-        { id: 'BO-906', name: '横浜みなとみらい有料老人ホーム', address: '神奈川県横浜市西区みなとみらい3-6', jobType: '介護', distKm: 0.9, boDate: '2026/11/10', wage: '時給1,780円〜', shift: '夜勤専従・日勤' },
-        { id: 'BO-907', name: '豊洲ベイサイド特別養護老人ホーム', address: '東京都江東区豊洲4-11-2', jobType: '介護', distKm: 0.5, boDate: '2026/11/11', wage: '時給1,820円〜', shift: '早番・日勤' }
-      ];
-    }
-    if (state.directJobs.length === 0) {
-      state.directJobs = [
-        { id: 'DIR-101', name: '特別養護老人ホーム 世田谷の杜（直接雇用・正社員/パート）', address: '東京都世田谷区三軒茶屋2-8-10', jobType: '介護', distKm: 0.2, boDate: '2026/11/12', wage: '月給28.5万円〜 / 時給1,650円〜' },
-        { id: 'DIR-102', name: '大宮駅前プレミアムケアホーム（直接雇用・看護）', address: '埼玉県さいたま市大宮区錦町630', jobType: '看護', distKm: 0.5, boDate: '2026/11/11', wage: '月給36万円〜 / 賞与4.0ヶ月' }
-      ];
-    }
-
     var cachedCsv = null;
     try { cachedCsv = localStorage.getItem(STORAGE_KEYS.CANDIDATE_CACHE); } catch (e) {}
     if (cachedCsv) {
@@ -565,20 +821,15 @@
     }
 
     var fallbackSamples = [
-      { id: '01M4R001', name: '鈴木 恵美', kana: 'スズキ エミ', phone: '09011112222', dob: '1985-04-12', age: 41, address: '東京都世田谷区三軒茶屋1-22', pref: '東京都', branch: '東京東', staff: '山上 健太', qualification: '介護福祉士', jobType: '介護', status: 'アテンド済', finalStatus: 'FIX待ち', applyDate: '2026-11-10 10:00', attendDate: '2026-11-11 16:00', contactDate: '2026-11-11 16:00', startDate: '', conditions: 'シフト:早番・日勤 / 週4日 / 希望時給:1750円' },
-      { id: '01M4R002', name: '高橋 美咲', kana: 'タカハシ ミサキ', phone: '09033334444', dob: '1990-08-23', age: 36, address: '東京都世田谷区太子堂2-15', pref: '東京都', branch: '本社', staff: '佐藤 翔太', qualification: '初任者研修', jobType: '介護', status: '未来希望', finalStatus: '未来人材', applyDate: '2026-11-01 11:20', attendDate: '2026-11-03 14:00', contactDate: '2026-11-03 14:00', startDate: '2026-12-15', conditions: 'シフト:日勤のみ / 週3〜4日 / 希望時給:1650円' },
-      { id: '01M4R003', name: '伊藤 健一', kana: 'イトウ ケンイチ', phone: '08055556666', dob: '1978-11-05', age: 48, address: '埼玉県さいたま市大宮区桜木町1-8', pref: '埼玉県', branch: '埼玉', staff: '中村 優子', qualification: '正看護師', jobType: '看護', status: 'アテンド済', finalStatus: 'FIX待ち', applyDate: '2026-11-02 09:30', attendDate: '2026-11-05 15:00', contactDate: '2026-11-05 15:00', startDate: '', conditions: 'シフト:日勤 / 週5日 / 希望時給:2300円' },
-      { id: '01M4R004', name: '渡辺 真由美', kana: 'ワタナベ マユミ', phone: '07077778888', dob: '1982-02-19', age: 44, address: '神奈川県横浜市西区南幸2-10', pref: '神奈川県', branch: '神奈川', staff: '山上 健太', qualification: '実務者研修', jobType: '介護', status: '職見済', finalStatus: '激熱掘起', applyDate: '2026-09-10 13:00', attendDate: '2026-09-15 11:00', contactDate: '2026-09-15 11:00', startDate: '', conditions: 'シフト:夜勤専従 / 週2回' },
-      { id: '01M4R005', name: '小林 誠', kana: 'コバヤシ マコト', phone: '09099990000', dob: '1988-07-30', age: 38, address: '東京都江東区豊洲3-5', pref: '東京都', branch: '東京東', staff: '佐藤 翔太', qualification: '介護福祉士', jobType: '介護', status: '未アテンド', finalStatus: '未接触', applyDate: '2026-09-01 18:10', attendDate: '', contactDate: '2026-09-02 10:00', startDate: '', conditions: 'シフト:フルシフト / 週5日' }
+      { id: '01M4R001', name: '鈴木 恵美', kana: 'スズキ エミ', phone: '09011112222', dob: '1985-04-12', age: 41, address: '東京都世田谷区三軒茶屋1-22', pref: '東京都', branch: '東京東', staff: '山上 健太', qualification: '介護福祉士', jobType: '介護', status: 'アテンド済', finalStatus: 'FIX待ち', applyDate: '2026-11-10 10:00', attendDate: '2026-11-11 16:00', contactDate: '2026-11-11 16:00', startDate: '', conditions: 'シフト:早番・日勤 / 週4日 / 希望時給:1750円' }
     ];
     state.csvHeaders = ['応募者ID', '最終ステータス', '氏名', 'フリガナ', '電話番号', '生年月日', '年齢', '住所', '都道府県', '担当支店', 'アテンド担当ユーザー', '保有資格', '職種', 'ステータス', '応募日', 'アテンド日', '接触日時', '就業開始希望日', '把握済条件'];
     processCandidates(fallbackSamples, 'デモデータ');
   }
 
   function normalizePhone(p) { return String(p || '').replace(/[^\d]/g, ''); }
-  function normalizeText(t) { return String(t || '').replace(/[\s\u3000]+/g, '').trim(); }
+  function normalizeText(t) { return String(t || '').replace(/[\s　]+/g, '').trim(); }
 
-  // B列（2列目）またはfinalStatusから最終ステータスを確実に取得
   function getColBFinalStatus(c) {
     if (c.rawRow && state.csvHeaders && state.csvHeaders.length >= 2) {
       var colBHeader = state.csvHeaders[1];
@@ -679,6 +930,15 @@
       }
       c.activeWarning = warnMatch ? '⚠️ 稼働・職見・内定待ちかも（' + warnMatch.statusLabel + 'と氏名/住所一致）' : '';
       c.assignedTab = classifyCandidateTab(c);
+
+      var coord = lookupCoordsFromDict(c.pref, c.address);
+      if (coord) {
+        c.lat = coord.lat;
+        c.lng = coord.lng;
+        c.coordMatched = coord.matched;
+        c.isCoarseCoord = coord.isCoarse;
+      }
+
       finalMerged.push(c);
     });
 
@@ -709,33 +969,28 @@
     return isNaN(d.getTime()) ? null : d;
   }
 
-  // タブ振り分けロジック（B列＝最終ステータス厳格判定）
   function classifyCandidateTab(c) {
     var now = new Date();
-    var finalSt = getColBFinalStatus(c); // B列（最終ステータス）
+    var finalSt = getColBFinalStatus(c);
     var st = String(c.status || '');
     var attendD = parseDateSafe(c.attendDate || c.contactDate);
     var applyD = parseDateSafe(c.applyDate);
     var startD = parseDateSafe(c.startDate);
 
-    // 1. 3日以内 未FIX人材（B列＝FIX待ち かつ アテンド・接触から12時間以上〜72時間以内）
     if (finalSt.indexOf('FIX待ち') !== -1) {
       if (attendD) {
         var diffHours = (now.getTime() - attendD.getTime()) / (1000 * 60 * 60);
         if (diffHours >= 12 && diffHours <= 72) {
           return 'within3days';
         }
-        // 2. 未FIX人材（B列＝FIX待ち かつ アテンド・接触から7〜10日経過）
         var dDays = (now.getTime() - attendD.getTime()) / (1000 * 60 * 60 * 24);
         if (dDays >= 7 && dDays <= 10) {
           return 'unfixed';
         }
       }
-      // B列がFIX待ちでも上記日数枠外の人は他タブへ誤分類しない
       return 'other_fix_wait';
     }
 
-    // 3. 激熱掘起（職見済・激熱・アテンド後11日〜44日経過）
     if (finalSt.indexOf('激熱') !== -1 || st.indexOf('職見済') !== -1 || finalSt.indexOf('職見済') !== -1) {
       return 'hot';
     }
@@ -744,7 +999,6 @@
       if (hDays > 10 && hDays < 45) return 'hot';
     }
 
-    // 4. 未来人材（就業開始希望日が本日から45日以内、またはB列が未来人材）
     if (startD) {
       var diffDays = Math.ceil((startD.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
       if (diffDays >= 0 && diffDays <= 45) {
@@ -754,7 +1008,6 @@
     }
     if (finalSt.indexOf('未来') !== -1 || st.indexOf('未来') !== -1) return 'future';
 
-    // 5. 通常掘起（応募から45日以上経過）
     if (applyD) {
       var applyDays = (now.getTime() - applyD.getTime()) / (1000 * 60 * 60 * 24);
       if (applyDays >= 45) return 'normal';
@@ -769,28 +1022,75 @@
     }
     var fullName = String(c.name || '').trim();
     if (!fullName) return { text: 'ご担当者様', mode: 'デフォルト' };
-    var parts = fullName.split(/[\s\u3000]+/).filter(Boolean);
+    var parts = fullName.split(/[\s　]+/).filter(Boolean);
     if (parts.length >= 2) return { text: parts[0] + '様', mode: '名字抽出' };
     return { text: fullName + '様', mode: 'フルネーム安全表記' };
   }
 
+  // 求職者の自宅座標から searchOrder 全案件との直線距離を計算し、5km以内（派遣BO）・2km以内（紹介）を抽出
   function getMatchedJobs(c) {
+    if (!state.searchOrderJobs || state.searchOrderJobs.length === 0) {
+      return { dispatch: [], direct: [], status: 'loading' };
+    }
+    if (c.lat == null || c.lng == null) {
+      return { dispatch: [], direct: [], status: 'no_coord' };
+    }
+
     var cType = String(c.jobType || '介護');
     var isNurse = cType.indexOf('看護') !== -1;
 
-    var disp = state.dispatchJobs.filter(function(j) {
-      var jNurse = String(j.jobType || '').indexOf('看護') !== -1;
-      return isNurse ? jNurse : !jNurse;
-    }).sort(function(a, b) {
-      return String(b.boDate || '').localeCompare(String(a.boDate || ''));
-    }).slice(0, 3);
+    var dispList = [];
+    var dirList = [];
 
-    var dir = state.directJobs.filter(function(j) {
-      var jNurse = String(j.jobType || '').indexOf('看護') !== -1;
-      return isNurse ? jNurse : !jNurse;
-    }).slice(0, 2);
+    for (var i = 0; i < state.searchOrderJobs.length; i++) {
+      var j = state.searchOrderJobs[i];
+      if (j.lat == null || j.lng == null) continue;
 
-    return { dispatch: disp, direct: dir };
+      var jNurse = String(j.jobType || '').indexOf('看護') !== -1;
+      if (isNurse ? !jNurse : jNurse) continue;
+
+      var dKm = calcDistanceKm(c.lat, c.lng, j.lat, j.lng);
+      if (dKm === null) continue;
+
+      var empList = j.empTypes || [j.empType || '派遣'];
+      var isDirect = empList.indexOf('紹介') !== -1;
+      var isDispatch = empList.indexOf('派遣') !== -1 || empList.indexOf('紹介予定派遣') !== -1;
+
+      if (isDispatch && dKm <= 5.0) {
+        dispList.push({
+          name: j.name,
+          address: j.address,
+          distKm: Number(dKm.toFixed(1)),
+          boDate: formatBoDateShort(j.date, j.timestamp),
+          timestamp: j.timestamp || 0,
+          shifts: (j.shifts || []).join('・')
+        });
+      }
+      if (isDirect && dKm <= 2.0) {
+        dirList.push({
+          name: j.name,
+          address: j.address,
+          distKm: Number(dKm.toFixed(1)),
+          boDate: formatBoDateShort(j.date, j.timestamp),
+          timestamp: j.timestamp || 0
+        });
+      }
+    }
+
+    // BO取得日時が新しい順（同時なら近い順）にソート
+    dispList.sort(function(a, b) {
+      if ((b.timestamp || 0) !== (a.timestamp || 0)) return (b.timestamp || 0) - (a.timestamp || 0);
+      return a.distKm - b.distKm;
+    });
+    dirList.sort(function(a, b) { return a.distKm - b.distKm; });
+
+    return {
+      dispatch: dispList.slice(0, 3),
+      direct: dirList.slice(0, 2),
+      totalDispCount: dispList.length,
+      totalDirCount: dirList.length,
+      status: 'ok'
+    };
   }
 
   function buildMessageForCandidate(c, reasonOverride) {
@@ -800,14 +1100,14 @@
     var tab = c.assignedTab;
 
     var jobLines = jobs.dispatch.map(function(j, idx) {
-      return '【候補' + (idx + 1) + '】' + j.name + LF + '・住所：' + (j.address || '詳細はお問い合わせください') + '（ご自宅から約' + j.distKm + 'km）' + LF + '・条件：' + (j.wage || '') + ' / ' + (j.shift || '');
+      return '【候補' + (idx + 1) + '】' + j.name + LF + '・住所：' + (j.address || '詳細はお問い合わせください') + '（ご自宅から約' + j.distKm + 'km）' + (j.shifts ? LF + '・シフト：' + j.shifts : '');
     }).join(LF + LF);
 
     var directHook = jobs.direct.length > 0
       ? LF + LF + '★また、ご自宅から約' + jobs.direct[0].distKm + 'km圏内に【直接雇用（正社員・パート）】の特別募集枠（' + jobs.direct[0].name + '／' + (jobs.direct[0].address || '') + '）も出ております！'
       : '';
 
-    var bodyJobs = (jobLines || '・近隣エリアの好条件求人を複数確保しております。') + directHook;
+    var bodyJobs = (jobLines || '・ご自宅近隣エリアの好条件求人を複数確保しております。') + directHook;
 
     if (tab === 'within3days') {
       var reason = reasonOverride || state.slideReasons[state.currentReasonIdx % state.slideReasons.length];
@@ -930,7 +1230,6 @@
       if (targetTab) {
         if (c.assignedTab !== targetTab) return false;
       } else {
-        // 全5タブ一括出力時
         if (['within3days', 'unfixed', 'hot', 'future', 'normal'].indexOf(c.assignedTab) === -1) return false;
       }
 
@@ -995,11 +1294,11 @@
     var map = {
       within3days: {
         title: '【3日以内 未FIX人材】の抽出基準・アプローチ設計を見る',
-        desc: 'CSVのB列（最終ステータス）＝「FIX待ち」かつ、アテンド・接触から12時間以上〜3日（72時間）以内の対象者のみを抽出。名字を安全に自動抽出し、4種類のスライド理由をランダム差し込みして近隣5kmBOを提案します。'
+        desc: 'CSVのB列（最終ステータス）＝「FIX待ち」かつ、アテンド・接触から12時間以上〜3日（72時間）以内の対象者のみを抽出。自宅住所から直線5km以内の派遣BOを自動計算して提案します。'
       },
       unfixed: {
         title: '【未FIX人材】の抽出基準・アプローチ設計を見る',
-        desc: 'CSVのB列（最終ステータス）＝「FIX待ち」かつ、アテンド・接触から7〜10日経過した対象者のみを抽出。5km圏内派遣BO（新着順3件）と2km圏内直接雇用フックで再アプローチします。'
+        desc: 'CSVのB列（最終ステータス）＝「FIX待ち」かつ、アテンド・接触から7〜10日経過した対象者のみを抽出。自宅5km圏内派遣BO（新着順3件）と2km圏内紹介フックで再アプローチします。'
       },
       hot: {
         title: '【激熱掘起】の抽出基準・アプローチ設計を見る',
@@ -1007,7 +1306,7 @@
       },
       future: {
         title: '【未来人材】の抽出基準・アプローチ設計を見る',
-        desc: '就業開始希望日が本日から45日以内（またはB列が未来人材）の対象者を抽出。希望時期が近づいたタイミングで最新5km案件を案内します。'
+        desc: '就業開始希望日が本日から45日以内（またはB列が未来人材）の対象者を抽出。希望時期が近づいたタイミングで自宅周辺5km案件を案内します。'
       },
       normal: {
         title: '【通常掘起】の抽出基準・アプローチ設計を見る',
@@ -1055,7 +1354,11 @@
     updateTabBadges();
     var list = getFilteredCandidates();
     document.getElementById('resultCountText').textContent = '該当: ' + list.length + '件';
-    document.getElementById('jobMasterSummary').textContent = '案件マスタ：派遣BO(5km) ' + state.dispatchJobs.length + '件 ／ 紹介(2km) ' + state.directJobs.length + '件';
+    if (state.jobsReady) {
+      document.getElementById('jobMasterSummary').textContent = '✅ searchOrder連携済：全' + state.searchOrderJobs.length.toLocaleString() + '件から直線距離計算';
+    } else {
+      document.getElementById('jobMasterSummary').textContent = '⏳ searchOrder案件データ取得中...';
+    }
     document.getElementById('autoExcludedSummary').textContent = state.autoExcludedCount > 0 ? '（稼働/職見/内定待ち自動除外: ' + state.autoExcludedCount + '件）' : '';
 
     var container = document.getElementById('candidateList');
@@ -1072,19 +1375,29 @@
       var bSt = getColBFinalStatus(c);
       var statusBadgeClass = act.isRemindReady ? 'bg-amber-100 text-amber-800 border-amber-300 animate-pulse' : (act.isActed ? 'bg-sky-50 text-sky-700 border-sky-200' : 'bg-rose-50 text-rose-700 border-rose-200');
 
-      var directHtml = jobs.direct.length > 0 ? (
-        '<div class="rounded-xl bg-purple-50/70 border border-purple-200 px-3 py-2 text-xs space-y-1">' +
-        '<div class="flex items-center justify-between font-bold text-purple-800"><span>🏠 2km圏内・紹介（直接雇用）特別フック案件</span><span>' + jobs.direct.length + '件</span></div>' +
-        jobs.direct.map(function(d) {
-          return '<div class="flex flex-wrap items-center justify-between gap-1 text-gray-800 pt-0.5"><div><span class="font-bold">' + escapeHtml(d.name) + '</span><span class="text-[11px] text-purple-700 ml-1.5">📍 ' + escapeHtml(d.address || '住所情報同期待ち') + '</span></div><span class="text-[11px] font-bold text-purple-700">約' + d.distKm + 'km</span></div>';
-        }).join('') + '</div>'
-      ) : '';
+      var directHtml = '';
+      if (jobs.status === 'ok' && jobs.direct.length > 0) {
+        directHtml = '<div class="rounded-xl bg-purple-50/70 border border-purple-200 px-3 py-2 text-xs space-y-1">' +
+          '<div class="flex items-center justify-between font-bold text-purple-800"><span>🏠 自宅から2km圏内・紹介（直接雇用）特別フック案件</span><span>該当' + jobs.totalDirCount + '件中 ' + jobs.direct.length + '件</span></div>' +
+          jobs.direct.map(function(d) {
+            return '<div class="flex flex-wrap items-center justify-between gap-1 text-gray-800 pt-0.5"><div><span class="font-bold">' + escapeHtml(d.name) + '</span><span class="text-[11px] text-purple-700 ml-1.5">📍 ' + escapeHtml(d.address) + '</span></div><span class="text-[11px] font-black text-purple-700">約' + d.distKm + 'km</span></div>';
+          }).join('') + '</div>';
+      }
 
-      var dispHtml = '<div class="rounded-xl bg-orange-50/60 border border-orange-200 px-3 py-2 text-xs space-y-1">' +
-        '<div class="flex items-center justify-between font-bold text-orange-800"><span>📍 5km以内の派遣・紹介予定派遣BO（BO取得日時が新しい順）</span><span>' + jobs.dispatch.length + '件</span></div>' +
-        jobs.dispatch.map(function(j) {
-          return '<div class="flex flex-wrap items-center justify-between gap-1 text-gray-800 border-t border-orange-100 pt-1"><div><span class="font-bold">' + escapeHtml(j.name) + '</span><span class="text-[11px] text-gray-600 ml-1.5">📍 ' + escapeHtml(j.address || '住所未設定（URL設定から同期可）') + '</span></div><div class="text-[11px] whitespace-nowrap"><span class="font-bold text-orange-700">約' + j.distKm + 'km</span><span class="text-gray-500 ml-1.5">BO:' + escapeHtml(j.boDate || '-') + '</span></div></div>';
-        }).join('') + '</div>';
+      var dispHtml = '';
+      if (jobs.status === 'loading') {
+        dispHtml = '<div class="rounded-xl bg-gray-50 border border-gray-200 px-3 py-2.5 text-xs text-gray-500">⏳ searchOrder の案件データ・座標辞書を読み込み中...</div>';
+      } else if (jobs.status === 'no_coord') {
+        dispHtml = '<div class="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 text-xs text-amber-800">⚠️ 求職者の住所情報から座標を特定できないため、5km圏内案件を算出できません（住所欄をご確認ください）</div>';
+      } else if (jobs.dispatch.length === 0) {
+        dispHtml = '<div class="rounded-xl bg-gray-50 border border-gray-200 px-3 py-2 text-xs text-gray-600">📍 自宅（' + escapeHtml(c.coordMatched || c.address || '') + '）から直線5km以内の該当派遣BOは現在0件です</div>';
+      } else {
+        dispHtml = '<div class="rounded-xl bg-orange-50/60 border border-orange-200 px-3 py-2 text-xs space-y-1">' +
+          '<div class="flex items-center justify-between font-bold text-orange-800"><span>📍 自宅から直線5km以内の派遣・紹介予定派遣BO（BO取得日時が新しい順）</span><span>該当' + jobs.totalDispCount + '件中 上位' + jobs.dispatch.length + '件</span></div>' +
+          jobs.dispatch.map(function(j) {
+            return '<div class="flex flex-wrap items-center justify-between gap-1 text-gray-800 border-t border-orange-100 pt-1"><div><span class="font-bold">' + escapeHtml(j.name) + '</span><span class="text-[11px] text-gray-600 ml-1.5">📍 ' + escapeHtml(j.address) + '</span></div><div class="text-[11px] whitespace-nowrap"><span class="font-black text-orange-700">約' + j.distKm + 'km</span><span class="text-gray-500 ml-1.5">BO:' + escapeHtml(j.boDate) + '</span></div></div>';
+          }).join('') + '</div>';
+      }
 
       var warnHtml = c.activeWarning ? (
         '<div class="bg-amber-50 border border-amber-300 rounded-xl px-3 py-2 flex flex-wrap items-center justify-between gap-2 text-xs">' +
@@ -1309,7 +1622,6 @@
           return '';
         };
 
-        // B列（2列目・インデックス1）を最終ステータスとして最優先取得
         var colBVal = (r[1] !== undefined) ? String(r[1]).trim() : '';
         var finalStVal = colBVal || pick(['最終ステータス']);
 
@@ -1404,7 +1716,7 @@
       var sal = extractSafeSalutation(c);
       var act = getActionState(c);
       var jobs = getMatchedJobs(c);
-      var boSummary = jobs.dispatch.map(function(j) { return j.name + '(' + (j.address || '') + ')'; }).join(' / ');
+      var boSummary = jobs.dispatch.map(function(j) { return j.name + '(約' + j.distKm + 'km/' + j.address + ')'; }).join(' / ');
       return '<tr><td class="px-2.5 py-1.5 font-bold text-orange-600 whitespace-nowrap">' + (tabNames[c.assignedTab] || c.assignedTab) + '</td><td class="px-2.5 py-1.5 whitespace-nowrap">' + escapeHtml(act.label) + '</td><td class="px-2.5 py-1.5 font-bold whitespace-nowrap">' + escapeHtml(c.name) + '</td><td class="px-2.5 py-1.5 whitespace-nowrap">' + escapeHtml(sal.text) + '</td><td class="px-2.5 py-1.5 whitespace-nowrap">' + escapeHtml(c.phone || '-') + '</td><td class="px-2.5 py-1.5 whitespace-nowrap">' + escapeHtml(c.branch || '-') + '</td><td class="px-2.5 py-1.5 max-w-[200px] truncate">' + escapeHtml(boSummary || '-') + '</td></tr>';
     }).join('') || '<tr><td colspan="7" class="px-3 py-4 text-center text-gray-400">出力対象データがありません</td></tr>';
   };
@@ -1423,7 +1735,7 @@
   function downloadCsvFromList(list, includeRaw) {
     if (!list || list.length === 0) { alert('出力対象のデータが0件です。'); return; }
     var tabNames = { within3days: '3日以内未FIX', unfixed: '未FIX人材', hot: '激熱掘起', future: '未来人材', normal: '通常掘起' };
-    var baseHeaders = ['追客区分', '対応状況', '氏名', '宛名', '電話番号', '担当支店', 'アテンド担当', '職種', '保有資格', 'B列_最終ステータス', '就業開始希望日', '生成済み送信文面', '候補BO1_施設名', '候補BO1_住所', '候補BO2_施設名', '候補BO2_住所', '候補BO3_施設名', '候補BO3_住所', '紹介特別フック_施設名', '紹介特別フック_住所', '応募者ID'];
+    var baseHeaders = ['追客区分', '対応状況', '氏名', '宛名', '電話番号', '担当支店', 'アテンド担当', '職種', '保有資格', 'B列_最終ステータス', '就業開始希望日', '生成済み送信文面', '候補BO1_施設名', '候補BO1_住所', '候補BO1_距離km', '候補BO2_施設名', '候補BO2_住所', '候補BO2_距離km', '候補BO3_施設名', '候補BO3_住所', '候補BO3_距離km', '紹介特別フック_施設名', '紹介特別フック_住所', '紹介特別フック_距離km', '応募者ID'];
     var rawHeaders = includeRaw ? state.csvHeaders : [];
     var allHeaders = baseHeaders.concat(rawHeaders);
     var csvLines = [allHeaders.map(csvEscape).join(',')];
@@ -1434,7 +1746,16 @@
       var jobs = getMatchedJobs(c);
       var msg = buildMessageForCandidate(c);
       var d0 = jobs.dispatch[0] || {}, d1 = jobs.dispatch[1] || {}, d2 = jobs.dispatch[2] || {}, dir0 = jobs.direct[0] || {};
-      var row = [tabNames[c.assignedTab] || c.assignedTab, act.label, c.name || '', sal.text, c.phone || '', c.branch || '', c.staff || '', c.jobType || '', c.qualification || '', getColBFinalStatus(c), c.startDate || '', msg, d0.name || '', d0.address || '', d1.name || '', d1.address || '', d2.name || '', d2.address || '', dir0.name || '', dir0.address || '', c.id || ''];
+      var row = [
+        tabNames[c.assignedTab] || c.assignedTab, act.label, c.name || '', sal.text, c.phone || '',
+        c.branch || '', c.staff || '', c.jobType || '', c.qualification || '', getColBFinalStatus(c),
+        c.startDate || '', msg,
+        d0.name || '', d0.address || '', d0.distKm !== undefined ? d0.distKm : '',
+        d1.name || '', d1.address || '', d1.distKm !== undefined ? d1.distKm : '',
+        d2.name || '', d2.address || '', d2.distKm !== undefined ? d2.distKm : '',
+        dir0.name || '', dir0.address || '', dir0.distKm !== undefined ? dir0.distKm : '',
+        c.id || ''
+      ];
       if (includeRaw) {
         rawHeaders.forEach(function(h) { row.push((c.rawRow && c.rawRow[h] !== undefined) ? c.rawRow[h] : ''); });
       }
@@ -1489,8 +1810,6 @@
       sourceLabel: '外部 data.js (' + new Date().toLocaleDateString('ja-JP') + '更新・全' + state.csvHeaders.length + '列)',
       headers: state.csvHeaders,
       demoCandidates: compactCandidates,
-      dispatchJobs: state.dispatchJobs,
-      directJobs: state.directJobs,
       slideReasons: state.slideReasons
     };
     return 'window.BSTYLE_APP_DATA=' + JSON.stringify(payload) + ';' + LF;
@@ -1632,78 +1951,10 @@
 
   window.fetchJobMasterFromUrl = function() {
     var url = document.getElementById('jobMasterUrlInput').value.trim();
-    state.settings.jobMasterUrl = url;
+    state.settings.jobMasterUrl = url || SEARCH_ORDER_JOBS_URL;
     localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(state.settings));
-    if (!url) return;
-    fetch(url).then(function(r) { return r.text(); }).then(function(txt) {
-      var data = null;
-      try { data = JSON.parse(txt); } catch (e) {
-        var m = txt.match(/=\s*(\{[\s\S]*\}|\[[\s\S]*\])\s*;?\s*$/);
-        if (m) data = JSON.parse(m[1]);
-      }
-      if (!data) throw new Error('JSONデータを解析できませんでした');
-      var rawJobs = Array.isArray(data) ? data : (data.dispatchJobs || data.orders || data.jobs || []);
-      applySyncedJobs(rawJobs);
-      closeModal('urlModal');
-      showPopup('案件マスタ同期完了！', 'searchOrder側から ' + rawJobs.length + ' 件の案件（住所・座標）を同期しました。');
-    }).catch(function(err) { alert('案件マスタURLの同期に失敗しました：' + err.message); });
+    syncFromSearchOrderPublic(true);
   };
-
-  window.handleJobCsvImport = function(e) {
-    var file = e.target.files[0];
-    if (!file) return;
-    var reader = new FileReader();
-    reader.onload = function(evt) {
-      var buf = evt.target.result;
-      var text = new TextDecoder('utf-8').decode(buf);
-      if (text.indexOf(String.fromCharCode(65533)) !== -1) text = new TextDecoder('shift-jis').decode(buf);
-      var rows = parseCsvRows(text);
-      if (rows.length < 2) return;
-      var headers = rows[0].map(function(h) { return String(h || '').trim(); });
-      var jobs = rows.slice(1).filter(function(r) { return r.some(function(c) { return String(c || '').trim() !== ''; }); }).map(function(r, idx) {
-        var obj = {};
-        headers.forEach(function(h, i) { obj[h] = String(r[i] || '').trim(); });
-        var pick = function(keys) {
-          for (var i = 0; i < keys.length; i++) {
-            var k = keys[i];
-            if (obj[k]) return obj[k];
-            var fk = headers.find(function(h) { return h.indexOf(k) !== -1; });
-            if (fk && obj[fk]) return obj[fk];
-          }
-          return '';
-        };
-        return {
-          id: pick(['案件ID', 'BOID', 'ID']) || ('BO-' + (idx + 1)),
-          name: pick(['施設名', '事業所名', '案件名', '法人名']),
-          address: pick(['住所', '勤務地住所', '所在地', '市区町村']),
-          jobType: pick(['職種']) || '介護',
-          distKm: parseFloat(pick(['距離'])) || 1.2,
-          boDate: pick(['BO取得日時', '登録日', '更新日']),
-          wage: pick(['給与', '時給']),
-          shift: pick(['シフト', '勤務時間']),
-          employmentType: pick(['雇用形態'])
-        };
-      });
-      applySyncedJobs(jobs);
-      closeModal('urlModal');
-      showPopup('案件CSVから住所同期完了！', file.name + ' から ' + jobs.length + ' 件の正しい住所・案件データを反映しました。');
-    };
-    reader.readAsArrayBuffer(file);
-    e.target.value = '';
-  };
-
-  function applySyncedJobs(jobs) {
-    var disp = [], dir = [];
-    jobs.forEach(function(j) {
-      var emp = (j.employmentType || '') + ' ' + (j.name || '');
-      if (emp.indexOf('直接雇用') !== -1 || emp.indexOf('正社員') !== -1 || emp.indexOf('紹介') !== -1) dir.push(j);
-      else disp.push(j);
-    });
-    if (disp.length > 0) state.dispatchJobs = disp;
-    if (dir.length > 0) state.directJobs = dir;
-    try { localStorage.setItem(STORAGE_KEYS.JOB_MASTER_CACHE, JSON.stringify({ dispatchJobs: state.dispatchJobs, directJobs: state.directJobs })); } catch (e) {}
-    renderList();
-  }
 
   window.exportHistoryJson = function() {
     var payload = { exportedAt: new Date().toISOString(), actionLogs: state.actionLogs, excludedMap: state.excludedMap };
@@ -1765,7 +2016,7 @@
     var body = document.getElementById('mergeInfoBody');
     var logCount = Object.keys(state.actionLogs).length;
     var excCount = Object.keys(state.excludedMap).length;
-    body.innerHTML = '<div class="bg-gray-50 rounded-xl p-3.5 border border-gray-200 space-y-1.5"><p>・元CSV総行数：<strong>' + state.rawCandidates.length + ' 件</strong>（全 ' + state.csvHeaders.length + ' 列保持）</p><p>・重複名寄せ統合（同一人物合体）：<strong>' + state.mergedDupCount + ' 件</strong></p><p>・稼働中／職見待ち／内定待ち 電話番号一致の自動除外：<strong>' + state.autoExcludedCount + ' 件</strong></p><p>・チェックボックス永続除外（タイムスタンプ保存済）：<strong>' + excCount + ' 件</strong></p><p>・独立ストレージ保存中の送信／クールダウン履歴：<strong>' + logCount + ' 件</strong></p></div>';
+    body.innerHTML = '<div class="bg-gray-50 rounded-xl p-3.5 border border-gray-200 space-y-1.5"><p>・元CSV総行数：<strong>' + state.rawCandidates.length + ' 件</strong>（全 ' + state.csvHeaders.length + ' 列保持）</p><p>・重複名寄せ統合（同一人物合体）：<strong>' + state.mergedDupCount + ' 件</strong></p><p>・稼働中／職見待ち／内定待ち 電話番号一致の自動除外：<strong>' + state.autoExcludedCount + ' 件</strong></p><p>・チェックボックス永続除外（タイムスタンプ保存済）：<strong>' + excCount + ' 件</strong></p><p>・独立ストレージ保存中の送信／クールダウン履歴：<strong>' + logCount + ' 件</strong></p><p>・searchOrder 連携済案件数：<strong>' + state.searchOrderJobs.length.toLocaleString() + ' 件</strong>（座標辞書：' + Object.keys(state.townCoordsDict).length + '都道府県）</p></div>';
   }
 
   window.openRawRowModal = function(personKey) {
@@ -1802,6 +2053,7 @@
   loadPersistentStorage();
   loadInitialData();
   setupDragAndDrop();
+  syncFromSearchOrderPublic(false);
 })();
 </script>
 </body>
