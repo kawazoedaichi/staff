@@ -219,9 +219,9 @@
         <div class="bg-zinc-900 text-white rounded-xl p-3.5 space-y-2">
           <div class="flex items-center justify-between">
             <span class="font-bold text-orange-400">📦 チーム配布・軽量化用 data.js 書き出し</span>
-            <span class="text-[10px] text-zinc-400">全列データ＋最新案件マスタ同梱</span>
+            <span class="text-[10px] text-zinc-400">軽量圧縮＋最新案件マスタ同梱</span>
           </div>
-          <p class="text-[11px] text-zinc-300">読み込んだ全列CSVを別ファイル（<code class="text-orange-300">data.js</code>）として保存します。</p>
+          <p class="text-[11px] text-zinc-300">読み込んだ全列CSVを軽量圧縮した別ファイル（<code class="text-orange-300">data.js</code>）として保存します。</p>
           <button type="button" onclick="exportDataJsFile()" class="w-full py-2 rounded-lg bg-orange-500 hover:bg-orange-600 text-zinc-950 font-black transition">
             📦 読込済CSV(全列)から最新 data.js を書き出し
           </button>
@@ -337,11 +337,11 @@
   <div id="githubModal" class="hidden fixed inset-0 z-50 modal-backdrop flex items-center justify-center p-3">
     <div class="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-gray-200 overflow-hidden">
       <div class="bg-zinc-950 text-white px-5 py-3.5 flex items-center justify-between">
-        <h2 class="font-bold text-base text-emerald-400">🚀 GitHubリポジトリへ自動反映（Push）</h2>
+        <h2 class="font-bold text-base text-emerald-400">🚀 GitHubリポジトリへ自動反映（大容量対応Push）</h2>
         <button type="button" onclick="closeModal('githubModal')" class="text-gray-400 hover:text-white text-xl font-bold px-2">×</button>
       </div>
       <div class="p-5 space-y-3 text-xs">
-        <p class="text-gray-600 leading-relaxed">現在読み込んでいる全列CSV・案件マスタを GitHub リポジトリ上の <strong><code>data.js</code></strong> に直接自動アップロードします。</p>
+        <p class="text-gray-600 leading-relaxed">大容量対応の Git Data API（Base64エンコード方式）を使用し、現在読み込んでいる全列CSV・案件マスタを軽量圧縮して GitHub 上の <strong><code>data.js</code></strong> へ直接自動アップロードします。</p>
         <div class="space-y-2 bg-gray-50 p-3.5 rounded-xl border border-gray-200">
           <div>
             <label class="block font-bold text-gray-700 mb-0.5">GitHub リポジトリ（オーナー/リポジトリ名）</label>
@@ -476,6 +476,16 @@
     currentReasonIdx: 0,
     currentRawCandidate: null
   };
+
+  function utf8ToBase64(str) {
+    var bytes = new TextEncoder().encode(str);
+    var bin = '';
+    var chunk = 8192;
+    for (var i = 0; i < bytes.length; i += chunk) {
+      bin += String.fromCharCode.apply(null, bytes.subarray(i, i + chunk));
+    }
+    return btoa(bin);
+  }
 
   function loadPersistentStorage() {
     try { var l = localStorage.getItem(STORAGE_KEYS.ACTION_LOGS); if (l) state.actionLogs = JSON.parse(l); } catch (e) {}
@@ -1249,7 +1259,10 @@
         return r.some(function(cell) { return String(cell || '').trim() !== ''; });
       }).map(function(r, idx) {
         var rawRow = {};
-        headers.forEach(function(h, i) { rawRow[h || ('列' + (i + 1))] = r[i] !== undefined ? String(r[i]).trim() : ''; });
+        headers.forEach(function(h, i) {
+          var val = r[i] !== undefined ? String(r[i]).trim() : '';
+          if (val !== '') rawRow[h || ('列' + (i + 1))] = val;
+        });
 
         var pick = function(keys) {
           for (var i = 0; i < keys.length; i++) {
@@ -1416,16 +1429,32 @@
   }
 
   function buildDataJsContent() {
+    var compactCandidates = state.rawCandidates.map(function(c) {
+      var cleanRaw = {};
+      if (c.rawRow) {
+        Object.keys(c.rawRow).forEach(function(k) {
+          if (c.rawRow[k] !== '' && c.rawRow[k] !== null && c.rawRow[k] !== undefined) {
+            cleanRaw[k] = c.rawRow[k];
+          }
+        });
+      }
+      var copy = Object.assign({}, c, { rawRow: cleanRaw });
+      Object.keys(copy).forEach(function(k) {
+        if (copy[k] === '' || copy[k] === null || copy[k] === undefined) delete copy[k];
+      });
+      return copy;
+    });
+
     var payload = {
       updatedAt: new Date().toLocaleString('ja-JP'),
       sourceLabel: '外部 data.js (' + new Date().toLocaleDateString('ja-JP') + '更新・全' + state.csvHeaders.length + '列)',
       headers: state.csvHeaders,
-      demoCandidates: state.rawCandidates,
+      demoCandidates: compactCandidates,
       dispatchJobs: state.dispatchJobs,
       directJobs: state.directJobs,
       slideReasons: state.slideReasons
     };
-    return 'window.BSTYLE_APP_DATA = ' + JSON.stringify(payload, null, 2) + ';' + LF;
+    return 'window.BSTYLE_APP_DATA=' + JSON.stringify(payload) + ';' + LF;
   }
 
   window.exportDataJsFile = function() {
@@ -1433,7 +1462,7 @@
     var blob = new Blob([content], { type: 'application/javascript;charset=utf-8;' });
     triggerDownload(blob, 'data.js');
     closeModal('csvModal');
-    showPopup('data.js エクスポート完了！', '全 ' + state.rawCandidates.length + ' 件（全' + state.csvHeaders.length + '列）と最新案件マスタを格納した data.js をダウンロードしました。');
+    showPopup('data.js エクスポート完了！', '全 ' + state.rawCandidates.length + ' 件（全' + state.csvHeaders.length + '列）を軽量圧縮した data.js をダウンロードしました。');
   };
 
   window.saveGithubConfig = function() {
@@ -1452,26 +1481,80 @@
     var btn = document.getElementById('ghPushBtn');
     var origText = btn.textContent;
     btn.disabled = true;
-    btn.textContent = '⏳ GitHubへアップロード中...';
+    btn.textContent = '⏳ 大容量データ送信中（1/4）...';
+
+    var headers = {
+      'Authorization': 'Bearer ' + ghToken,
+      'Accept': 'application/vnd.github+json',
+      'Content-Type': 'application/json'
+    };
+
     try {
-      var apiUrl = 'https://api.github.com/repos/' + ghRepo + '/contents/' + ghPath;
-      var sha = null;
-      var getRes = await fetch(apiUrl + '?ref=' + encodeURIComponent(ghBranch), {
-        headers: { 'Authorization': 'Bearer ' + ghToken, 'Accept': 'application/vnd.github+json' }
-      });
-      if (getRes.ok) { var gd = await getRes.json(); sha = gd.sha; }
+      var baseApi = 'https://api.github.com/repos/' + ghRepo;
+
+      var refRes = await fetch(baseApi + '/git/ref/heads/' + encodeURIComponent(ghBranch), { headers: headers });
+      if (!refRes.ok) {
+        var errRef = await refRes.json().catch(function() { return {}; });
+        throw new Error('ブランチ取得エラー: ' + (errRef.message || refRes.status));
+      }
+      var refData = await refRes.json();
+      var latestCommitSha = refData.object.sha;
+
+      btn.textContent = '⏳ ツリー情報取得中（2/4）...';
+      var commitRes = await fetch(baseApi + '/git/commits/' + latestCommitSha, { headers: headers });
+      var commitData = await commitRes.json();
+      var baseTreeSha = commitData.tree.sha;
+
+      btn.textContent = '⏳ data.js アップロード中（3/4）...';
       var contentStr = buildDataJsContent();
-      var base64Content = btoa(unescape(encodeURIComponent(contentStr)));
-      var putBody = { message: 'Update ' + ghPath + ' (' + new Date().toLocaleString('ja-JP') + ')', content: base64Content, branch: ghBranch };
-      if (sha) putBody.sha = sha;
-      var putRes = await fetch(apiUrl, {
-        method: 'PUT',
-        headers: { 'Authorization': 'Bearer ' + ghToken, 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json' },
-        body: JSON.stringify(putBody)
+      var base64Str = utf8ToBase64(contentStr);
+      var sizeKb = Math.round(base64Str.length * 0.75 / 1024);
+
+      var blobRes = await fetch(baseApi + '/git/blobs', {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify({ content: base64Str, encoding: 'base64' })
       });
-      if (!putRes.ok) { var ej = await putRes.json().catch(function() { return {}; }); throw new Error(ej.message || ('HTTP ' + putRes.status)); }
+      if (!blobRes.ok) {
+        var errBlob = await blobRes.json().catch(function() { return {}; });
+        throw new Error('Blob作成エラー: ' + (errBlob.message || blobRes.status));
+      }
+      var blobData = await blobRes.json();
+
+      btn.textContent = '⏳ コミット反映中（4/4）...';
+      var treeRes = await fetch(baseApi + '/git/trees', {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify({
+          base_tree: baseTreeSha,
+          tree: [{ path: ghPath, mode: '100644', type: 'blob', sha: blobData.sha }]
+        })
+      });
+      var treeData = await treeRes.json();
+
+      var newCommitRes = await fetch(baseApi + '/git/commits', {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify({
+          message: 'Update ' + ghPath + ' (' + state.rawCandidates.length + '件 / ' + sizeKb + 'KB)',
+          tree: treeData.sha,
+          parents: [latestCommitSha]
+        })
+      });
+      var newCommitData = await newCommitRes.json();
+
+      var patchRefRes = await fetch(baseApi + '/git/refs/heads/' + encodeURIComponent(ghBranch), {
+        method: 'PATCH',
+        headers: headers,
+        body: JSON.stringify({ sha: newCommitData.sha })
+      });
+      if (!patchRefRes.ok) {
+        var errPatch = await patchRefRes.json().catch(function() { return {}; });
+        throw new Error('ブランチ更新エラー: ' + (errPatch.message || patchRefRes.status));
+      }
+
       closeModal('githubModal');
-      showPopup('🚀 GitHub自動反映が完了しました！', 'リポジトリ：' + ghRepo + ' (' + ghBranch + ')' + LF + '更新ファイル：' + ghPath + LF + '約30秒〜1分で公開ページに最新データが自動反映されます。');
+      showPopup('🚀 GitHub自動反映が完了しました！', 'リポジトリ：' + ghRepo + ' (' + ghBranch + ')' + LF + '更新ファイル：' + ghPath + '（' + state.rawCandidates.length + '件 / 約' + sizeKb + 'KB）' + LF + '約30秒〜1分で公開ページに最新データが自動反映されます。');
     } catch (err) {
       alert('GitHubへの自動反映に失敗しました：' + err.message);
     } finally {
