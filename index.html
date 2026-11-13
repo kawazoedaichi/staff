@@ -57,14 +57,11 @@
       </div>
     </div>
 
+    <!-- 5タブナビゲーション（3日以内未FIX → 未FIX人材 → 激熱掘起 → 未来人材 → 通常掘起） -->
     <nav class="max-w-7xl mx-auto px-2 sm:px-6 flex overflow-x-auto scrollbar-hide gap-1 sm:gap-4 text-xs sm:text-sm pt-1">
       <button type="button" onclick="switchTab('within3days')" id="tab-within3days" class="tab-active py-2.5 px-2.5 whitespace-nowrap flex items-center gap-1.5 transition">
         <span>3日以内 未FIX人材</span>
         <span id="badge-within3days" class="px-1.5 py-0.5 text-[11px] rounded-full bg-orange-500 text-zinc-950 font-black">0</span>
-      </button>
-      <button type="button" onclick="switchTab('future')" id="tab-future" class="tab-inactive py-2.5 px-2.5 whitespace-nowrap flex items-center gap-1.5 transition">
-        <span>未来人材</span>
-        <span id="badge-future" class="px-1.5 py-0.5 text-[11px] rounded-full bg-zinc-800 text-zinc-300 font-bold">0</span>
       </button>
       <button type="button" onclick="switchTab('unfixed')" id="tab-unfixed" class="tab-inactive py-2.5 px-2.5 whitespace-nowrap flex items-center gap-1.5 transition">
         <span>未FIX人材</span>
@@ -73,6 +70,10 @@
       <button type="button" onclick="switchTab('hot')" id="tab-hot" class="tab-inactive py-2.5 px-2.5 whitespace-nowrap flex items-center gap-1.5 transition">
         <span>激熱掘起</span>
         <span id="badge-hot" class="px-1.5 py-0.5 text-[11px] rounded-full bg-zinc-800 text-zinc-300 font-bold">0</span>
+      </button>
+      <button type="button" onclick="switchTab('future')" id="tab-future" class="tab-inactive py-2.5 px-2.5 whitespace-nowrap flex items-center gap-1.5 transition">
+        <span>未来人材</span>
+        <span id="badge-future" class="px-1.5 py-0.5 text-[11px] rounded-full bg-zinc-800 text-zinc-300 font-bold">0</span>
       </button>
       <button type="button" onclick="switchTab('normal')" id="tab-normal" class="tab-inactive py-2.5 px-2.5 whitespace-nowrap flex items-center gap-1.5 transition">
         <span>通常掘起</span>
@@ -89,7 +90,7 @@
       </button>
       <div id="guideBody" class="hidden px-4 pb-3 pt-1 border-t border-gray-100 text-xs text-gray-600 space-y-1.5 bg-orange-50/40">
         <p id="guideDesc"></p>
-        <p class="text-[11px] text-gray-500">※ 同一CSV内で「稼働中・就業中・職見待ち・内定待ち・決定」のレコードと電話番号が一致する場合は全タブから自動除外されます。氏名・住所が類似する場合は警告アラートが表示され、チェックでタイムスタンプ付き永続除外できます。</p>
+        <p class="text-[11px] text-gray-500">※ CSVのB列（最終ステータス）を参照し、「3日以内 未FIX人材」「未FIX人材」はB列＝「FIX待ち」のみ抽出します。また、同一CSV内で「稼働中・就業中・職見待ち・内定待ち・決定」と電話番号が一致する場合は自動除外されます。</p>
       </div>
     </div>
 
@@ -203,7 +204,7 @@
         <div class="bg-orange-50 border border-orange-200 rounded-xl p-3 flex items-center justify-between gap-2">
           <div>
             <p class="font-bold text-gray-900">1. Refoから全列CSVをダウンロード</p>
-            <p class="text-[11px] text-gray-600">列数制限なし（1列目〜最終列まで全カラム自動認識）</p>
+            <p class="text-[11px] text-gray-600">B列（2列目）を「最終ステータス」として自動参照します</p>
           </div>
           <a href="https://refo.link/haken-oubo/applications" target="_blank" rel="noopener noreferrer"
              class="px-3 py-2 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-orange-400 font-bold whitespace-nowrap shadow-sm">
@@ -570,15 +571,30 @@
       { id: '01M4R004', name: '渡辺 真由美', kana: 'ワタナベ マユミ', phone: '07077778888', dob: '1982-02-19', age: 44, address: '神奈川県横浜市西区南幸2-10', pref: '神奈川県', branch: '神奈川', staff: '山上 健太', qualification: '実務者研修', jobType: '介護', status: '職見済', finalStatus: '激熱掘起', applyDate: '2026-09-10 13:00', attendDate: '2026-09-15 11:00', contactDate: '2026-09-15 11:00', startDate: '', conditions: 'シフト:夜勤専従 / 週2回' },
       { id: '01M4R005', name: '小林 誠', kana: 'コバヤシ マコト', phone: '09099990000', dob: '1988-07-30', age: 38, address: '東京都江東区豊洲3-5', pref: '東京都', branch: '東京東', staff: '佐藤 翔太', qualification: '介護福祉士', jobType: '介護', status: '未アテンド', finalStatus: '未接触', applyDate: '2026-09-01 18:10', attendDate: '', contactDate: '2026-09-02 10:00', startDate: '', conditions: 'シフト:フルシフト / 週5日' }
     ];
-    state.csvHeaders = ['応募者ID', '氏名', 'フリガナ', '電話番号', '生年月日', '年齢', '住所', '都道府県', '担当支店', 'アテンド担当ユーザー', '保有資格', '職種', 'ステータス', '最終ステータス', '応募日', 'アテンド日', '接触日時', '就業開始希望日', '把握済条件'];
+    state.csvHeaders = ['応募者ID', '最終ステータス', '氏名', 'フリガナ', '電話番号', '生年月日', '年齢', '住所', '都道府県', '担当支店', 'アテンド担当ユーザー', '保有資格', '職種', 'ステータス', '応募日', 'アテンド日', '接触日時', '就業開始希望日', '把握済条件'];
     processCandidates(fallbackSamples, 'デモデータ');
   }
 
   function normalizePhone(p) { return String(p || '').replace(/[^\d]/g, ''); }
   function normalizeText(t) { return String(t || '').replace(/[\s\u3000]+/g, '').trim(); }
 
+  // B列（2列目）またはfinalStatusから最終ステータスを確実に取得
+  function getColBFinalStatus(c) {
+    if (c.rawRow && state.csvHeaders && state.csvHeaders.length >= 2) {
+      var colBHeader = state.csvHeaders[1];
+      if (colBHeader && c.rawRow[colBHeader] !== undefined && String(c.rawRow[colBHeader]).trim() !== '') {
+        return String(c.rawRow[colBHeader]).trim();
+      }
+    }
+    if (c.rawRow && c.rawRow['最終ステータス'] !== undefined && String(c.rawRow['最終ステータス']).trim() !== '') {
+      return String(c.rawRow['最終ステータス']).trim();
+    }
+    return String(c.finalStatus || '').trim();
+  }
+
   function isActiveOrPendingRecord(c) {
-    var combined = (c.status || '') + ' ' + (c.finalStatus || '');
+    var bStatus = getColBFinalStatus(c);
+    var combined = (c.status || '') + ' ' + bStatus;
     for (var i = 0; i < ACTIVE_OR_PENDING_KEYWORDS.length; i++) {
       if (combined.indexOf(ACTIVE_OR_PENDING_KEYWORDS[i]) !== -1) return true;
     }
@@ -601,6 +617,8 @@
     var activePhones = new Set();
     var activePersons = [];
     rawList.forEach(function(c) {
+      var bSt = getColBFinalStatus(c);
+      if (bSt) c.finalStatus = bSt;
       if (isActiveOrPendingRecord(c)) {
         var ph = normalizePhone(c.phone);
         if (ph.length >= 9) activePhones.add(ph);
@@ -608,7 +626,7 @@
           name: normalizeText(c.name),
           kana: normalizeText(c.kana),
           address: normalizeText(c.address),
-          statusLabel: String(c.finalStatus || c.status || '稼働・待ち')
+          statusLabel: String(bSt || c.status || '稼働・待ち')
         });
       }
     });
@@ -674,8 +692,9 @@
 
   function getProgressScore(c) {
     var score = 0;
+    var bSt = getColBFinalStatus(c);
     if (isActiveOrPendingRecord(c)) score += 100;
-    if ((c.finalStatus || '').indexOf('FIX待ち') !== -1) score += 50;
+    if (bSt.indexOf('FIX待ち') !== -1) score += 50;
     if (c.attendDate) score += 20;
     if (c.startDate) score += 15;
     var d = parseDateSafe(c.attendDate || c.contactDate || c.applyDate);
@@ -690,21 +709,42 @@
     return isNaN(d.getTime()) ? null : d;
   }
 
+  // タブ振り分けロジック（B列＝最終ステータス厳格判定）
   function classifyCandidateTab(c) {
     var now = new Date();
-    var finalSt = String(c.finalStatus || '');
+    var finalSt = getColBFinalStatus(c); // B列（最終ステータス）
     var st = String(c.status || '');
     var attendD = parseDateSafe(c.attendDate || c.contactDate);
     var applyD = parseDateSafe(c.applyDate);
     var startD = parseDateSafe(c.startDate);
 
-    if (attendD) {
-      var diffHours = (now.getTime() - attendD.getTime()) / (1000 * 60 * 60);
-      if (diffHours >= 12 && diffHours <= 72 && (finalSt.indexOf('FIX待ち') !== -1 || st.indexOf('アテンド') !== -1 || finalSt.indexOf('決定') === -1)) {
-        return 'within3days';
+    // 1. 3日以内 未FIX人材（B列＝FIX待ち かつ アテンド・接触から12時間以上〜72時間以内）
+    if (finalSt.indexOf('FIX待ち') !== -1) {
+      if (attendD) {
+        var diffHours = (now.getTime() - attendD.getTime()) / (1000 * 60 * 60);
+        if (diffHours >= 12 && diffHours <= 72) {
+          return 'within3days';
+        }
+        // 2. 未FIX人材（B列＝FIX待ち かつ アテンド・接触から7〜10日経過）
+        var dDays = (now.getTime() - attendD.getTime()) / (1000 * 60 * 60 * 24);
+        if (dDays >= 7 && dDays <= 10) {
+          return 'unfixed';
+        }
       }
+      // B列がFIX待ちでも上記日数枠外の人は他タブへ誤分類しない
+      return 'other_fix_wait';
     }
 
+    // 3. 激熱掘起（職見済・激熱・アテンド後11日〜44日経過）
+    if (finalSt.indexOf('激熱') !== -1 || st.indexOf('職見済') !== -1 || finalSt.indexOf('職見済') !== -1) {
+      return 'hot';
+    }
+    if (attendD && finalSt.indexOf('NG') === -1 && finalSt.indexOf('辞退') === -1) {
+      var hDays = (now.getTime() - attendD.getTime()) / (1000 * 60 * 60 * 24);
+      if (hDays > 10 && hDays < 45) return 'hot';
+    }
+
+    // 4. 未来人材（就業開始希望日が本日から45日以内、またはB列が未来人材）
     if (startD) {
       var diffDays = Math.ceil((startD.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
       if (diffDays >= 0 && diffDays <= 45) {
@@ -714,19 +754,7 @@
     }
     if (finalSt.indexOf('未来') !== -1 || st.indexOf('未来') !== -1) return 'future';
 
-    if (attendD) {
-      var dDays = (now.getTime() - attendD.getTime()) / (1000 * 60 * 60 * 24);
-      if (dDays >= 7 && dDays <= 10 && (finalSt.indexOf('FIX待ち') !== -1 || st.indexOf('アテンド') !== -1)) {
-        return 'unfixed';
-      }
-    }
-
-    if (finalSt.indexOf('激熱') !== -1 || st.indexOf('職見済') !== -1) return 'hot';
-    if (attendD) {
-      var hDays = (now.getTime() - attendD.getTime()) / (1000 * 60 * 60 * 24);
-      if (hDays > 10 && hDays < 45) return 'hot';
-    }
-
+    // 5. 通常掘起（応募から45日以上経過）
     if (applyD) {
       var applyDays = (now.getTime() - applyD.getTime()) / (1000 * 60 * 60 * 24);
       if (applyDays >= 45) return 'normal';
@@ -898,7 +926,13 @@
     return state.mergedCandidates.filter(function(c) {
       if (state.excludedMap[c.personKey]) return false;
       if (targetArea === 'kanto' && !isKantoCandidate(c)) return false;
-      if (targetTab && c.assignedTab !== targetTab) return false;
+
+      if (targetTab) {
+        if (c.assignedTab !== targetTab) return false;
+      } else {
+        // 全5タブ一括出力時
+        if (['within3days', 'unfixed', 'hot', 'future', 'normal'].indexOf(c.assignedTab) === -1) return false;
+      }
 
       var act = getActionState(c);
       if (act.isHidden) return false;
@@ -916,7 +950,7 @@
   }
 
   function updateTabBadges() {
-    var tabs = ['within3days', 'future', 'unfixed', 'hot', 'normal'];
+    var tabs = ['within3days', 'unfixed', 'hot', 'future', 'normal'];
     tabs.forEach(function(t) {
       var list = getFilteredCandidates({ tab: t, unactedOnly: true, ignoreFilters: true });
       var badge = document.getElementById('badge-' + t);
@@ -927,7 +961,7 @@
 
   window.switchTab = function(tabId) {
     state.currentTab = tabId;
-    ['within3days', 'future', 'unfixed', 'hot', 'normal'].forEach(function(t) {
+    ['within3days', 'unfixed', 'hot', 'future', 'normal'].forEach(function(t) {
       var btn = document.getElementById('tab-' + t);
       var badge = document.getElementById('badge-' + t);
       if (t === tabId) {
@@ -961,19 +995,19 @@
     var map = {
       within3days: {
         title: '【3日以内 未FIX人材】の抽出基準・アプローチ設計を見る',
-        desc: 'アテンド・接触から12時間以上〜3日（72時間）以内の未FIX層を自動抽出。名字を安全に自動抽出し、4種類のスライド理由（「充足してしまった」「他社で決定してしまった」等）をランダム差し込みして近隣5kmBOを提案します。'
-      },
-      future: {
-        title: '【未来人材】の抽出基準・アプローチ設計を見る',
-        desc: '就業開始希望日が本日から45日以内（または最終ステータスが未来人材）の対象者を抽出。希望時期が近づいたタイミングで最新5km案件を案内します。'
+        desc: 'CSVのB列（最終ステータス）＝「FIX待ち」かつ、アテンド・接触から12時間以上〜3日（72時間）以内の対象者のみを抽出。名字を安全に自動抽出し、4種類のスライド理由をランダム差し込みして近隣5kmBOを提案します。'
       },
       unfixed: {
         title: '【未FIX人材】の抽出基準・アプローチ設計を見る',
-        desc: 'アテンド後7〜10日経過したFIX待ち層を抽出。5km圏内派遣BO（新着順3件）と2km圏内直接雇用フックで再アプローチします。'
+        desc: 'CSVのB列（最終ステータス）＝「FIX待ち」かつ、アテンド・接触から7〜10日経過した対象者のみを抽出。5km圏内派遣BO（新着順3件）と2km圏内直接雇用フックで再アプローチします。'
       },
       hot: {
         title: '【激熱掘起】の抽出基準・アプローチ設計を見る',
         desc: '職見済・激熱層を抽出。初回送信すると翌日に「🔔 翌日リマインド対象」として自動再浮上し専用文面に切り替わります。リマインド送信後は30日間自動でクールダウン（非表示）になります。'
+      },
+      future: {
+        title: '【未来人材】の抽出基準・アプローチ設計を見る',
+        desc: '就業開始希望日が本日から45日以内（またはB列が未来人材）の対象者を抽出。希望時期が近づいたタイミングで最新5km案件を案内します。'
       },
       normal: {
         title: '【通常掘起】の抽出基準・アプローチ設計を見る',
@@ -1035,6 +1069,7 @@
       var act = getActionState(c);
       var jobs = getMatchedJobs(c);
       var condId = 'cond-box-' + idx;
+      var bSt = getColBFinalStatus(c);
       var statusBadgeClass = act.isRemindReady ? 'bg-amber-100 text-amber-800 border-amber-300 animate-pulse' : (act.isActed ? 'bg-sky-50 text-sky-700 border-sky-200' : 'bg-rose-50 text-rose-700 border-rose-200');
 
       var directHtml = jobs.direct.length > 0 ? (
@@ -1064,7 +1099,7 @@
           '<div class="flex flex-wrap items-center gap-1.5 text-[11px]">' +
             '<span class="px-2 py-0.5 rounded bg-zinc-100 text-zinc-700 font-bold">' + escapeHtml(c.jobType || '介護') + '</span>' +
             '<span class="px-2 py-0.5 rounded border font-bold ' + statusBadgeClass + '">' + escapeHtml(act.label) + '</span>' +
-            (c.finalStatus ? '<span class="px-2 py-0.5 rounded bg-orange-50 text-orange-700 border border-orange-200 font-bold">最終ステータス: ' + escapeHtml(c.finalStatus) + '</span>' : '') +
+            (bSt ? '<span class="px-2 py-0.5 rounded bg-orange-50 text-orange-700 border border-orange-200 font-bold">B列(最終ステータス): ' + escapeHtml(bSt) + '</span>' : '') +
             (typeof c.daysUntilStart === 'number' ? '<span class="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold">開始まであと' + c.daysUntilStart + '日</span>' : '') +
             (c.mergedCount > 1 ? '<span class="px-2 py-0.5 rounded bg-purple-50 text-purple-700 border border-purple-200 font-bold">名寄せ統合: ' + c.mergedCount + '件</span>' : '') +
           '</div>' +
@@ -1274,6 +1309,10 @@
           return '';
         };
 
+        // B列（2列目・インデックス1）を最終ステータスとして最優先取得
+        var colBVal = (r[1] !== undefined) ? String(r[1]).trim() : '';
+        var finalStVal = colBVal || pick(['最終ステータス']);
+
         var sei = pick(['姓']);
         var mei = pick(['名']);
         var fullName = pick(['氏名', '名前', '求職者名']) || (sei && mei ? sei + ' ' + mei : sei);
@@ -1292,7 +1331,7 @@
           qualification: pick(['保有資格', '資格']),
           jobType: pick(['職種', '希望職種']) || '介護',
           status: pick(['ステータス', '応募ステータス', '進捗']),
-          finalStatus: pick(['最終ステータス']),
+          finalStatus: finalStVal,
           applyDate: pick(['応募日', '応募日時']),
           attendDate: pick(['アテンド日', 'アテンド日時', '面談日']),
           contactDate: pick(['接触日時', '最終接触日', '連絡日']),
@@ -1304,9 +1343,9 @@
 
       try { localStorage.setItem(STORAGE_KEYS.CANDIDATE_CACHE, JSON.stringify({ headers: headers, candidates: candidates })); } catch (e) {}
 
-      processCandidates(candidates, 'CSV読込済 (全' + headers.length + '列)');
+      processCandidates(candidates, 'CSV読込済 (全' + headers.length + '列・B列参照)');
       closeModal('csvModal');
-      showPopup('インポート完了！', 'ファイル名：' + file.name + LF + '全 ' + headers.length + ' 列・' + candidates.length + ' 件を読み込みました。' + LF + '（稼働・職見・内定待ち自動除外：' + state.autoExcludedCount + '件 ／ 名寄せ統合：' + state.mergedDupCount + '件）');
+      showPopup('インポート完了！', 'ファイル名：' + file.name + LF + '全 ' + headers.length + ' 列・' + candidates.length + ' 件を読み込みました（B列＝最終ステータス参照）。' + LF + '（稼働・職見・内定待ち自動除外：' + state.autoExcludedCount + '件 ／ 名寄せ統合：' + state.mergedDupCount + '件）');
     };
     reader.readAsArrayBuffer(file);
   }
@@ -1360,7 +1399,7 @@
     var list = getExportTargetList();
     document.getElementById('exportTargetCountBadge').textContent = '対象: ' + list.length + '件';
     var tbody = document.getElementById('exportPreviewBody');
-    var tabNames = { within3days: '3日以内未FIX', future: '未来人材', unfixed: '未FIX人材', hot: '激熱掘起', normal: '通常掘起' };
+    var tabNames = { within3days: '3日以内未FIX', unfixed: '未FIX人材', hot: '激熱掘起', future: '未来人材', normal: '通常掘起' };
     tbody.innerHTML = list.slice(0, 3).map(function(c) {
       var sal = extractSafeSalutation(c);
       var act = getActionState(c);
@@ -1383,8 +1422,8 @@
 
   function downloadCsvFromList(list, includeRaw) {
     if (!list || list.length === 0) { alert('出力対象のデータが0件です。'); return; }
-    var tabNames = { within3days: '3日以内未FIX', future: '未来人材', unfixed: '未FIX人材', hot: '激熱掘起', normal: '通常掘起' };
-    var baseHeaders = ['追客区分', '対応状況', '氏名', '宛名', '電話番号', '担当支店', 'アテンド担当', '職種', '保有資格', '最終ステータス', '就業開始希望日', '生成済み送信文面', '候補BO1_施設名', '候補BO1_住所', '候補BO2_施設名', '候補BO2_住所', '候補BO3_施設名', '候補BO3_住所', '紹介特別フック_施設名', '紹介特別フック_住所', '応募者ID'];
+    var tabNames = { within3days: '3日以内未FIX', unfixed: '未FIX人材', hot: '激熱掘起', future: '未来人材', normal: '通常掘起' };
+    var baseHeaders = ['追客区分', '対応状況', '氏名', '宛名', '電話番号', '担当支店', 'アテンド担当', '職種', '保有資格', 'B列_最終ステータス', '就業開始希望日', '生成済み送信文面', '候補BO1_施設名', '候補BO1_住所', '候補BO2_施設名', '候補BO2_住所', '候補BO3_施設名', '候補BO3_住所', '紹介特別フック_施設名', '紹介特別フック_住所', '応募者ID'];
     var rawHeaders = includeRaw ? state.csvHeaders : [];
     var allHeaders = baseHeaders.concat(rawHeaders);
     var csvLines = [allHeaders.map(csvEscape).join(',')];
@@ -1395,7 +1434,7 @@
       var jobs = getMatchedJobs(c);
       var msg = buildMessageForCandidate(c);
       var d0 = jobs.dispatch[0] || {}, d1 = jobs.dispatch[1] || {}, d2 = jobs.dispatch[2] || {}, dir0 = jobs.direct[0] || {};
-      var row = [tabNames[c.assignedTab] || c.assignedTab, act.label, c.name || '', sal.text, c.phone || '', c.branch || '', c.staff || '', c.jobType || '', c.qualification || '', c.finalStatus || '', c.startDate || '', msg, d0.name || '', d0.address || '', d1.name || '', d1.address || '', d2.name || '', d2.address || '', dir0.name || '', dir0.address || '', c.id || ''];
+      var row = [tabNames[c.assignedTab] || c.assignedTab, act.label, c.name || '', sal.text, c.phone || '', c.branch || '', c.staff || '', c.jobType || '', c.qualification || '', getColBFinalStatus(c), c.startDate || '', msg, d0.name || '', d0.address || '', d1.name || '', d1.address || '', d2.name || '', d2.address || '', dir0.name || '', dir0.address || '', c.id || ''];
       if (includeRaw) {
         rawHeaders.forEach(function(h) { row.push((c.rawRow && c.rawRow[h] !== undefined) ? c.rawRow[h] : ''); });
       }
