@@ -55,44 +55,44 @@
            class="px-2.5 py-1.5 rounded-md bg-zinc-900 hover:bg-zinc-800 text-orange-400 border border-orange-500/40 font-bold transition flex items-center gap-1">
           <span>案件詳細</span><span>↗</span>
         </a>
-        <button type="button" onclick="openModal('githubModal')"
+        <button onclick="openModal('githubModal')"
            class="px-2.5 py-1.5 rounded-md bg-zinc-900 hover:bg-zinc-800 text-emerald-400 border border-emerald-500/40 font-bold transition flex items-center gap-1">
           <span>🚀 GitHub自動反映</span>
         </button>
-        <button type="button" onclick="openModal('exportModal')"
+        <button onclick="openModal('exportModal')"
            class="px-2.5 py-1.5 rounded-md bg-zinc-800 hover:bg-zinc-700 text-white border border-zinc-600 font-bold transition">
           CSV出力
         </button>
-        <button type="button" onclick="openModal('urlModal')"
+        <button onclick="openModal('urlModal')"
            class="px-2.5 py-1.5 rounded-md bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-600 font-medium transition">
           URL・案件設定
         </button>
-        <button type="button" onclick="openModal('csvModal')"
+        <button onclick="openModal('csvModal')"
            class="px-3 py-1.5 rounded-md bg-orange-500 hover:bg-orange-600 text-zinc-950 font-black transition shadow-sm">
           CSV読込
         </button>
       </div>
     </div>
 
-    <!-- 5タブナビゲーション（最左から優先順） -->
+    <!-- 5タブナビゲーション -->
     <nav class="max-w-7xl mx-auto px-2 sm:px-6 flex overflow-x-auto scrollbar-hide gap-1 sm:gap-4 text-xs sm:text-sm pt-1">
-      <button type="button" onclick="switchTab('within3days')" id="tab-within3days" class="tab-active py-2.5 px-2.5 whitespace-nowrap flex items-center gap-1.5 transition">
+      <button onclick="switchTab('within3days')" id="tab-within3days" class="tab-active py-2.5 px-2.5 whitespace-nowrap flex items-center gap-1.5 transition">
         <span>3日以内 未FIX人材</span>
         <span id="badge-within3days" class="px-1.5 py-0.5 text-[11px] rounded-full bg-orange-500 text-zinc-950 font-black">0</span>
       </button>
-      <button type="button" onclick="switchTab('future')" id="tab-future" class="tab-inactive py-2.5 px-2.5 whitespace-nowrap flex items-center gap-1.5 transition">
+      <button onclick="switchTab('future')" id="tab-future" class="tab-inactive py-2.5 px-2.5 whitespace-nowrap flex items-center gap-1.5 transition">
         <span>未来人材</span>
         <span id="badge-future" class="px-1.5 py-0.5 text-[11px] rounded-full bg-zinc-800 text-zinc-300 font-bold">0</span>
       </button>
-      <button type="button" onclick="switchTab('unfixed')" id="tab-unfixed" class="tab-inactive py-2.5 px-2.5 whitespace-nowrap flex items-center gap-1.5 transition">
+      <button onclick="switchTab('unfixed')" id="tab-unfixed" class="tab-inactive py-2.5 px-2.5 whitespace-nowrap flex items-center gap-1.5 transition">
         <span>未FIX人材</span>
         <span id="badge-unfixed" class="px-1.5 py-0.5 text-[11px] rounded-full bg-zinc-800 text-zinc-300 font-bold">0</span>
       </button>
-      <button type="button" onclick="switchTab('hot')" id="tab-hot" class="tab-inactive py-2.5 px-2.5 whitespace-nowrap flex items-center gap-1.5 transition">
+      <button onclick="switchTab('hot')" id="tab-hot" class="tab-inactive py-2.5 px-2.5 whitespace-nowrap flex items-center gap-1.5 transition">
         <span>激熱掘起</span>
         <span id="badge-hot" class="px-1.5 py-0.5 text-[11px] rounded-full bg-zinc-800 text-zinc-300 font-bold">0</span>
       </button>
-      <button type="button" onclick="switchTab('normal')" id="tab-normal" class="tab-inactive py-2.5 px-2.5 whitespace-nowrap flex items-center gap-1.5 transition">
+      <button onclick="switchTab('normal')" id="tab-normal" class="tab-inactive py-2.5 px-2.5 whitespace-nowrap flex items-center gap-1.5 transition">
         <span>通常掘起</span>
         <span id="badge-normal" class="px-1.5 py-0.5 text-[11px] rounded-full bg-zinc-800 text-zinc-300 font-bold">0</span>
       </button>
@@ -104,8 +104,1981 @@
 
     <!-- タブ別アプローチ設計アコーディオン -->
     <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-      <button type="button" onclick="toggleGuide()" class="w-full px-4 py-2.5 flex items-center justify-between text-left text-xs sm:text-sm font-bold text-gray-800 hover:bg-gray-50 transition">
+      <button onclick="toggleGuide()" class="w-full px-4 py-2.5 flex items-center justify-between text-left text-xs sm:text-sm font-bold text-gray-800 hover:bg-gray-50 transition">
         <span id="guideTitle" class="text-orange-600">【3日以内 未FIX人材】の抽出基準・アプローチ設計を見る</span>
         <span id="guideArrow" class="text-gray-400 text-xs">開く ▼</span>
       </button>
-      <div id="guideBody" class="hidden px-4 pb-3 pt-1 border-t border-gray-10
+      <div id="guideBody" class="hidden px-4 pb-3 pt-1 border-t border-gray-100 text-xs text-gray-600 space-y-1.5 bg-orange-50/40">
+        <p id="guideDesc"></p>
+        <p class="text-[11px] text-gray-500">※ 同一CSV内で「稼働中・就業中・職見待ち・内定待ち・決定」のレコードと電話番号が一致する場合は全タブから自動除外されます。氏名・住所が類似する場合は警告アラートが表示され、チェックでタイムスタンプ付き永続除外できます。</p>
+      </div>
+    </div>
+
+    <!-- エリア2タブ（関東 / 全エリア）＆ フィルターバー -->
+    <div class="bg-white rounded-xl border border-gray-200 p-3 shadow-sm space-y-2.5">
+      <div class="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-gray-100">
+        <div class="inline-flex rounded-lg bg-zinc-100 p-1 border border-zinc-200">
+          <button onclick="switchArea('kanto')" id="area-kanto" class="px-3.5 py-1 rounded-md text-xs font-black bg-zinc-900 text-orange-400 shadow-sm transition">
+            関東（東京東・本社・埼玉・神奈川）
+          </button>
+          <button onclick="switchArea('all')" id="area-all" class="px-3.5 py-1 rounded-md text-xs font-bold text-gray-600 hover:text-gray-900 transition">
+            全エリア（関西・名古屋含む）
+          </button>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2 text-xs">
+          <button onclick="openModal('excludedModal')" class="px-2.5 py-1 rounded-md bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold transition flex items-center gap-1">
+            <span>除外済リスト</span>
+            <span id="excludedCountBadge" class="px-1.5 py-0.2 bg-rose-600 text-white rounded-full text-[10px]">0</span>
+          </button>
+          <button onclick="openModal('mergeInfoModal')" class="px-2.5 py-1 rounded-md bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium transition">
+            名寄せ・履歴内訳
+          </button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-4 gap-2">
+        <select id="filterPref" onchange="renderList()" class="rounded-lg border border-gray-300 px-3 py-1.5 text-xs bg-white focus:outline-none focus:border-orange-500">
+          <option value="">都道府県：すべて</option>
+        </select>
+        <select id="filterStaff" onchange="renderList()" class="rounded-lg border border-gray-300 px-3 py-1.5 text-xs bg-white focus:outline-none focus:border-orange-500">
+          <option value="">アテンド担当ユーザー：すべて</option>
+        </select>
+        <select id="filterBranch" onchange="renderList()" class="rounded-lg border border-gray-300 px-3 py-1.5 text-xs bg-white focus:outline-none focus:border-orange-500">
+          <option value="">担当支店：すべて</option>
+        </select>
+        <label class="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-orange-200 bg-orange-50/70 text-xs font-bold text-gray-800 cursor-pointer select-none">
+          <input type="checkbox" id="filterUnactedOnly" checked onchange="renderList()" class="accent-orange-500 w-4 h-4 rounded" />
+          <span>未対応のみ表示</span>
+        </label>
+      </div>
+
+      <div class="flex flex-col sm:flex-row gap-2">
+        <input type="text" id="searchInput" oninput="renderList()" placeholder="氏名・フリガナ・電話番号・ID・エリア・資格で検索..."
+               class="flex-1 rounded-lg border border-gray-300 px-3 py-1.5 text-xs focus:outline-none focus:border-orange-500" />
+        <button onclick="quickExportCurrent()" class="px-4 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-orange-400 border border-zinc-700 text-xs font-bold whitespace-nowrap transition shadow-sm">
+          表示中を即CSV出力
+        </button>
+      </div>
+    </div>
+
+    <!-- サマリーバー -->
+    <div class="flex flex-wrap items-center justify-between gap-2 px-1 text-xs text-gray-600">
+      <div class="flex flex-wrap items-center gap-2">
+        <span class="font-bold text-gray-900" id="resultCountText">該当: 0件</span>
+        <span class="text-gray-400">|</span>
+        <span id="jobMasterSummary">案件マスタ：派遣BO(5km) 0件 ／ 紹介(2km) 0件</span>
+        <span id="autoExcludedSummary" class="text-rose-600 font-medium"></span>
+      </div>
+      <div class="text-[11px] text-gray-500">
+        ※ 送信履歴・翌日リマインド・30日クールダウンはCSV再読込でも消えない独立ストレージに保存されます
+      </div>
+    </div>
+
+    <!-- 候補者カード一覧 -->
+    <div id="candidateList" class="space-y-3 pb-10"></div>
+
+  </main>
+
+  <!-- モーダル1：文面作成・確認モーダル -->
+  <div id="msgModal" class="hidden fixed inset-0 z-50 modal-backdrop flex items-center justify-center p-3">
+    <div class="bg-white rounded-2xl max-w-2xl w-full shadow-2xl border border-gray-200 overflow-hidden flex flex-col max-h-[92vh]">
+      <div class="bg-zinc-950 text-white px-5 py-3.5 flex items-center justify-between">
+        <div>
+          <span id="modalTabBadge" class="text-[11px] px-2 py-0.5 rounded bg-orange-500 text-zinc-950 font-black mr-2">追客</span>
+          <span id="modalCandidateName" class="font-bold text-base">氏名</span>
+        </div>
+        <button onclick="closeModal('msgModal')" class="text-gray-400 hover:text-white text-xl font-bold px-2">×</button>
+      </div>
+
+      <div class="p-4 sm:p-5 overflow-y-auto space-y-3 text-xs">
+        <div id="shuffleReasonBox" class="hidden bg-orange-50 border border-orange-200 rounded-xl p-3 flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <span class="font-bold text-orange-800">自動差し込み理由：</span>
+            <span id="currentReasonText" class="font-bold text-gray-900"></span>
+          </div>
+          <button onclick="shuffleReason()" class="px-3 py-1 rounded-lg bg-orange-500 hover:bg-orange-600 text-zinc-950 font-black transition shadow-sm">
+            🔄 理由を再抽選
+          </button>
+        </div>
+
+        <div id="remindNoticeBox" class="hidden bg-amber-50 border border-amber-300 rounded-xl p-3 text-amber-900 font-bold">
+          🔔 激熱掘起：初回送信の翌日リマインド対象です。送信すると30日間（1ヶ月）自動で非表示（クールダウン）になります。
+        </div>
+
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <label class="font-bold text-gray-700">送信メッセージ文面（編集可能）</label>
+            <span id="modalSalutationInfo" class="text-[11px] text-orange-600 font-bold"></span>
+          </div>
+          <textarea id="modalMessageText" rows="11" class="w-full rounded-xl border border-gray-300 p-3 text-xs sm:text-sm leading-relaxed focus:outline-none focus:border-orange-500 font-sans"></textarea>
+        </div>
+      </div>
+
+      <div class="bg-gray-50 px-5 py-3.5 border-t border-gray-200 flex flex-wrap items-center justify-end gap-2">
+        <button onclick="closeModal('msgModal')" class="px-4 py-2 rounded-xl border border-gray-300 text-gray-700 text-xs font-bold hover:bg-gray-100">
+          閉じる
+        </button>
+        <button onclick="copyMessageOnly()" class="px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-bold">
+          文面だけコピー
+        </button>
+        <button onclick="copyAndRecordAction()" class="px-5 py-2 rounded-xl bg-orange-500 hover:bg-orange-600 text-zinc-950 text-xs font-black shadow">
+          📋 コピーして送信記録をつける（完了）
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- モーダル2：CSV読込・data.js書き出しモーダル -->
+  <div id="csvModal" class="hidden fixed inset-0 z-50 modal-backdrop flex items-center justify-center p-3">
+    <div class="bg-white rounded-2xl max-w-xl w-full shadow-2xl border border-gray-200 overflow-hidden">
+      <div class="bg-zinc-950 text-white px-5 py-3.5 flex items-center justify-between">
+        <h2 class="font-bold text-base">CSV読込・外部データ（data.js）書き出し</h2>
+        <button onclick="closeModal('csvModal')" class="text-gray-400 hover:text-white text-xl font-bold px-2">×</button>
+      </div>
+      <div class="p-5 space-y-4 text-xs">
+        <div class="bg-orange-50 border border-orange-200 rounded-xl p-3 flex items-center justify-between gap-2">
+          <div>
+            <p class="font-bold text-gray-900">1. Refoから全列CSVをダウンロード</p>
+            <p class="text-[11px] text-gray-600">列数制限なし（1列目〜最終列まで全カラム自動認識）</p>
+          </div>
+          <a href="https://refo.link/haken-oubo/applications" target="_blank" rel="noopener noreferrer"
+             class="px-3 py-2 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-orange-400 font-bold whitespace-nowrap shadow-sm">
+            📥 Refo応募一覧を開く ↗
+          </a>
+        </div>
+
+        <div id="dropZone" onclick="document.getElementById('csvFileInput').click()"
+             class="border-2 border-dashed border-gray-300 hover:border-orange-500 rounded-2xl p-7 text-center cursor-pointer transition bg-gray-50 hover:bg-orange-50/30">
+          <p class="font-black text-sm text-gray-800 mb-1">2. クリックして全列CSVファイルを選択</p>
+          <p class="text-gray-500">またはここにCSVファイルをドラッグ＆ドロップ（UTF-8 / Shift-JIS自動判定）</p>
+          <input type="file" id="csvFileInput" accept=".csv" class="hidden" onchange="handleCsvFileSelect(event)" />
+        </div>
+
+        <div class="bg-zinc-900 text-white rounded-xl p-3.5 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-orange-400">📦 チーム配布・軽量化用 data.js 書き出し</span>
+            <span class="text-[10px] text-zinc-400">全列データ＋最新案件マスタ同梱</span>
+          </div>
+          <p class="text-[11px] text-zinc-300">読み込んだ全列CSVを別ファイル（<code class="text-orange-300">data.js</code>）として保存します。GitHubに上書き（または右上の「GitHub自動反映」）すると全員に最新データが反映されます。</p>
+          <button onclick="exportDataJsFile()" class="w-full py-2 rounded-lg bg-orange-500 hover:bg-orange-600 text-zinc-950 font-black transition">
+            📦 読込済CSV(全列)から最新 data.js を書き出し
+          </button>
+        </div>
+
+        <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-gray-100">
+          <button onclick="resetToDemoData()" class="px-3 py-1.5 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-100 font-medium">
+            デモデータに戻す
+          </button>
+          <button onclick="clearActionHistory()" class="px-3 py-1.5 rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 font-medium">
+            送信・クールダウン履歴をリセット
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- モーダル3：CSVエクスポートモーダル（プレビュー付き） -->
+  <div id="exportModal" class="hidden fixed inset-0 z-50 modal-backdrop flex items-center justify-center p-3">
+    <div class="bg-white rounded-2xl max-w-3xl w-full shadow-2xl border border-gray-200 overflow-hidden flex flex-col max-h-[92vh]">
+      <div class="bg-zinc-950 text-white px-5 py-3.5 flex items-center justify-between">
+        <h2 class="font-bold text-base">Excel対応 CSVエクスポート（BOM付きUTF-8）</h2>
+        <button onclick="closeModal('exportModal')" class="text-gray-400 hover:text-white text-xl font-bold px-2">×</button>
+      </div>
+
+      <div class="p-5 overflow-y-auto space-y-4 text-xs">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+          <label class="border rounded-xl p-3 cursor-pointer hover:border-orange-500 flex items-start gap-2 bg-orange-50/40 border-orange-300">
+            <input type="radio" name="exportScope" value="current" checked onchange="updateExportPreview()" class="mt-0.5 accent-orange-500" />
+            <div>
+              <p class="font-bold text-gray-900">① 現在の表示条件</p>
+              <p class="text-[11px] text-gray-500">選択中エリア・タブ・検索条件通り</p>
+            </div>
+          </label>
+          <label class="border border-gray-200 rounded-xl p-3 cursor-pointer hover:border-orange-500 flex items-start gap-2">
+            <input type="radio" name="exportScope" value="tabAll" onchange="updateExportPreview()" class="mt-0.5 accent-orange-500" />
+            <div>
+              <p class="font-bold text-gray-900">② 現在のタブ全件</p>
+              <p class="text-[11px] text-gray-500">選択中エリアの現タブ全件</p>
+            </div>
+          </label>
+          <label class="border border-gray-200 rounded-xl p-3 cursor-pointer hover:border-orange-500 flex items-start gap-2">
+            <input type="radio" name="exportScope" value="allTabs" onchange="updateExportPreview()" class="mt-0.5 accent-orange-500" />
+            <div>
+              <p class="font-bold text-gray-900">③ 全5タブ一括出力</p>
+              <p class="text-[11px] text-gray-500">全追客対象をまとめて1ファイル化</p>
+            </div>
+          </label>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-4 bg-gray-50 p-3 rounded-xl border border-gray-200">
+          <label class="flex items-center gap-2 font-bold text-gray-800 cursor-pointer">
+            <input type="checkbox" id="exportUnactedOnly" checked onchange="updateExportPreview()" class="accent-orange-500 w-4 h-4" />
+            <span>未対応のみ出力する</span>
+          </label>
+          <label class="flex items-center gap-2 font-bold text-gray-800 cursor-pointer">
+            <input type="checkbox" id="exportIncludeRaw" onchange="updateExportPreview()" class="accent-orange-500 w-4 h-4" />
+            <span>元CSVの全列を後ろに連結して出力</span>
+          </label>
+        </div>
+
+        <div>
+          <div class="flex items-center justify-between mb-1.5">
+            <span class="font-bold text-gray-800">出力プレビュー（先頭3件・Excelで一番左に見える重要列順）</span>
+            <span id="exportTargetCountBadge" class="font-black text-orange-600">対象: 0件</span>
+          </div>
+          <div class="overflow-x-auto border border-gray-200 rounded-xl">
+            <table class="min-w-full text-[11px] text-left">
+              <thead class="bg-zinc-900 text-white">
+                <tr>
+                  <th class="px-2.5 py-2">追客区分</th>
+                  <th class="px-2.5 py-2">対応状況</th>
+                  <th class="px-2.5 py-2">氏名</th>
+                  <th class="px-2.5 py-2">宛名</th>
+                  <th class="px-2.5 py-2">電話番号</th>
+                  <th class="px-2.5 py-2">担当支店</th>
+                  <th class="px-2.5 py-2">候補BO(住所入)</th>
+                </tr>
+              </thead>
+              <tbody id="exportPreviewBody" class="divide-y divide-gray-200 bg-white"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="bg-zinc-100 rounded-xl p-3 flex flex-wrap items-center justify-between gap-2">
+          <span class="text-[11px] text-gray-600 font-medium">別端末へ履歴（送信済・30日クールダウン・除外リスト）を引き継ぐ場合：</span>
+          <div class="flex gap-2">
+            <button onclick="exportHistoryJson()" class="px-3 py-1.5 rounded-lg bg-white border border-gray-300 hover:bg-gray-50 font-bold text-gray-800">
+              履歴JSON保存
+            </button>
+            <button onclick="document.getElementById('historyJsonInput').click()" class="px-3 py-1.5 rounded-lg bg-white border border-gray-300 hover:bg-gray-50 font-bold text-gray-800">
+              履歴JSON復元
+            </button>
+            <input type="file" id="historyJsonInput" accept=".json" class="hidden" onchange="importHistoryJson(event)" />
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-gray-50 px-5 py-3.5 border-t border-gray-200 flex items-center justify-end gap-2">
+        <button onclick="closeModal('exportModal')" class="px-4 py-2 rounded-xl border border-gray-300 text-gray-700 text-xs font-bold">閉じる</button>
+        <button onclick="executeCsvExport()" class="px-5 py-2 rounded-xl bg-orange-500 hover:bg-orange-600 text-zinc-950 text-xs font-black shadow">
+          📥 CSVをダウンロードする
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- モーダル4：URL・案件マスタ設定モーダル（searchOrder連携） -->
+  <div id="urlModal" class="hidden fixed inset-0 z-50 modal-backdrop flex items-center justify-center p-3">
+    <div class="bg-white rounded-2xl max-w-xl w-full shadow-2xl border border-gray-200 overflow-hidden">
+      <div class="bg-zinc-950 text-white px-5 py-3.5 flex items-center justify-between">
+        <h2 class="font-bold text-base">外部データURL・案件マスタ（searchOrder）連携設定</h2>
+        <button onclick="closeModal('urlModal')" class="text-gray-400 hover:text-white text-xl font-bold px-2">×</button>
+      </div>
+      <div class="p-5 space-y-4 text-xs">
+        <div>
+          <label class="block font-bold text-gray-800 mb-1">① 外部求職者データURL（別サイトの data.js / JSON）</label>
+          <div class="flex gap-2">
+            <input type="text" id="externalDataUrlInput" placeholder="https://kawazoedaichi.github.io/staff-data/data.js"
+                   class="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-xs focus:outline-none focus:border-orange-500" />
+            <button onclick="saveAndLoadExternalDataUrl()" class="px-3.5 py-2 rounded-lg bg-zinc-900 text-orange-400 font-bold hover:bg-zinc-800">
+              読込・保存
+            </button>
+          </div>
+        </div>
+
+        <div class="border-t border-gray-200 pt-3 space-y-2">
+          <label class="block font-bold text-gray-800">② 案件マスタ（searchOrder側データ）のURLまたはCSV取込</label>
+          <p class="text-[11px] text-gray-500">候補BOの住所・座標を <a href="https://kawazoedaichi.github.io/searchOrder/" target="_blank" class="text-orange-600 underline">searchOrder</a> の最新案件データと同期します。</p>
+          <div class="flex gap-2">
+            <input type="text" id="jobMasterUrlInput" placeholder="https://kawazoedaichi.github.io/searchOrder/data.js または JSON URL"
+                   class="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-xs focus:outline-none focus:border-orange-500" />
+            <button onclick="fetchJobMasterFromUrl()" class="px-3.5 py-2 rounded-lg bg-orange-500 text-zinc-950 font-black hover:bg-orange-600">
+              URLから同期
+            </button>
+          </div>
+          <div class="pt-1">
+            <button onclick="document.getElementById('jobCsvInput').click()" class="w-full py-2 rounded-lg border border-dashed border-gray-400 hover:border-orange-500 text-gray-700 font-bold bg-gray-50">
+              📂 または searchOrder に使った案件CSVを直接選択して住所反映
+            </button>
+            <input type="file" id="jobCsvInput" accept=".csv" class="hidden" onchange="handleJobCsvImport(event)" />
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- モーダル5：GitHubワンボタン自動反映モーダル（searchOrder方式） -->
+  <div id="githubModal" class="hidden fixed inset-0 z-50 modal-backdrop flex items-center justify-center p-3">
+    <div class="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-gray-200 overflow-hidden">
+      <div class="bg-zinc-950 text-white px-5 py-3.5 flex items-center justify-between">
+        <h2 class="font-bold text-base text-emerald-400">🚀 GitHubリポジトリへ自動反映（Push）</h2>
+        <button onclick="closeModal('githubModal')" class="text-gray-400 hover:text-white text-xl font-bold px-2">×</button>
+      </div>
+      <div class="p-5 space-y-3 text-xs">
+        <p class="text-gray-600 leading-relaxed">
+          <code>searchOrder</code> と同じ仕組みで、現在読み込んでいる全列CSV・案件マスタを GitHub リポジトリ上の <strong><code>data.js</code></strong> に直接自動アップロードします（手動ダウンロード・アップロード不要）。
+        </p>
+
+        <div class="space-y-2 bg-gray-50 p-3.5 rounded-xl border border-gray-200">
+          <div>
+            <label class="block font-bold text-gray-700 mb-0.5">GitHub リポジトリ（オーナー/リポジトリ名）</label>
+            <input type="text" id="ghRepoInput" value="kawazoedaichi/staff" placeholder="kawazoedaichi/staff"
+                   class="w-full rounded-lg border border-gray-300 px-3 py-1.5 bg-white" />
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block font-bold text-gray-700 mb-0.5">ブランチ名</label>
+              <input type="text" id="ghBranchInput" value="main" class="w-full rounded-lg border border-gray-300 px-3 py-1.5 bg-white" />
+            </div>
+            <div>
+              <label class="block font-bold text-gray-700 mb-0.5">更新ファイルパス</label>
+              <input type="text" id="ghPathInput" value="data.js" class="w-full rounded-lg border border-gray-300 px-3 py-1.5 bg-white" />
+            </div>
+          </div>
+          <div>
+            <label class="block font-bold text-gray-700 mb-0.5">GitHub Personal Access Token（ブラウザ内にのみ保存）</label>
+            <input type="password" id="ghTokenInput" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
+                   class="w-full rounded-lg border border-gray-300 px-3 py-1.5 bg-white" />
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between pt-2">
+          <button onclick="saveGithubConfig()" class="px-3.5 py-2 rounded-lg border border-gray-300 text-gray-700 font-bold hover:bg-gray-100">
+            設定だけ保存
+          </button>
+          <button onclick="pushDataJsToGithub()" id="ghPushBtn" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black shadow transition">
+            🚀 GitHubの data.js を今すぐ自動更新する
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- モーダル6：除外済リスト管理モーダル -->
+  <div id="excludedModal" class="hidden fixed inset-0 z-50 modal-backdrop flex items-center justify-center p-3">
+    <div class="bg-white rounded-2xl max-w-2xl w-full shadow-2xl border border-gray-200 overflow-hidden flex flex-col max-h-[88vh]">
+      <div class="bg-zinc-950 text-white px-5 py-3.5 flex items-center justify-between">
+        <h2 class="font-bold text-base">除外済リスト（タイムスタンプ永続保存）</h2>
+        <button onclick="closeModal('excludedModal')" class="text-gray-400 hover:text-white text-xl font-bold px-2">×</button>
+      </div>
+      <div class="p-4 overflow-y-auto space-y-2 text-xs" id="excludedListContainer"></div>
+      <div class="bg-gray-50 px-5 py-3 border-t border-gray-200 flex justify-end">
+        <button onclick="closeModal('excludedModal')" class="px-4 py-1.5 rounded-lg bg-zinc-900 text-white font-bold text-xs">閉じる</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- モーダル7：名寄せ・履歴内訳モーダル -->
+  <div id="mergeInfoModal" class="hidden fixed inset-0 z-50 modal-backdrop flex items-center justify-center p-3">
+    <div class="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-gray-200 overflow-hidden">
+      <div class="bg-zinc-950 text-white px-5 py-3.5 flex items-center justify-between">
+        <h2 class="font-bold text-base">名寄せ・重複除外・独立ストレージ内訳</h2>
+        <button onclick="closeModal('mergeInfoModal')" class="text-gray-400 hover:text-white text-xl font-bold px-2">×</button>
+      </div>
+      <div id="mergeInfoBody" class="p-5 space-y-2.5 text-xs text-gray-700"></div>
+      <div class="bg-gray-50 px-5 py-3 border-t border-gray-200 flex justify-end">
+        <button onclick="closeModal('mergeInfoModal')" class="px-4 py-1.5 rounded-lg bg-zinc-900 text-white font-bold text-xs">閉じる</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- モーダル8：全列データ閲覧モーダル -->
+  <div id="rawRowModal" class="hidden fixed inset-0 z-50 modal-backdrop flex items-center justify-center p-3">
+    <div class="bg-white rounded-2xl max-w-2xl w-full shadow-2xl border border-gray-200 overflow-hidden flex flex-col max-h-[88vh]">
+      <div class="bg-zinc-950 text-white px-5 py-3.5 flex items-center justify-between">
+        <h2 id="rawRowModalTitle" class="font-bold text-base">元CSV 全列データ詳細</h2>
+        <button onclick="closeModal('rawRowModal')" class="text-gray-400 hover:text-white text-xl font-bold px-2">×</button>
+      </div>
+      <div class="px-5 py-2 bg-gray-100 border-b border-gray-200 flex items-center justify-between text-xs">
+        <label class="flex items-center gap-1.5 font-bold text-gray-700 cursor-pointer">
+          <input type="checkbox" id="rawHideEmpty" checked onchange="renderCurrentRawModal()" class="accent-orange-500" />
+          <span>値が入っている列のみ表示</span>
+        </label>
+        <span id="rawColCountText" class="text-gray-500"></span>
+      </div>
+      <div id="rawRowModalBody" class="p-4 overflow-y-auto divide-y divide-gray-100 text-xs"></div>
+    </div>
+  </div>
+
+  <!-- 中央完了ポップアップ -->
+  <div id="popupModal" class="hidden fixed inset-0 z-50 modal-backdrop flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl border-2 border-orange-500 p-6 text-center space-y-3">
+      <div id="popupIcon" class="w-12 h-12 rounded-full bg-orange-100 text-orange-600 font-black text-2xl flex items-center justify-center mx-auto">✓</div>
+      <h3 id="popupTitle" class="font-black text-lg text-gray-900">完了しました</h3>
+      <p id="popupMessage" class="text-xs text-gray-600 leading-relaxed whitespace-pre-line"></p>
+      <div class="pt-2">
+        <button onclick="closeModal('popupModal')" class="w-full py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-orange-400 font-black text-sm shadow">
+          OK
+        </button>
+      </div>
+    </div>
+  </div>
+
+<script>
+const CR = String.fromCharCode(13);
+const LF = String.fromCharCode(10);
+const CRLF = CR + LF;
+
+const STORAGE_KEYS = {
+  ACTION_LOGS: 'bstyle_staff_action_logs_v3',
+  EXCLUDED_LIST: 'bstyle_staff_excluded_v3',
+  CANDIDATE_CACHE: 'bstyle_staff_candidates_v3',
+  JOB_MASTER_CACHE: 'bstyle_staff_jobs_v3',
+  SETTINGS: 'bstyle_staff_settings_v3'
+};
+
+const KANTO_BRANCHES = ['東京東', '本社', '埼玉', '神奈川'];
+
+const ACTIVE_OR_PENDING_KEYWORDS = [
+  '稼働中', '稼動中', '就業中',
+  '職見待ち', '職場見学待ち', '職見',
+  '内定待ち', '採用待ち', '入社待ち', '決定', '成約'
+];
+
+let state = {
+  currentTab: 'within3days',
+  currentArea: 'kanto',
+  rawCandidates: [],
+  mergedCandidates: [],
+  activePhonesSet: new Set(),
+  activePersonsList: [],
+  autoExcludedCount: 0,
+  mergedDupCount: 0,
+  csvHeaders: [],
+  dispatchJobs: [],
+  directJobs: [],
+  slideReasons: [
+    "先方にて充足してしまった",
+    "他社で決定してしまった",
+    "直接雇用で埋まってしまった",
+    "エントリー選考外となってしまった"
+  ],
+  actionLogs: {},
+  excludedMap: {},
+  settings: {
+    externalDataUrl: '',
+    jobMasterUrl: '',
+    ghRepo: 'kawazoedaichi/staff',
+    ghBranch: 'main',
+    ghPath: 'data.js',
+    ghToken: ''
+  },
+  modalTarget: null,
+  currentReasonIdx: 0,
+  currentRawCandidate: null
+};
+
+window.addEventListener('DOMContentLoaded', () => {
+  loadPersistentStorage();
+  loadInitialData();
+  setupDragAndDrop();
+});
+
+function loadPersistentStorage() {
+  try {
+    const logs = localStorage.getItem(STORAGE_KEYS.ACTION_LOGS);
+    if (logs) state.actionLogs = JSON.parse(logs);
+  } catch (e) {}
+
+  try {
+    const exc = localStorage.getItem(STORAGE_KEYS.EXCLUDED_LIST);
+    if (exc) state.excludedMap = JSON.parse(exc);
+  } catch (e) {}
+
+  try {
+    const st = localStorage.getItem(STORAGE_KEYS.SETTINGS);
+    if (st) state.settings = { ...state.settings, ...JSON.parse(st) };
+  } catch (e) {}
+
+  document.getElementById('externalDataUrlInput').value = state.settings.externalDataUrl || '';
+  document.getElementById('jobMasterUrlInput').value = state.settings.jobMasterUrl || '';
+  document.getElementById('ghRepoInput').value = state.settings.ghRepo || 'kawazoedaichi/staff';
+  document.getElementById('ghBranchInput').value = state.settings.ghBranch || 'main';
+  document.getElementById('ghPathInput').value = state.settings.ghPath || 'data.js';
+  document.getElementById('ghTokenInput').value = state.settings.ghToken || '';
+}
+
+function saveActionLogs() {
+  localStorage.setItem(STORAGE_KEYS.ACTION_LOGS, JSON.stringify(state.actionLogs));
+}
+
+function saveExcludedMap() {
+  localStorage.setItem(STORAGE_KEYS.EXCLUDED_LIST, JSON.stringify(state.excludedMap));
+}
+
+function loadInitialData() {
+  const cachedJobs = localStorage.getItem(STORAGE_KEYS.JOB_MASTER_CACHE);
+  if (cachedJobs) {
+    try {
+      const parsed = JSON.parse(cachedJobs);
+      state.dispatchJobs = parsed.dispatchJobs || [];
+      state.directJobs = parsed.directJobs || [];
+    } catch (e) {}
+  } else if (window.BSTYLE_APP_DATA) {
+    state.dispatchJobs = window.BSTYLE_APP_DATA.dispatchJobs || [];
+    state.directJobs = window.BSTYLE_APP_DATA.directJobs || [];
+    if (window.BSTYLE_APP_DATA.slideReasons) state.slideReasons = window.BSTYLE_APP_DATA.slideReasons;
+  }
+
+  if (state.dispatchJobs.length === 0) {
+    state.dispatchJobs = [
+      { id: "BO-901", name: "ベネッセスタイルケア グランダ三軒茶屋", address: "東京都世田谷区三軒茶屋1-12-8", jobType: "介護", distKm: 0.0, boDate: "2026/11/11", wage: "時給1,750円〜", shift: "早番・日勤・遅番", lat: 35.6438, lng: 139.6710 },
+      { id: "BO-902", name: "チャームスイート世田谷三軒茶屋", address: "東京都世田谷区太子堂2-14-3", jobType: "介護", distKm: 0.2, boDate: "2026/11/12", wage: "時給1,800円〜", shift: "日勤のみ可", lat: 35.6445, lng: 139.6720 },
+      { id: "BO-903", name: "駒沢介護福祉センター", address: "東京都世田谷区駒沢2-18-5", jobType: "介護", distKm: 1.6, boDate: "2026/10/01", wage: "時給1,700円〜", shift: "週3〜OK", lat: 35.6310, lng: 139.6615 },
+      { id: "BO-904", name: "大宮駅西口内科・リハビリクリニック", address: "埼玉県さいたま市大宮区桜木町2-4-1", jobType: "看護", distKm: 0.4, boDate: "2026/11/12", wage: "時給2,350円〜", shift: "日勤・残業ほぼなし", lat: 35.9070, lng: 139.6225 },
+      { id: "BO-906", name: "横浜みなとみらい有料老人ホーム", address: "神奈川県横浜市西区みなとみらい3-6", jobType: "介護", distKm: 0.9, boDate: "2026/11/10", wage: "時給1,780円〜", shift: "夜勤専従・日勤", lat: 35.4605, lng: 139.6280 },
+      { id: "BO-907", name: "豊洲ベイサイド特別養護老人ホーム", address: "東京都江東区豊洲4-11-2", jobType: "介護", distKm: 0.5, boDate: "2026/11/11", wage: "時給1,820円〜", shift: "早番・日勤", lat: 35.6530, lng: 139.7945 }
+    ];
+  }
+  if (state.directJobs.length === 0) {
+    state.directJobs = [
+      { id: "DIR-101", name: "特別養護老人ホーム 世田谷の杜（直接雇用・正社員/パート）", address: "東京都世田谷区三軒茶屋2-8-10", jobType: "介護", distKm: 0.2, boDate: "2026/11/12", wage: "月給28.5万円〜 / 時給1,650円〜", lat: 35.6440, lng: 139.6718 },
+      { id: "DIR-102", name: "大宮駅前プレミアムケアホーム（直接雇用・看護）", address: "埼玉県さいたま市大宮区錦町630", jobType: "看護", distKm: 0.5, boDate: "2026/11/11", wage: "月給36万円〜 / 賞与4.0ヶ月", lat: 35.9060, lng: 139.6235 }
+    ];
+  }
+
+  const cachedCsv = localStorage.getItem(STORAGE_KEYS.CANDIDATE_CACHE);
+  if (cachedCsv) {
+    try {
+      const parsed = JSON.parse(cachedCsv);
+      state.csvHeaders = parsed.headers || [];
+      processCandidates(parsed.candidates || [], `CSV読込済 (全${state.csvHeaders.length}列)`);
+      return;
+    } catch (e) {}
+  }
+
+  if (window.BSTYLE_APP_DATA && Array.isArray(window.BSTYLE_APP_DATA.demoCandidates) && window.BSTYLE_APP_DATA.demoCandidates.length > 0) {
+    state.csvHeaders = window.BSTYLE_APP_DATA.headers || Object.keys(window.BSTYLE_APP_DATA.demoCandidates[0].rawRow || {});
+    processCandidates(window.BSTYLE_APP_DATA.demoCandidates, window.BSTYLE_APP_DATA.sourceLabel || '外部 data.js 読込済');
+    return;
+  }
+
+  const fallbackSamples = [
+    {
+      id: "01M4R001", name: "鈴木 恵美", kana: "スズキ エミ", phone: "09011112222", dob: "1985-04-12", age: 41,
+      address: "東京都世田谷区三軒茶屋1-22", pref: "東京都", branch: "東京東", staff: "山上 健太",
+      qualification: "介護福祉士", jobType: "介護", status: "アテンド済", finalStatus: "FIX待ち",
+      applyDate: "2026-11-10 10:00", attendDate: "2026-11-11 16:00", contactDate: "2026-11-11 16:00", startDate: "",
+      conditions: "シフト:早番・日勤 / 週4日 / 希望時給:1750円 / 施設:有料老人ホーム", lat: 35.6436, lng: 139.6712
+    },
+    {
+      id: "01M4R002", name: "高橋 美咲", kana: "タカハシ ミサキ", phone: "09033334444", dob: "1990-08-23", age: 36,
+      address: "東京都世田谷区太子堂2-15", pref: "東京都", branch: "本社", staff: "佐藤 翔太",
+      qualification: "初任者研修", jobType: "介護", status: "未来希望", finalStatus: "未来人材",
+      applyDate: "2026-11-01 11:20", attendDate: "2026-11-03 14:00", contactDate: "2026-11-03 14:00", startDate: "2026-12-15",
+      conditions: "シフト:日勤のみ / 週3〜4日 / 希望時給:1650円 / 施設:デイサービス", lat: 35.6451, lng: 139.6705
+    },
+    {
+      id: "01M4R003", name: "伊藤 健一", kana: "イトウ ケンイチ", phone: "08055556666", dob: "1978-11-05", age: 48,
+      address: "埼玉県さいたま市大宮区桜木町1-8", pref: "埼玉県", branch: "埼玉", staff: "中村 優子",
+      qualification: "正看護師", jobType: "看護", status: "アテンド済", finalStatus: "FIX待ち",
+      applyDate: "2026-11-02 09:30", attendDate: "2026-11-05 15:00", contactDate: "2026-11-05 15:00", startDate: "",
+      conditions: "シフト:日勤・オンコールなし / 週5日 / 希望時給:2300円 / 施設:クリニック", lat: 35.9063, lng: 139.6240
+    },
+    {
+      id: "01M4R004", name: "渡辺 真由美", kana: "ワタナベ マユミ", phone: "07077778888", dob: "1982-02-19", age: 44,
+      address: "神奈川県横浜市西区南幸2-10", pref: "神奈川県", branch: "神奈川", staff: "山上 健太",
+      qualification: "実務者研修", jobType: "介護", status: "職見済", finalStatus: "激熱掘起",
+      applyDate: "2026-09-10 13:00", attendDate: "2026-09-15 11:00", contactDate: "2026-09-15 11:00", startDate: "",
+      conditions: "シフト:夜勤専従 / 週2回 / 希望日給:28000円 / 施設:グループホーム", lat: 35.4658, lng: 139.6195
+    },
+    {
+      id: "01M4R005", name: "小林 誠", kana: "コバヤシ マコト", phone: "09099990000", dob: "1988-07-30", age: 38,
+      address: "東京都江東区豊洲3-5", pref: "東京都", branch: "東京東", staff: "佐藤 翔太",
+      qualification: "介護福祉士", jobType: "介護", status: "未アテンド", finalStatus: "未接触",
+      applyDate: "2026-09-01 18:10", attendDate: "", contactDate: "2026-09-02 10:00", startDate: "",
+      conditions: "シフト:フルシフト / 週5日 / 希望時給:1800円 / 施設:特養", lat: 35.6550, lng: 139.7960
+    }
+  ];
+  state.csvHeaders = ["応募者ID", "氏名", "フリガナ", "電話番号", "生年月日", "年齢", "住所", "都道府県", "担当支店", "アテンド担当ユーザー", "保有資格", "職種", "ステータス", "最終ステータス", "応募日", "アテンド日", "接触日時", "就業開始希望日", "把握済条件"];
+  processCandidates(fallbackSamples, 'デモデータ');
+}
+
+function normalizePhone(p) {
+  return String(p || '').replace(/[^\d]/g, '');
+}
+
+function normalizeText(t) {
+  return String(t || '').replace(/[\s ]+/g, '').trim();
+}
+
+function isActiveOrPendingRecord(c) {
+  const combined = `${c.status || ''} ${c.finalStatus || ''}`;
+  return ACTIVE_OR_PENDING_KEYWORDS.some(kw => combined.includes(kw));
+}
+
+function getPersonKey(c) {
+  const ph = normalizePhone(c.phone);
+  if (ph.length >= 9) return 'PH_' + ph;
+  const nk = normalizeText(c.kana || c.name);
+  const db = normalizeText(c.dob);
+  if (nk && db) return 'KD_' + nk + '_' + db;
+  return 'ID_' + (c.id || Math.random().toString(36).slice(2));
+}
+
+function processCandidates(rawList, badgeLabel) {
+  state.rawCandidates = rawList;
+  document.getElementById('dataSourceBadge').textContent = badgeLabel;
+
+  const activePhones = new Set();
+  const activePersons = [];
+  rawList.forEach(c => {
+    if (isActiveOrPendingRecord(c)) {
+      const ph = normalizePhone(c.phone);
+      if (ph.length >= 9) activePhones.add(ph);
+      activePersons.push({
+        name: normalizeText(c.name),
+        kana: normalizeText(c.kana),
+        address: normalizeText(c.address),
+        statusLabel: `${c.finalStatus || c.status || '稼働・待ち'}`
+      });
+    }
+  });
+  state.activePhonesSet = activePhones;
+  state.activePersonsList = activePersons;
+
+  const map = new Map();
+  let dupCount = 0;
+
+  rawList.forEach(item => {
+    const key = getPersonKey(item);
+    if (!map.has(key)) {
+      map.set(key, {
+        ...item,
+        personKey: key,
+        mergedIds: [item.id],
+        mergedCount: 1
+      });
+    } else {
+      dupCount++;
+      const existing = map.get(key);
+      existing.mergedCount += 1;
+      if (item.id && !existing.mergedIds.includes(item.id)) {
+        existing.mergedIds.push(item.id);
+      }
+      const itemScore = getProgressScore(item);
+      const extScore = getProgressScore(existing);
+      if (itemScore > extScore) {
+        const keepIds = existing.mergedIds;
+        const keepCount = existing.mergedCount;
+        map.set(key, { ...item, personKey: key, mergedIds: keepIds, mergedCount: keepCount });
+      }
+    }
+  });
+
+  state.mergedDupCount = dupCount;
+
+  let autoExc = 0;
+  const finalMerged = [];
+
+  map.forEach(c => {
+    const ph = normalizePhone(c.phone);
+    if (ph.length >= 9 && activePhones.has(ph)) {
+      autoExc++;
+      return;
+    }
+
+    const nName = normalizeText(c.name);
+    const nKana = normalizeText(c.kana);
+    const nAddr = normalizeText(c.address);
+    let warnMatch = null;
+    if (nName || nKana) {
+      warnMatch = activePersons.find(ap => {
+        const nameSame = (nName && ap.name === nName) || (nKana && ap.kana === nKana);
+        if (!nameSame) return false;
+        if (!nAddr || !ap.address) return true;
+        return ap.address.slice(0, 6) === nAddr.slice(0, 6);
+      });
+    }
+    c.activeWarning = warnMatch ? `⚠️ 稼働・職見・内定待ちかも（${warnMatch.statusLabel}と氏名/住所一致）` : '';
+    c.assignedTab = classifyCandidateTab(c);
+    finalMerged.push(c);
+  });
+
+  state.autoExcludedCount = autoExc;
+  state.mergedCandidates = finalMerged;
+
+  populateFilterOptions();
+  updateTabBadges();
+  renderList();
+}
+
+function getProgressScore(c) {
+  let score = 0;
+  if (isActiveOrPendingRecord(c)) score += 100;
+  if ((c.finalStatus || '').includes('FIX待ち')) score += 50;
+  if (c.attendDate) score += 20;
+  if (c.startDate) score += 15;
+  const d = parseDateSafe(c.attendDate || c.contactDate || c.applyDate);
+  if (d) score += d.getTime() / 1e11;
+  return score;
+}
+
+function parseDateSafe(str) {
+  if (!str) return null;
+  const clean = String(str).trim().replace(/\//g, '-');
+  const d = new Date(clean);
+  return isNaN(d.getTime()) ? null : d;
+}
+
+function classifyCandidateTab(c) {
+  const now = new Date();
+  const finalSt = String(c.finalStatus || '');
+  const st = String(c.status || '');
+  const attendD = parseDateSafe(c.attendDate || c.contactDate);
+  const applyD = parseDateSafe(c.applyDate);
+  const startD = parseDateSafe(c.startDate);
+
+  if (attendD) {
+    const diffHours = (now.getTime() - attendD.getTime()) / (1000 * 60 * 60);
+    if (diffHours >= 12 && diffHours <= 72 && (finalSt.includes('FIX待ち') || st.includes('アテンド') || !finalSt.includes('決定'))) {
+      return 'within3days';
+    }
+  }
+
+  if (startD) {
+    const diffDays = Math.ceil((startD.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    if (diffDays >= 0 && diffDays <= 45) {
+      c.daysUntilStart = diffDays;
+      return 'future';
+    }
+  }
+  if (finalSt.includes('未来') || st.includes('未来')) {
+    return 'future';
+  }
+
+  if (attendD) {
+    const diffDays = (now.getTime() - attendD.getTime()) / (1000 * 60 * 60 * 24);
+    if (diffDays >= 7 && diffDays <= 10 && (finalSt.includes('FIX待ち') || st.includes('アテンド'))) {
+      return 'unfixed';
+    }
+  }
+
+  if (finalSt.includes('激熱') || st.includes('職見済')) {
+    return 'hot';
+  }
+  if (attendD) {
+    const diffDays = (now.getTime() - attendD.getTime()) / (1000 * 60 * 60 * 24);
+    if (diffDays > 10 && diffDays < 45) {
+      return 'hot';
+    }
+  }
+
+  if (applyD) {
+    const applyDays = (now.getTime() - applyD.getTime()) / (1000 * 60 * 60 * 24);
+    if (applyDays >= 45) return 'normal';
+  }
+
+  return 'normal';
+}
+
+function extractSafeSalutation(c) {
+  if (c.rawRow && c.rawRow['姓'] && String(c.rawRow['姓']).trim()) {
+    return { text: `${String(c.rawRow['姓']).trim()}様`, mode: '名字抽出' };
+  }
+  const fullName = String(c.name || '').trim();
+  if (!fullName) return { text: 'ご担当者様', mode: 'デフォルト' };
+
+  const parts = fullName.split(/[\s ]+/).filter(Boolean);
+  if (parts.length >= 2) {
+    return { text: `${parts[0]}様`, mode: '名字抽出' };
+  }
+  return { text: `${fullName}様`, mode: 'フルネーム安全表記' };
+}
+
+function getMatchedJobs(c) {
+  const cType = String(c.jobType || '介護');
+  const isNurse = cType.includes('看護');
+
+  const disp = state.dispatchJobs
+    .filter(j => {
+      const jNurse = String(j.jobType || '').includes('看護');
+      return isNurse ? jNurse : !jNurse;
+    })
+    .sort((a, b) => String(b.boDate || '').localeCompare(String(a.boDate || '')))
+    .slice(0, 3);
+
+  const dir = state.directJobs
+    .filter(j => {
+      const jNurse = String(j.jobType || '').includes('看護');
+      return isNurse ? jNurse : !jNurse;
+    })
+    .slice(0, 2);
+
+  return { dispatch: disp, direct: dir };
+}
+
+function buildMessageForCandidate(c, reasonOverride = null) {
+  const sal = extractSafeSalutation(c);
+  const jobs = getMatchedJobs(c);
+  const log = state.actionLogs[c.personKey];
+  const tab = c.assignedTab;
+
+  const jobLines = jobs.dispatch.map((j, idx) =>
+    `【候補${idx + 1}】${j.name}${LF}・住所：${j.address || '詳細はお問い合わせください'}（ご自宅から約${j.distKm}km）${LF}・条件：${j.wage || ''} / ${j.shift || ''}`
+  ).join(LF + LF);
+
+  const directHook = jobs.direct.length > 0
+    ? `${LF}${LF}★また、ご自宅から約${jobs.direct[0].distKm}km圏内に【直接雇用（正社員・パート）】の特別募集枠（${jobs.direct[0].name}／${jobs.direct[0].address || ''}）も出ております！`
+    : '';
+
+  if (tab === 'within3days') {
+    const reason = reasonOverride || state.slideReasons[state.currentReasonIdx % state.slideReasons.length];
+    return [
+      sal.text,
+      '',
+      `お世話になっております。ビースタイルの${c.staff || '担当'}です。`,
+      `先日お話しさせていただいた件につきまして、実は先ほど確認したところ、ご希望いただいていた求人が【${reason}】という状況になってしまいました。`,
+      '',
+      'せっかくお時間をいただいたのに申し訳ございません！',
+      '代わりにご自宅から通いやすい近隣エリアで、条件に合う新着求人をピックアップいたしました。',
+      '',
+      (jobLines || '・近隣エリアの好条件求人を複数確保しております。') + directHook,
+      '',
+      'もし気になるものがございましたら、すぐ詳細をお送りしますのでお気軽にご返信ください！'
+    ].join(LF);
+  }
+
+  if (tab === 'future') {
+    return [
+      sal.text,
+      '',
+      `お世話になっております。ビースタイルの${c.staff || '担当'}です。`,
+      `ご就業希望時期（${c.startDate || '近日中'}）が近づいてまいりましたので、最新の募集状況のご案内です！`,
+      '',
+      '現在、ご自宅周辺で以下の好条件案件が出ております。',
+      '',
+      (jobLines || '・ご希望条件に合う最新求人が入っております。') + directHook,
+      '',
+      'ご希望条件に変更がないか、また見学など進められそうか、ご都合のよいタイミングでお知らせいただけますでしょうか？'
+    ].join(LF);
+  }
+
+  if (tab === 'unfixed') {
+    return [
+      sal.text,
+      '',
+      `お世話になっております。ビースタイルの${c.staff || '担当'}です。`,
+      '先日ご提案させていただきました件、その後ご状況はいかがでしょうか？',
+      '',
+      '現在もご自宅から5km圏内で以下の求人が募集中となっております。',
+      '',
+      (jobLines || '・近隣エリアで引き続き募集中です。') + directHook,
+      '',
+      '「まずは条件だけ詳しく聞きたい」「他で決まった」など、一言だけでもご返信いただけますと幸いです！'
+    ].join(LF);
+  }
+
+  if (tab === 'hot') {
+    if (log && log.status === 'reminded') {
+      return [
+        sal.text,
+        '',
+        `度々のご連絡失礼いたします。ビースタイルの${c.staff || '担当'}です！`,
+        '昨日お送りさせていただきました近隣の募集案件ですが、枠が埋まりやすくなっているため念のためリマインドさせていただきました。',
+        '',
+        'お忙しいところ恐縮ですが、もし少しでもご興味があれば「詳細希望」とだけご返信ください！'
+      ].join(LF);
+    }
+    return [
+      sal.text,
+      '',
+      `ご無沙汰しております！ビースタイルの${c.staff || '担当'}です。`,
+      '以前お話しさせていただいたご希望条件にぴったりの新着案件が入りましたので、優先的にご連絡いたしました！',
+      '',
+      (jobLines || '・ご自宅近くの好条件求人が新着で入っております。') + directHook,
+      '',
+      '今すぐのご転職でなくても情報収集だけでも大歓迎ですので、ぜひお気軽にご返信ください！'
+    ].join(LF);
+  }
+
+  return [
+    sal.text,
+    '',
+    `お世話になっております。ビースタイルの${c.staff || '担当'}です。`,
+    'その後、お仕事のご状況はいかがでしょうか？',
+    '',
+    '現在、お住まいのエリア周辺で新しい募集枠が複数出ておりますのでご案内いたします。',
+    '',
+    (jobLines || '・近隣エリアの最新求人情報がございます。') + directHook,
+    '',
+    '現在のシフト希望やご状況に合わせて改めてお探しすることも可能ですので、ぜひお気軽にお声がけください！'
+  ].join(LF);
+}
+
+function isKantoCandidate(c) {
+  const branch = String(c.branch || '').trim();
+  if (KANTO_BRANCHES.some(kb => branch.includes(kb))) return true;
+  const pref = String(c.pref || c.address || '');
+  if (!branch && /(東京都|神奈川県|埼玉県|千葉県|茨城県|栃木県|群馬県)/.test(pref)) return true;
+  return false;
+}
+
+function getActionState(c) {
+  const log = state.actionLogs[c.personKey];
+  if (!log) return { isHidden: false, isActed: false, label: '未対応' };
+
+  const now = Date.now();
+  if (log.cooldownUntil && now < log.cooldownUntil) {
+    const remDays = Math.ceil((log.cooldownUntil - now) / (1000 * 60 * 60 * 24));
+    return { isHidden: true, isActed: true, label: `30日クールダウン中（残${remDays}日）` };
+  }
+
+  if (c.assignedTab === 'hot' && log.status === 'wait_remind') {
+    if (now >= (log.remindReadyAt || 0)) {
+      log.status = 'reminded';
+      saveActionLogs();
+      return { isHidden: false, isActed: false, isRemindReady: true, label: '🔔 翌日リマインド対象' };
+    }
+    return { isHidden: false, isActed: true, label: '初回送信済（翌日リマインド待機）' };
+  }
+
+  if (log.status === 'reminded') {
+    return { isHidden: false, isActed: false, isRemindReady: true, label: '🔔 翌日リマインド対象' };
+  }
+
+  if (log.status === 'done') {
+    const dt = log.lastSentAt ? new Date(log.lastSentAt).toLocaleDateString('ja-JP') : '';
+    return { isHidden: false, isActed: true, label: `対応済（${dt}送信）` };
+  }
+
+  return { isHidden: false, isActed: false, label: '未対応' };
+}
+
+function getFilteredCandidates(options = {}) {
+  const targetTab = options.tab !== undefined ? options.tab : state.currentTab;
+  const targetArea = options.area !== undefined ? options.area : state.currentArea;
+  const unactedOnly = options.unactedOnly !== undefined ? options.unactedOnly : document.getElementById('filterUnactedOnly').checked;
+  const prefVal = options.ignoreFilters ? '' : document.getElementById('filterPref').value;
+  const staffVal = options.ignoreFilters ? '' : document.getElementById('filterStaff').value;
+  const branchVal = options.ignoreFilters ? '' : document.getElementById('filterBranch').value;
+  const q = options.ignoreFilters ? '' : normalizeText(document.getElementById('searchInput').value).toLowerCase();
+
+  return state.mergedCandidates.filter(c => {
+    if (state.excludedMap[c.personKey]) return false;
+    if (targetArea === 'kanto' && !isKantoCandidate(c)) return false;
+    if (targetTab && c.assignedTab !== targetTab) return false;
+
+    const act = getActionState(c);
+    if (act.isHidden) return false;
+    if (unactedOnly && act.isActed) return false;
+
+    if (prefVal && c.pref !== prefVal) return false;
+    if (staffVal && c.staff !== staffVal) return false;
+    if (branchVal && c.branch !== branchVal) return false;
+    if (q) {
+      const hay = `${c.name} ${c.kana} ${c.phone} ${c.id} ${c.address} ${c.qualification}`.toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+
+    return true;
+  });
+}
+
+function updateTabBadges() {
+  const tabs = ['within3days', 'future', 'unfixed', 'hot', 'normal'];
+  tabs.forEach(t => {
+    const list = getFilteredCandidates({ tab: t, unactedOnly: true, ignoreFilters: true });
+    const badge = document.getElementById('badge-' + t);
+    if (badge) badge.textContent = list.length;
+  });
+
+  const excCount = Object.keys(state.excludedMap).length;
+  document.getElementById('excludedCountBadge').textContent = excCount;
+}
+
+function switchTab(tabId) {
+  state.currentTab = tabId;
+  ['within3days', 'future', 'unfixed', 'hot', 'normal'].forEach(t => {
+    const btn = document.getElementById('tab-' + t);
+    const badge = document.getElementById('badge-' + t);
+    if (t === tabId) {
+      btn.className = 'tab-active py-2.5 px-2.5 whitespace-nowrap flex items-center gap-1.5 transition';
+      badge.className = 'px-1.5 py-0.5 text-[11px] rounded-full bg-orange-500 text-zinc-950 font-black';
+    } else {
+      btn.className = 'tab-inactive py-2.5 px-2.5 whitespace-nowrap flex items-center gap-1.5 transition';
+      badge.className = 'px-1.5 py-0.5 text-[11px] rounded-full bg-zinc-800 text-zinc-300 font-bold';
+    }
+  });
+  updateGuideText();
+  renderList();
+}
+
+function switchArea(areaId) {
+  state.currentArea = areaId;
+  const kBtn = document.getElementById('area-kanto');
+  const aBtn = document.getElementById('area-all');
+  if (areaId === 'kanto') {
+    kBtn.className = 'px-3.5 py-1 rounded-md text-xs font-black bg-zinc-900 text-orange-400 shadow-sm transition';
+    aBtn.className = 'px-3.5 py-1 rounded-md text-xs font-bold text-gray-600 hover:text-gray-900 transition';
+  } else {
+    aBtn.className = 'px-3.5 py-1 rounded-md text-xs font-black bg-zinc-900 text-orange-400 shadow-sm transition';
+    kBtn.className = 'px-3.5 py-1 rounded-md text-xs font-bold text-gray-600 hover:text-gray-900 transition';
+  }
+  updateTabBadges();
+  renderList();
+}
+
+function updateGuideText() {
+  const map = {
+    within3days: {
+      title: '【3日以内 未FIX人材】の抽出基準・アプローチ設計を見る',
+      desc: 'アテンド・接触から12時間以上〜3日（72時間）以内の未FIX層を自動抽出。名字を安全に自動抽出し、4種類のスライド理由（「充足してしまった」「他社で決定してしまった」等）をランダム差し込みして近隣5kmBOを提案します。'
+    },
+    future: {
+      title: '【未来人材】の抽出基準・アプローチ設計を見る',
+      desc: '就業開始希望日が本日から45日以内（または最終ステータスが未来人材）の対象者を抽出。希望時期が近づいたタイミングで最新5km案件を案内します。'
+    },
+    unfixed: {
+      title: '【未FIX人材】の抽出基準・アプローチ設計を見る',
+      desc: 'アテンド後7〜10日経過したFIX待ち層を抽出。5km圏内派遣BO（新着順3件）と2km圏内直接雇用フックで再アプローチします。'
+    },
+    hot: {
+      title: '【激熱掘起】の抽出基準・アプローチ設計を見る',
+      desc: '職見済・激熱層を抽出。初回送信すると翌日に「🔔 翌日リマインド対象」として自動再浮上し専用文面に切り替わります。リマインド送信後は30日間自動でクールダウン（非表示）になります。'
+    },
+    normal: {
+      title: '【通常掘起】の抽出基準・アプローチ設計を見る',
+      desc: '応募から45日以上経過した掘り起こし対象層を抽出。送信後は30日間自動でクールダウン（非表示）になります。'
+    }
+  };
+  const info = map[state.currentTab] || map.within3days;
+  document.getElementById('guideTitle').textContent = info.title;
+  document.getElementById('guideDesc').textContent = info.desc;
+}
+
+function toggleGuide() {
+  const body = document.getElementById('guideBody');
+  const arrow = document.getElementById('guideArrow');
+  if (body.classList.contains('hidden')) {
+    body.classList.remove('hidden');
+    arrow.textContent = '閉じる ▲';
+  } else {
+    body.classList.add('hidden');
+    arrow.textContent = '開く ▼';
+  }
+}
+
+function populateFilterOptions() {
+  const prefs = new Set(), staffs = new Set(), branches = new Set();
+  state.mergedCandidates.forEach(c => {
+    if (c.pref) prefs.add(c.pref);
+    if (c.staff) staffs.add(c.staff);
+    if (c.branch) branches.add(c.branch);
+  });
+
+  fillSelect('filterPref', '都道府県：すべて', Array.from(prefs));
+  fillSelect('filterStaff', 'アテンド担当ユーザー：すべて', Array.from(staffs));
+  fillSelect('filterBranch', '担当支店：すべて', Array.from(branches));
+}
+
+function fillSelect(id, defaultLabel, items) {
+  const sel = document.getElementById(id);
+  const prev = sel.value;
+  sel.innerHTML = `<option value="">${defaultLabel}</option>` +
+    items.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('');
+  if (items.includes(prev)) sel.value = prev;
+}
+
+function renderList() {
+  updateTabBadges();
+  const list = getFilteredCandidates();
+  document.getElementById('resultCountText').textContent = `該当: ${list.length}件`;
+  document.getElementById('jobMasterSummary').textContent =
+    `案件マスタ：派遣BO(5km) ${state.dispatchJobs.length}件 ／ 紹介(2km) ${state.directJobs.length}件`;
+  document.getElementById('autoExcludedSummary').textContent =
+    state.autoExcludedCount > 0 ? `（稼働/職見/内定待ち自動除外: ${state.autoExcludedCount}件）` : '';
+
+  const container = document.getElementById('candidateList');
+  if (list.length === 0) {
+    container.innerHTML = `
+      <div class="bg-white rounded-2xl border border-gray-200 p-10 text-center text-gray-500 text-xs space-y-2">
+        <p class="font-bold text-sm text-gray-700">該当する追客対象者はありません</p>
+        <p>エリア切替（関東 / 全エリア）や「未対応のみ表示」のチェックを外して確認できます。</p>
+      </div>`;
+    return;
+  }
+
+  container.innerHTML = list.map((c, idx) => {
+    const sal = extractSafeSalutation(c);
+    const act = getActionState(c);
+    const jobs = getMatchedJobs(c);
+    const condId = `cond-box-${idx}`;
+
+    const statusBadgeClass = act.isRemindReady
+      ? 'bg-amber-100 text-amber-800 border-amber-300 animate-pulse'
+      : (act.isActed ? 'bg-sky-50 text-sky-700 border-sky-200' : 'bg-rose-50 text-rose-700 border-rose-200');
+
+    return `
+    <div class="bg-white rounded-2xl border ${c.activeWarning ? 'border-amber-400 ring-2 ring-amber-200' : 'border-gray-200'} p-4 shadow-sm hover:shadow-md transition space-y-3">
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <div class="flex flex-wrap items-center gap-1.5 text-[11px]">
+          <span class="px-2 py-0.5 rounded bg-zinc-100 text-zinc-700 font-bold">${escapeHtml(c.jobType || '介護')}</span>
+          <span class="px-2 py-0.5 rounded border font-bold ${statusBadgeClass}">${escapeHtml(act.label)}</span>
+          ${c.finalStatus ? `<span class="px-2 py-0.5 rounded bg-orange-50 text-orange-700 border border-orange-200 font-bold">最終ステータス: ${escapeHtml(c.finalStatus)}</span>` : ''}
+          ${typeof c.daysUntilStart === 'number' ? `<span class="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold">開始まであと${c.daysUntilStart}日</span>` : ''}
+          ${c.mergedCount > 1 ? `<span class="px-2 py-0.5 rounded bg-purple-50 text-purple-700 border border-purple-200 font-bold">名寄せ統合: ${c.mergedCount}件</span>` : ''}
+        </div>
+
+        <div class="flex flex-wrap items-center gap-1.5 text-[11px]">
+          <button onclick="openRawRowModal('${escapeHtml(c.personKey)}')" class="px-2 py-1 rounded bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold">
+            全列データ
+          </button>
+          <span class="px-2 py-1 rounded bg-zinc-100 text-zinc-500 font-mono">ID: ${escapeHtml(c.id || '-')}</span>
+          <a href="https://b-style-20260516.duo.arrove.jp/" target="_blank" rel="noopener noreferrer"
+             onclick="copyIdToast('${escapeHtml(c.id || '')}')"
+             class="px-2.5 py-1 rounded bg-zinc-900 hover:bg-zinc-800 text-white font-bold">
+            希望日変更・修正 ↗
+          </a>
+        </div>
+      </div>
+
+      ${c.activeWarning ? `
+      <div class="bg-amber-50 border border-amber-300 rounded-xl px-3 py-2 flex flex-wrap items-center justify-between gap-2 text-xs">
+        <span class="font-black text-amber-900">${escapeHtml(c.activeWarning)}</span>
+        <label class="flex items-center gap-1.5 bg-white px-2.5 py-1 rounded-lg border border-amber-400 font-bold text-rose-700 cursor-pointer hover:bg-rose-50">
+          <input type="checkbox" onchange="excludeCandidateForever('${escapeHtml(c.personKey)}')" class="accent-rose-600 w-4 h-4" />
+          <span>本人確定のため永続除外する（タイムスタンプ保存）</span>
+        </label>
+      </div>` : ''}
+
+      <div>
+        <div class="flex flex-wrap items-baseline gap-2">
+          <h3 class="text-base sm:text-lg font-black text-gray-900">${escapeHtml(c.name || '氏名不明')}</h3>
+          <span class="text-[11px] px-2 py-0.5 rounded bg-orange-50 text-orange-700 border border-orange-200 font-bold">
+            宛名: ${escapeHtml(sal.text)}（${sal.mode}）
+          </span>
+          <span class="text-xs text-gray-500">${escapeHtml(c.kana || '')} ${c.age ? `（${c.age}歳）` : ''} ／ ${escapeHtml(c.address || '住所未登録')}</span>
+        </div>
+        <div class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-600">
+          ${c.phone ? `<span class="font-bold text-gray-900">TEL: ${escapeHtml(c.phone)}</span>` : ''}
+          <span>応募日: ${escapeHtml(c.applyDate || '-')}</span>
+          <span>アテンド日: ${escapeHtml(c.attendDate || '-')}</span>
+          <span>資格: ${escapeHtml(c.qualification || '-')}</span>
+          <span>担当: ${escapeHtml(c.staff || '-')}（${escapeHtml(c.branch || '-')}）</span>
+        </div>
+      </div>
+
+      <div class="border border-gray-200 rounded-xl bg-gray-50/70 overflow-hidden">
+        <button onclick="toggleConditionBox('${condId}', this)" class="w-full px-3 py-2 flex items-center justify-between text-left text-xs font-bold text-gray-700 hover:bg-gray-100 transition">
+          <span>📋 把握済条件・詳細メモを見る（デフォルト非表示）</span>
+          <span class="text-gray-400">開く ▼</span>
+        </button>
+        <div id="${condId}" class="hidden px-3 pb-3 pt-1.5 border-t border-gray-200 text-xs text-gray-700 leading-relaxed whitespace-pre-wrap bg-white">${escapeHtml(c.conditions || '把握済条件の記載なし')}</div>
+      </div>
+
+      <div class="space-y-1.5">
+        ${jobs.direct.length > 0 ? `
+        <div class="rounded-xl bg-purple-50/70 border border-purple-200 px-3 py-2 text-xs space-y-1">
+          <div class="flex items-center justify-between font-bold text-purple-800">
+            <span>🏠 2km圏内・紹介（直接雇用）特別フック案件</span>
+            <span>${jobs.direct.length}件</span>
+          </div>
+          ${jobs.direct.map(d => `
+          <div class="flex flex-wrap items-center justify-between gap-1 text-gray-800 pt-0.5">
+            <div>
+              <span class="font-bold">${escapeHtml(d.name)}</span>
+              <span class="text-[11px] text-purple-700 ml-1.5">📍 ${escapeHtml(d.address || '住所情報同期待ち')}</span>
+            </div>
+            <span class="text-[11px] font-bold text-purple-700">約${d.distKm}km</span>
+          </div>`).join('')}
+        </div>` : ''}
+
+        <div class="rounded-xl bg-orange-50/60 border border-orange-200 px-3 py-2 text-xs space-y-1">
+          <div class="flex items-center justify-between font-bold text-orange-800">
+            <span>📍 5km以内の派遣・紹介予定派遣BO（BO取得日時が新しい順）</span>
+            <span>${jobs.dispatch.length}件</span>
+          </div>
+          ${jobs.dispatch.map(j => `
+          <div class="flex flex-wrap items-center justify-between gap-1 text-gray-800 border-t border-orange-100 pt-1">
+            <div>
+              <span class="font-bold">${escapeHtml(j.name)}</span>
+              <span class="text-[11px] text-gray-600 ml-1.5">📍 ${escapeHtml(j.address || '住所未設定（URL設定から同期可）')}</span>
+            </div>
+            <div class="text-[11px] whitespace-nowrap">
+              <span class="font-bold text-orange-700">約${j.distKm}km</span>
+              <span class="text-gray-500 ml-1.5">BO:${escapeHtml(j.boDate || '-')}</span>
+            </div>
+          </div>`).join('')}
+        </div>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2 pt-1">
+        <button onclick="openMessageModal('${escapeHtml(c.personKey)}')"
+                class="flex-1 min-w-[160px] py-2.5 px-4 rounded-xl bg-zinc-800 hover:bg-zinc-900 text-white text-xs font-black transition shadow-sm">
+          文面作成・確認
+        </button>
+        <button onclick="quickMarkDone('${escapeHtml(c.personKey)}')"
+                class="flex-1 min-w-[180px] py-2.5 px-4 rounded-xl bg-white hover:bg-orange-50 text-gray-900 border border-gray-300 hover:border-orange-400 text-xs font-bold transition">
+          送信記録をつける（完了）
+        </button>
+        <button onclick="undoActionLog('${escapeHtml(c.personKey)}')"
+                class="py-2.5 px-3 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs font-bold transition">
+          未対応に戻す
+        </button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleConditionBox(id, btn) {
+  const el = document.getElementById(id);
+  const arrow = btn.querySelector('span:last-child');
+  if (el.classList.contains('hidden')) {
+    el.classList.remove('hidden');
+    arrow.textContent = '閉じる ▲';
+  } else {
+    el.classList.add('hidden');
+    arrow.textContent = '開く ▼';
+  }
+}
+
+function copyIdToast(id) {
+  if (!id) return;
+  navigator.clipboard?.writeText(id).catch(() => {});
+}
+
+function recordSentAction(personKey) {
+  const c = state.mergedCandidates.find(x => x.personKey === personKey);
+  if (!c) return;
+  const now = Date.now();
+  const prev = state.actionLogs[personKey];
+  const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
+  const oneDayMs = 24 * 60 * 60 * 1000;
+
+  if (c.assignedTab === 'hot') {
+    if (prev && (prev.status === 'reminded' || prev.status === 'wait_remind')) {
+      state.actionLogs[personKey] = {
+        status: 'cooldown',
+        firstSentAt: prev.firstSentAt || now,
+        lastSentAt: now,
+        cooldownUntil: now + thirtyDaysMs,
+        tab: c.assignedTab
+      };
+    } else {
+      state.actionLogs[personKey] = {
+        status: 'wait_remind',
+        firstSentAt: now,
+        lastSentAt: now,
+        remindReadyAt: now + oneDayMs,
+        tab: c.assignedTab
+      };
+    }
+  } else if (c.assignedTab === 'normal') {
+    state.actionLogs[personKey] = {
+      status: 'cooldown',
+      firstSentAt: now,
+      lastSentAt: now,
+      cooldownUntil: now + thirtyDaysMs,
+      tab: c.assignedTab
+    };
+  } else {
+    state.actionLogs[personKey] = {
+      status: 'done',
+      firstSentAt: prev?.firstSentAt || now,
+      lastSentAt: now,
+      tab: c.assignedTab
+    };
+  }
+
+  saveActionLogs();
+  renderList();
+}
+
+function quickMarkDone(personKey) {
+  recordSentAction(personKey);
+}
+
+function undoActionLog(personKey) {
+  delete state.actionLogs[personKey];
+  saveActionLogs();
+  renderList();
+}
+
+function excludeCandidateForever(personKey) {
+  const c = state.mergedCandidates.find(x => x.personKey === personKey);
+  if (!c) return;
+  const ts = new Date().toLocaleString('ja-JP');
+  state.excludedMap[personKey] = {
+    name: c.name || '不明',
+    phone: c.phone || '-',
+    address: c.address || '-',
+    reason: c.activeWarning || '手動チェック除外',
+    timestamp: ts
+  };
+  saveExcludedMap();
+  renderList();
+  showPopup('永続除外として格納しました', `${c.name} 様を除外リストへ保存しました。${LF}タイムスタンプ：${ts}${LF}（CSVを再読み込みしても除外状態は維持されます）`);
+}
+
+function restoreExcludedCandidate(personKey) {
+  delete state.excludedMap[personKey];
+  saveExcludedMap();
+  renderExcludedModal();
+  renderList();
+}
+
+function openMessageModal(personKey) {
+  const c = state.mergedCandidates.find(x => x.personKey === personKey);
+  if (!c) return;
+  state.modalTarget = c;
+  state.currentReasonIdx = Math.floor(Math.random() * state.slideReasons.length);
+
+  const sal = extractSafeSalutation(c);
+  const log = state.actionLogs[c.personKey];
+
+  document.getElementById('modalCandidateName').textContent = `${c.name}（${c.branch || '-'}）`;
+  document.getElementById('modalSalutationInfo').textContent = `宛名判定：${sal.text}（${sal.mode}）`;
+
+  const shuffleBox = document.getElementById('shuffleReasonBox');
+  if (c.assignedTab === 'within3days') {
+    shuffleBox.classList.remove('hidden');
+    document.getElementById('currentReasonText').textContent = state.slideReasons[state.currentReasonIdx];
+  } else {
+    shuffleBox.classList.add('hidden');
+  }
+
+  const remindBox = document.getElementById('remindNoticeBox');
+  if (c.assignedTab === 'hot' && log && log.status === 'reminded') {
+    remindBox.classList.remove('hidden');
+  } else {
+    remindBox.classList.add('hidden');
+  }
+
+  document.getElementById('modalMessageText').value = buildMessageForCandidate(c);
+  openModal('msgModal');
+}
+
+function shuffleReason() {
+  if (!state.modalTarget) return;
+  state.currentReasonIdx = (state.currentReasonIdx + 1) % state.slideReasons.length;
+  const reason = state.slideReasons[state.currentReasonIdx];
+  document.getElementById('currentReasonText').textContent = reason;
+  document.getElementById('modalMessageText').value = buildMessageForCandidate(state.modalTarget, reason);
+}
+
+function copyMessageOnly() {
+  const txt = document.getElementById('modalMessageText').value;
+  navigator.clipboard?.writeText(txt);
+  showPopup('文面をコピーしました', 'クリップボードに送信文面をコピーしました。');
+}
+
+function copyAndRecordAction() {
+  if (!state.modalTarget) return;
+  const txt = document.getElementById('modalMessageText').value;
+  navigator.clipboard?.writeText(txt);
+  const key = state.modalTarget.personKey;
+  closeModal('msgModal');
+  recordSentAction(key);
+  showPopup('コピー＆送信記録完了', '文面をコピーし、対応履歴を記録しました。');
+}
+
+function setupDragAndDrop() {
+  const dz = document.getElementById('dropZone');
+  if (!dz) return;
+  dz.addEventListener('dragover', e => {
+    e.preventDefault();
+    dz.classList.add('border-orange-500', 'bg-orange-50');
+  });
+  dz.addEventListener('dragleave', () => {
+    dz.classList.remove('border-orange-500', 'bg-orange-50');
+  });
+  dz.addEventListener('drop', e => {
+    e.preventDefault();
+    dz.classList.remove('border-orange-500', 'bg-orange-50');
+    const file = e.dataTransfer.files[0];
+    if (file) readCsvFile(file);
+  });
+}
+
+function handleCsvFileSelect(e) {
+  const file = e.target.files[0];
+  if (file) readCsvFile(file);
+  e.target.value = '';
+}
+
+function readCsvFile(file) {
+  const reader = new FileReader();
+  reader.onload = function(evt) {
+    const buf = evt.target.result;
+    let text = new TextDecoder('utf-8').decode(buf);
+    if (text.indexOf(String.fromCharCode(65533)) !== -1) {
+      text = new TextDecoder('shift-jis').decode(buf);
+    }
+    const rows = parseCsvRows(text);
+    if (rows.length < 2) {
+      alert('CSVデータが正しく読み込めませんでした。');
+      return;
+    }
+
+    const headers = rows[0].map(h => String(h || '').trim());
+    state.csvHeaders = headers;
+
+    const candidates = rows.slice(1).filter(r => r.some(cell => String(cell || '').trim() !== '')).map((r, idx) => {
+      const rawRow = {};
+      headers.forEach((h, i) => {
+        rawRow[h || `列${i + 1}`] = r[i] !== undefined ? String(r[i]).trim() : '';
+      });
+
+      const pick = (keys) => {
+        for (const k of keys) {
+          if (rawRow[k]) return rawRow[k];
+          const foundKey = headers.find(h => h.includes(k));
+          if (foundKey && rawRow[foundKey]) return rawRow[foundKey];
+        }
+        return '';
+      };
+
+      const sei = pick(['姓']);
+      const mei = pick(['名']);
+      const fullName = pick(['氏名', '名前', '求職者名']) || (sei && mei ? `${sei} ${mei}` : sei);
+
+      return {
+        id: pick(['応募者ID', '求職者ID', 'ID']) || `ROW-${idx + 1}`,
+        name: fullName,
+        kana: pick(['フリガナ', 'カナ', 'セイ']),
+        phone: pick(['電話番号', '携帯番号', 'TEL', '電話']),
+        dob: pick(['生年月日']),
+        age: pick(['年齢']),
+        address: pick(['住所', '現住所', '市区町村']),
+        pref: pick(['都道府県']),
+        branch: pick(['担当支店', '支店', 'エリア']),
+        staff: pick(['アテンド担当ユーザー', '担当者', '担当']),
+        qualification: pick(['保有資格', '資格']),
+        jobType: pick(['職種', '希望職種']) || '介護',
+        status: pick(['ステータス', '応募ステータス', '進捗']),
+        finalStatus: pick(['最終ステータス']),
+        applyDate: pick(['応募日', '応募日時']),
+        attendDate: pick(['アテンド日', 'アテンド日時', '面談日']),
+        contactDate: pick(['接触日時', '最終接触日', '連絡日']),
+        startDate: pick(['就業開始希望日', '就業可能時期', '開始希望日']),
+        conditions: pick(['把握済条件', '備考', 'メモ', '希望条件']),
+        lat: parseFloat(pick(['緯度'])) || null,
+        lng: parseFloat(pick(['経度'])) || null,
+        rawRow
+      };
+    });
+
+    try {
+      localStorage.setItem(STORAGE_KEYS.CANDIDATE_CACHE, JSON.stringify({ headers, candidates }));
+    } catch (e) {
+      console.warn('localStorage容量上限のためメモリ上に保持します');
+    }
+
+    processCandidates(candidates, `CSV読込済 (全${headers.length}列)`);
+    closeModal('csvModal');
+    showPopup(
+      'インポート完了！',
+      `ファイル名：${file.name}${LF}全 ${headers.length} 列・${candidates.length} 件を読み込みました。${LF}（稼働・職見・内定待ち自動除外：${state.autoExcludedCount}件 ／ 名寄せ統合：${state.mergedDupCount}件）`
+    );
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function parseCsvRows(text) {
+  const rows = [];
+  let row = [], cell = '', inQuotes = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    const next = text[i + 1];
+    if (inQuotes) {
+      if (ch === '"' && next === '"') { cell += '"'; i++; }
+      else if (ch === '"') { inQuotes = false; }
+      else { cell += ch; }
+    } else {
+      if (ch === '"') { inQuotes = true; }
+      else if (ch === ',') { row.push(cell); cell = ''; }
+      else if (ch === CR && next === LF) { row.push(cell); rows.push(row); row = []; cell = ''; i++; }
+      else if (ch === LF || ch === CR) { row.push(cell); rows.push(row); row = []; cell = ''; }
+      else { cell += ch; }
+    }
+  }
+  if (cell.length > 0 || row.length > 0) {
+    row.push(cell);
+    rows.push(row);
+  }
+  return rows;
+}
+
+function resetToDemoData() {
+  localStorage.removeItem(STORAGE_KEYS.CANDIDATE_CACHE);
+  closeModal('csvModal');
+  loadInitialData();
+  showPopup('デモデータに戻しました', '初期サンプルデータ表示に戻りました。');
+}
+
+function clearActionHistory() {
+  if (!confirm('送信履歴・翌日リマインド・30日クールダウン履歴をリセットしますか？')) return;
+  state.actionLogs = {};
+  saveActionLogs();
+  renderList();
+  showPopup('履歴をリセットしました', 'すべての送信・クールダウン履歴を初期化しました。');
+}
+
+function getExportTargetList() {
+  const scope = document.querySelector('input[name="exportScope"]:checked')?.value || 'current';
+  const unactedOnly = document.getElementById('exportUnactedOnly')?.checked ?? true;
+
+  if (scope === 'current') {
+    return getFilteredCandidates({ unactedOnly });
+  }
+  if (scope === 'tabAll') {
+    return getFilteredCandidates({ unactedOnly, ignoreFilters: true });
+  }
+  return getFilteredCandidates({ tab: '', unactedOnly, ignoreFilters: true });
+}
+
+function updateExportPreview() {
+  const list = getExportTargetList();
+  document.getElementById('exportTargetCountBadge').textContent = `対象: ${list.length}件`;
+  const tbody = document.getElementById('exportPreviewBody');
+  const tabNames = { within3days: '3日以内未FIX', future: '未来人材', unfixed: '未FIX人材', hot: '激熱掘起', normal: '通常掘起' };
+
+  tbody.innerHTML = list.slice(0, 3).map(c => {
+    const sal = extractSafeSalutation(c);
+    const act = getActionState(c);
+    const jobs = getMatchedJobs(c);
+    const boSummary = jobs.dispatch.map(j => `${j.name}(${j.address || ''})`).join(' / ');
+    return `
+      <tr>
+        <td class="px-2.5 py-1.5 font-bold text-orange-600 whitespace-nowrap">${tabNames[c.assignedTab] || c.assignedTab}</td>
+        <td class="px-2.5 py-1.5 whitespace-nowrap">${escapeHtml(act.label)}</td>
+        <td class="px-2.5 py-1.5 font-bold whitespace-nowrap">${escapeHtml(c.name)}</td>
+        <td class="px-2.5 py-1.5 whitespace-nowrap">${escapeHtml(sal.text)}</td>
+        <td class="px-2.5 py-1.5 whitespace-nowrap">${escapeHtml(c.phone || '-')}</td>
+        <td class="px-2.5 py-1.5 whitespace-nowrap">${escapeHtml(c.branch || '-')}</td>
+        <td class="px-2.5 py-1.5 max-w-[200px] truncate">${escapeHtml(boSummary || '-')}</td>
+      </tr>`;
+  }).join('') || `<tr><td colspan="7" class="px-3 py-4 text-center text-gray-400">出力対象データがありません</td></tr>`;
+}
+
+function quickExportCurrent() {
+  const list = getFilteredCandidates();
+  downloadCsvFromList(list, false);
+}
+
+function executeCsvExport() {
+  const list = getExportTargetList();
+  const includeRaw = document.getElementById('exportIncludeRaw').checked;
+  closeModal('exportModal');
+  downloadCsvFromList(list, includeRaw);
+}
+
+function downloadCsvFromList(list, includeRaw) {
+  if (!list || list.length === 0) {
+    alert('出力対象のデータが0件です。');
+    return;
+  }
+
+  const tabNames = { within3days: '3日以内未FIX', future: '未来人材', unfixed: '未FIX人材', hot: '激熱掘起', normal: '通常掘起' };
+  const baseHeaders = [
+    '追客区分', '対応状況', '氏名', '宛名', '電話番号', '担当支店', 'アテンド担当',
+    '職種', '保有資格', '最終ステータス', '就業開始希望日', '生成済み送信文面',
+    '候補BO1_施設名', '候補BO1_住所', '候補BO2_施設名', '候補BO2_住所', '候補BO3_施設名', '候補BO3_住所',
+    '紹介特別フック_施設名', '紹介特別フック_住所', '応募者ID'
+  ];
+
+  const rawHeaders = includeRaw ? state.csvHeaders : [];
+  const allHeaders = [...baseHeaders, ...rawHeaders];
+
+  const csvLines = [allHeaders.map(csvEscape).join(',')];
+
+  list.forEach(c => {
+    const sal = extractSafeSalutation(c);
+    const act = getActionState(c);
+    const jobs = getMatchedJobs(c);
+    const msg = buildMessageForCandidate(c);
+    const d0 = jobs.dispatch[0] || {};
+    const d1 = jobs.dispatch[1] || {};
+    const d2 = jobs.dispatch[2] || {};
+    const dir0 = jobs.direct[0] || {};
+
+    const row = [
+      tabNames[c.assignedTab] || c.assignedTab,
+      act.label,
+      c.name || '',
+      sal.text,
+      c.phone || '',
+      c.branch || '',
+      c.staff || '',
+      c.jobType || '',
+      c.qualification || '',
+      c.finalStatus || '',
+      c.startDate || '',
+      msg,
+      d0.name || '', d0.address || '',
+      d1.name || '', d1.address || '',
+      d2.name || '', d2.address || '',
+      dir0.name || '', dir0.address || '',
+      c.id || ''
+    ];
+
+    if (includeRaw) {
+      rawHeaders.forEach(h => {
+        row.push((c.rawRow && c.rawRow[h] !== undefined) ? c.rawRow[h] : '');
+      });
+    }
+
+    csvLines.push(row.map(csvEscape).join(','));
+  });
+
+  const bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
+  const blob = new Blob([bom, csvLines.join(CRLF)], { type: 'text/csv;charset=utf-8;' });
+  const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+  const areaLabel = state.currentArea === 'kanto' ? '関東' : '全エリア';
+  const tabLabel = tabNames[state.currentTab] || '追客';
+  const fileName = `追客リスト_${areaLabel}_${tabLabel}_${list.length}件_${dateStr}.csv`;
+
+  triggerDownload(blob, fileName);
+  showPopup('エクスポート完了！', `ファイル名：${fileName}${LF}対象 ${list.length} 件をExcel対応CSVとしてダウンロードしました。`);
+}
+
+function csvEscape(val) {
+  const s = String(val === undefined || val === null ? '' : val);
+  return `"${s.replace(/"/g, '""')}"`;
+}
+
+function triggerDownload(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function buildDataJsContent() {
+  const payload = {
+    updatedAt: new Date().toLocaleString('ja-JP'),
+    sourceLabel: `外部 data.js (${new Date().toLocaleDateString('ja-JP')}更新・全${state.csvHeaders.length}列)`,
+    headers: state.csvHeaders,
+    demoCandidates: state.rawCandidates,
+    dispatchJobs: state.dispatchJobs,
+    directJobs: state.directJobs,
+    slideReasons: state.slideReasons
+  };
+  return `/**${LF} * data.js - ビースタイル 追客・掘り起こし管理 外部データファイル${LF} * 生成日時: ${payload.updatedAt}${LF} */${LF}window.BSTYLE_APP_DATA = ${JSON.stringify(payload, null, 2)};${LF}`;
+}
+
+function exportDataJsFile() {
+  const content = buildDataJsContent();
+  const blob = new Blob([content], { type: 'application/javascript;charset=utf-8;' });
+  triggerDownload(blob, 'data.js');
+  closeModal('csvModal');
+  showPopup('data.js エクスポート完了！', `全 ${state.rawCandidates.length} 件（全${state.csvHeaders.length}列）と最新案件マスタを格納した data.js をダウンロードしました。`);
+}
+
+function saveGithubConfig() {
+  state.settings.ghRepo = document.getElementById('ghRepoInput').value.trim();
+  state.settings.ghBranch = document.getElementById('ghBranchInput').value.trim() || 'main';
+  state.settings.ghPath = document.getElementById('ghPathInput').value.trim() || 'data.js';
+  state.settings.ghToken = document.getElementById('ghTokenInput').value.trim();
+  localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(state.settings));
+  showPopup('GitHub設定を保存しました', 'リポジトリ・トークン設定をお使いのブラウザに保存しました。');
+}
+
+async function pushDataJsToGithub() {
+  saveGithubConfig();
+  const { ghRepo, ghBranch, ghPath, ghToken } = state.settings;
+  if (!ghRepo || !ghToken) {
+    alert('GitHub リポジトリ名と Personal Access Token を入力してください。');
+    return;
+  }
+
+  const btn = document.getElementById('ghPushBtn');
+  const origText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = '⏳ GitHubへアップロード中...';
+
+  try {
+    const apiUrl = `https://api.github.com/repos/${ghRepo}/contents/${ghPath}`;
+    let sha = null;
+
+    const getRes = await fetch(`${apiUrl}?ref=${encodeURIComponent(ghBranch)}`, {
+      headers: {
+        'Authorization': `Bearer ${ghToken}`,
+        'Accept': 'application/vnd.github+json'
+      }
+    });
+    if (getRes.ok) {
+      const getData = await getRes.json();
+      sha = getData.sha;
+    }
+
+    const contentStr = buildDataJsContent();
+    const base64Content = btoa(unescape(encodeURIComponent(contentStr)));
+
+    const putBody = {
+      message: `Update ${ghPath} via B-style Follow-up App (${new Date().toLocaleString('ja-JP')})`,
+      content: base64Content,
+      branch: ghBranch
+    };
+    if (sha) putBody.sha = sha;
+
+    const putRes = await fetch(apiUrl, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${ghToken}`,
+        'Accept': 'application/vnd.github+json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(putBody)
+    });
+
+    if (!putRes.ok) {
+      const errJson = await putRes.json().catch(() => ({}));
+      throw new Error(errJson.message || `HTTP ${putRes.status}`);
+    }
+
+    closeModal('githubModal');
+    showPopup(
+      '🚀 GitHub自動反映が完了しました！',
+      `リポジトリ：${ghRepo} (${ghBranch})${LF}更新ファイル：${ghPath}${LF}約30秒〜1分で公開ページに最新データが自動反映されます。`
+    );
+  } catch (err) {
+    alert(`GitHubへの自動反映に失敗しました：${err.message}${LF}トークンの権限（repo / Contents: Read and write）を確認してください。`);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = origText;
+  }
+}
+
+function saveAndLoadExternalDataUrl() {
+  const url = document.getElementById('externalDataUrlInput').value.trim();
+  state.settings.externalDataUrl = url;
+  localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(state.settings));
+  if (!url) return;
+
+  if (url.endsWith('.js')) {
+    const s = document.createElement('script');
+    s.src = url + (url.includes('?') ? '&' : '?') + 't=' + Date.now();
+    s.onload = () => {
+      if (window.BSTYLE_APP_DATA && window.BSTYLE_APP_DATA.demoCandidates) {
+        state.csvHeaders = window.BSTYLE_APP_DATA.headers || [];
+        processCandidates(window.BSTYLE_APP_DATA.demoCandidates, '外部URL data.js 同期済');
+        closeModal('urlModal');
+        showPopup('外部データ読込完了', `${url} から最新データを読み込みました。`);
+      }
+    };
+    s.onerror = () => alert('外部JSファイルの読み込みに失敗しました。URLを確認してください。');
+    document.head.appendChild(s);
+  } else {
+    fetch(url).then(r => r.json()).then(data => {
+      const list = Array.isArray(data) ? data : (data.demoCandidates || data.candidates || []);
+      processCandidates(list, '外部JSON同期済');
+      closeModal('urlModal');
+      showPopup('外部JSON読込完了', `${list.length}件を読み込みました。`);
+    }).catch(e => alert('外部JSONの読み込みに失敗しました：' + e.message));
+  }
+}
+
+function fetchJobMasterFromUrl() {
+  const url = document.getElementById('jobMasterUrlInput').value.trim();
+  state.settings.jobMasterUrl = url;
+  localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(state.settings));
+  if (!url) return;
+
+  fetch(url).then(r => r.text()).then(txt => {
+    let data = null;
+    try {
+      data = JSON.parse(txt);
+    } catch (e) {
+      const m = txt.match(/=\s*(\{[\s\S]*\}|\[[\s\S]*\])\s*;?\s*$/);
+      if (m) data = JSON.parse(m[1]);
+    }
+    if (!data) throw new Error('JSONデータを解析できませんでした');
+    const rawJobs = Array.isArray(data) ? data : (data.dispatchJobs || data.orders || data.jobs || []);
+    applySyncedJobs(rawJobs);
+    closeModal('urlModal');
+    showPopup('案件マスタ同期完了！', `searchOrder側から ${rawJobs.length} 件の案件（住所・座標）を同期しました。`);
+  }).catch(err => alert('案件マスタURLの同期に失敗しました：' + err.message));
+}
+
+function handleJobCsvImport(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = evt => {
+    const buf = evt.target.result;
+    let text = new TextDecoder('utf-8').decode(buf);
+    if (text.indexOf(String.fromCharCode(65533)) !== -1) text = new TextDecoder('shift-jis').decode(buf);
+    const rows = parseCsvRows(text);
+    if (rows.length < 2) return;
+    const headers = rows[0].map(h => String(h || '').trim());
+    const jobs = rows.slice(1).filter(r => r.some(c => String(c || '').trim() !== '')).map((r, idx) => {
+      const obj = {};
+      headers.forEach((h, i) => obj[h] = String(r[i] || '').trim());
+      const pick = keys => {
+        for (const k of keys) {
+          if (obj[k]) return obj[k];
+          const fk = headers.find(h => h.includes(k));
+          if (fk && obj[fk]) return obj[fk];
+        }
+        return '';
+      };
+      return {
+        id: pick(['案件ID', 'BOID', 'ID']) || `BO-${idx + 1}`,
+        name: pick(['施設名', '事業所名', '案件名', '法人名']),
+        address: pick(['住所', '勤務地住所', '所在地', '市区町村']),
+        jobType: pick(['職種']) || '介護',
+        distKm: parseFloat(pick(['距離'])) || 1.2,
+        boDate: pick(['BO取得日時', '登録日', '更新日']),
+        wage: pick(['給与', '時給']),
+        shift: pick(['シフト', '勤務時間']),
+        employmentType: pick(['雇用形態'])
+      };
+    });
+    applySyncedJobs(jobs);
+    closeModal('urlModal');
+    showPopup('案件CSVから住所同期完了！', `${file.name} から ${jobs.length} 件の正しい住所・案件データを反映しました。`);
+  };
+  reader.readAsArrayBuffer(file);
+  e.target.value = '';
+}
+
+function applySyncedJobs(jobs) {
+  const disp = [], dir = [];
+  jobs.forEach(j => {
+    const emp = `${j.employmentType || ''} ${j.name || ''}`;
+    if (emp.includes('直接雇用') || emp.includes('正社員') || emp.includes('紹介')) {
+      dir.push(j);
+    } else {
+      disp.push(j);
+    }
+  });
+  if (disp.length > 0) state.dispatchJobs = disp;
+  if (dir.length > 0) state.directJobs = dir;
+  localStorage.setItem(STORAGE_KEYS.JOB_MASTER_CACHE, JSON.stringify({
+    dispatchJobs: state.dispatchJobs,
+    directJobs: state.directJobs
+  }));
+  renderList();
+}
+
+function exportHistoryJson() {
+  const payload = {
+    exportedAt: new Date().toISOString(),
+    actionLogs: state.actionLogs,
+    excludedMap: state.excludedMap
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  triggerDownload(blob, `bstyle_history_backup_${new Date().toISOString().slice(0, 10)}.json`);
+  showPopup('履歴JSON保存完了', '送信済・30日クールダウン・永続除外リストをJSON保存しました。');
+}
+
+function importHistoryJson(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = evt => {
+    try {
+      const data = JSON.parse(evt.target.result);
+      if (data.actionLogs) state.actionLogs = { ...state.actionLogs, ...data.actionLogs };
+      if (data.excludedMap) state.excludedMap = { ...state.excludedMap, ...data.excludedMap };
+      saveActionLogs();
+      saveExcludedMap();
+      renderList();
+      showPopup('履歴JSON復元完了', '送信履歴・クールダウン・永続除外リストを復元しました。');
+    } catch (err) {
+      alert('JSONファイルの読み込みに失敗しました。');
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+}
+
+function openModal(id) {
+  if (id === 'exportModal') updateExportPreview();
+  if (id === 'excludedModal') renderExcludedModal();
+  if (id === 'mergeInfoModal') renderMergeInfoModal();
+  document.getElementById(id).classList.remove('hidden');
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.add('hidden');
+}
+
+function showPopup(title, message) {
+  document.getElementById('popupTitle').textContent = title;
+  document.getElementById('popupMessage').textContent = message;
+  document.getElementById('popupModal').classList.remove('hidden');
+}
+
+function renderExcludedModal() {
+  const container = document.getElementById('excludedListContainer');
+  const keys = Object.keys(state.excludedMap);
+  if (keys.length === 0) {
+    container.innerHTML = `<p class="text-center text-gray-400 py-6">現在、永続除外リストに登録されている求職者はいません。</p>`;
+    return;
+  }
+  container.innerHTML = keys.map(k => {
+    const item = state.excludedMap[k];
+    return `
+      <div class="border border-gray-200 rounded-xl p-3 flex items-center justify-between gap-2 bg-gray-50">
+        <div>
+          <p class="font-bold text-gray-900">${escapeHtml(item.name)}（TEL: ${escapeHtml(item.phone)}）</p>
+          <p class="text-[11px] text-gray-500">住所: ${escapeHtml(item.address)} ／ 除外日時: ${escapeHtml(item.timestamp)}</p>
+          <p class="text-[11px] text-rose-600 font-medium">${escapeHtml(item.reason)}</p>
+        </div>
+        <button onclick="restoreExcludedCandidate('${escapeHtml(k)}')" class="px-3 py-1.5 rounded-lg bg-white border border-gray-300 hover:bg-gray-100 font-bold text-gray-700 whitespace-nowrap">
+          除外解除
+        </button>
+      </div>`;
+  }).join('');
+}
+
+function renderMergeInfoModal() {
+  const body = document.getElementById('mergeInfoBody');
+  const logCount = Object.keys(state.actionLogs).length;
+  const excCount = Object.keys(state.excludedMap).length;
+  body.innerHTML = `
+    <div class="bg-gray-50 rounded-xl p-3.5 border border-gray-200 space-y-1.5">
+      <p>・元CSV総行数：<strong>${state.rawCandidates.length} 件</strong>（全 ${state.csvHeaders.length} 列保持）</p>
+      <p>・重複名寄せ統合（同一人物合体）：<strong>${state.mergedDupCount} 件</strong></p>
+      <p>・稼働中／職見待ち／内定待ち 電話番号一致の自動除外：<strong>${state.autoExcludedCount} 件</strong></p>
+      <p>・チェックボックス永続除外（タイムスタンプ保存済）：<strong>${excCount} 件</strong></p>
+      <p>・独立ストレージ保存中の送信／クールダウン履歴：<strong>${logCount} 件</strong></p>
+    </div>
+    <p class="text-[11px] text-gray-500">※ 送信履歴・翌日リマインド・30日クールダウン・永続除外はCSVとは独立した領域に保存されるため、新しいCSVを再読み込みしても消えません。</p>
+  `;
+}
+
+function openRawRowModal(personKey) {
+  const c = state.mergedCandidates.find(x => x.personKey === personKey);
+  if (!c) return;
+  state.currentRawCandidate = c;
+  document.getElementById('rawRowModalTitle').textContent = `${c.name} 様の元CSV全列データ`;
+  renderCurrentRawModal();
+  openModal('rawRowModal');
+}
+
+function renderCurrentRawModal() {
+  const c = state.currentRawCandidate;
+  if (!c) return;
+  const hideEmpty = document.getElementById('rawHideEmpty').checked;
+  const raw = c.rawRow || {};
+  const entries = Object.entries(raw).filter(([k, v]) => !hideEmpty || String(v || '').trim() !== '');
+  document.getElementById('rawColCountText').textContent = `表示列数: ${entries.length} / 全${Object.keys(raw).length}列`;
+
+  document.getElementById('rawRowModalBody').innerHTML = entries.map(([k, v]) => `
+    <div class="py-2 flex flex-col sm:flex-row sm:items-baseline gap-1 sm:gap-3">
+      <span class="sm:w-48 shrink-0 font-bold text-gray-600">${escapeHtml(k)}</span>
+      <span class="text-gray-900 break-all">${escapeHtml(v || '-')}</span>
+    </div>
+  `).join('') || `<p class="text-center text-gray-400 py-6">表示できる列データがありません。</p>`;
+}
+
+function escapeHtml(str) {
+  return String(str === undefined || str === null ? '' : str)
+    .replace(/&/g, '&')
+    .replace(/</g, '<')
+    .replace(/>/g, '>')
+    .replace(/"/g, '"')
+    .replace(/'/g, ''');
+}
+</script>
+</body>
+</html>
