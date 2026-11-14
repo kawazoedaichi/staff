@@ -20,131 +20,146 @@
 <body class="min-h-screen flex flex-col">
 
   <header class="bg-zinc-950 text-white sticky top-0 z-30 shadow-md border-b border-zinc-800">
-    <div class="max-w-7xl mx-auto px-3 sm:px-6 pt-3 pb-2 flex flex-wrap items-center justify-between gap-2">
-      <div class="flex items-center gap-2.5">
-        <div class="w-8 h-8 rounded-lg bg-orange-500 text-zinc-950 font-black flex items-center justify-center text-lg shadow">B</div>
-        <div class="flex flex-wrap items-center gap-2">
-          <h1 class="font-bold text-base sm:text-lg tracking-tight">ビースタイル 追客・掘り起こし管理</h1>
-          <span id="dataSourceBadge" class="text-[11px] px-2 py-0.5 rounded-full bg-zinc-800 text-orange-400 border border-zinc-700 font-medium">読込中...</span>
-          <span id="historySyncBadge" class="text-[11px] px-2 py-0.5 rounded-full bg-zinc-900 text-emerald-400 border border-emerald-700/50 font-medium">履歴同期確認中...</span>
-        </div>
+    <div class="max-w-7xl mx-auto px-2.5 sm:px-6 pt-2 pb-1.5 flex items-center justify-between gap-2">
+      <div class="flex items-center gap-2 min-w-0">
+        <div class="w-7 h-7 rounded-lg bg-orange-500 text-zinc-950 font-black flex items-center justify-center text-base shadow shrink-0">B</div>
+        <h1 class="font-bold text-sm sm:text-lg tracking-tight truncate">ビースタイル 追客管理</h1>
+        <span id="dataSourceBadge" class="hidden sm:inline-block text-[11px] px-2 py-0.5 rounded-full bg-zinc-800 text-orange-400 border border-zinc-700 font-medium whitespace-nowrap">読込中...</span>
+        <span id="historySyncBadge" class="text-[10px] sm:text-[11px] px-1.5 sm:px-2 py-0.5 rounded-full bg-zinc-900 text-emerald-400 border border-emerald-700/50 font-medium whitespace-nowrap">履歴同期中</span>
       </div>
 
-      <div class="flex flex-wrap items-center gap-1.5 sm:gap-2 text-xs">
+      <!-- PC表示用メニュー -->
+      <div class="hidden md:flex items-center gap-1.5 text-xs">
         <a href="https://refo.link/haken-oubo/applications" target="_blank" rel="noopener noreferrer"
-           class="px-2.5 py-1.5 rounded-md bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-zinc-700 font-medium transition flex items-center gap-1">
-          <span>Refo応募一覧</span><span class="text-orange-400">↗</span>
-        </a>
+           class="px-2.5 py-1.5 rounded-md bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-zinc-700 font-medium transition">Refo ↗</a>
         <a href="https://kawazoedaichi.github.io/searchOrder/" target="_blank" rel="noopener noreferrer"
-           class="px-2.5 py-1.5 rounded-md bg-zinc-900 hover:bg-zinc-800 text-orange-400 border border-orange-500/40 font-bold transition flex items-center gap-1">
-          <span>案件詳細</span><span>↗</span>
-        </a>
+           class="px-2.5 py-1.5 rounded-md bg-zinc-900 hover:bg-zinc-800 text-orange-400 border border-orange-500/40 font-bold transition">案件詳細 ↗</a>
         <button type="button" onclick="openModal('githubModal')"
-           class="px-2.5 py-1.5 rounded-md bg-zinc-900 hover:bg-zinc-800 text-emerald-400 border border-emerald-500/40 font-bold transition flex items-center gap-1">
-          <span>🚀 GitHub同期設定</span>
-        </button>
+           class="px-2.5 py-1.5 rounded-md bg-zinc-900 hover:bg-zinc-800 text-emerald-400 border border-emerald-500/40 font-bold transition">🚀 GitHub同期</button>
         <button type="button" onclick="openModal('exportModal')"
-           class="px-2.5 py-1.5 rounded-md bg-zinc-800 hover:bg-zinc-700 text-white border border-zinc-600 font-bold transition">
-          CSV出力
-        </button>
+           class="px-2.5 py-1.5 rounded-md bg-zinc-800 hover:bg-zinc-700 text-white border border-zinc-600 font-bold transition">CSV出力</button>
         <button type="button" onclick="openModal('urlModal')"
-           class="px-2.5 py-1.5 rounded-md bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-600 font-medium transition">
-          URL・案件設定
-        </button>
+           class="px-2.5 py-1.5 rounded-md bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-600 font-medium transition">設定</button>
         <button type="button" onclick="openModal('csvModal')"
-           class="px-3 py-1.5 rounded-md bg-orange-500 hover:bg-orange-600 text-zinc-950 font-black transition shadow-sm">
-          CSV読込
-        </button>
+           class="px-3 py-1.5 rounded-md bg-orange-500 hover:bg-orange-600 text-zinc-950 font-black transition shadow-sm">CSV読込</button>
+      </div>
+
+      <!-- スマホ表示用コンパクトメニュー（1行に収める） -->
+      <div class="flex md:hidden items-center gap-1.5 text-[11px] shrink-0">
+        <a href="https://kawazoedaichi.github.io/searchOrder/" target="_blank" rel="noopener noreferrer"
+           class="px-2 py-1 rounded bg-zinc-900 text-orange-400 border border-orange-500/40 font-bold">案件↗</a>
+        <button type="button" onclick="openModal('csvModal')"
+           class="px-2.5 py-1 rounded bg-orange-500 text-zinc-950 font-black">CSV</button>
+        <button type="button" onclick="toggleMobileHeaderMenu()"
+           class="px-2 py-1 rounded bg-zinc-800 text-zinc-200 border border-zinc-700 font-bold">⚙️ メニュー</button>
       </div>
     </div>
 
-    <nav class="max-w-7xl mx-auto px-2 sm:px-6 flex overflow-x-auto scrollbar-hide gap-1 sm:gap-4 text-xs sm:text-sm pt-1">
-      <button type="button" onclick="switchTab('within3days')" id="tab-within3days" class="tab-active py-2.5 px-2.5 whitespace-nowrap flex items-center gap-1.5 transition">
-        <span>3日以内 未FIX人材</span>
-        <span id="badge-within3days" class="px-1.5 py-0.5 text-[11px] rounded-full bg-orange-500 text-zinc-950 font-black">0</span>
+    <!-- スマホ用折りたたみ管理メニュー -->
+    <div id="mobileHeaderMenu" class="hidden md:hidden px-2.5 pb-2 pt-1 border-t border-zinc-800 bg-zinc-900/95 flex flex-wrap items-center gap-1.5 text-[11px]">
+      <a href="https://refo.link/haken-oubo/applications" target="_blank" rel="noopener noreferrer"
+         class="px-2.5 py-1.5 rounded bg-zinc-800 text-zinc-200 border border-zinc-700 font-medium">Refo応募一覧 ↗</a>
+      <button type="button" onclick="openModal('githubModal'); toggleMobileHeaderMenu();"
+         class="px-2.5 py-1.5 rounded bg-zinc-800 text-emerald-400 border border-emerald-500/40 font-bold">🚀 GitHub同期設定</button>
+      <button type="button" onclick="openModal('exportModal'); toggleMobileHeaderMenu();"
+         class="px-2.5 py-1.5 rounded bg-zinc-800 text-white border border-zinc-600 font-bold">CSV出力</button>
+      <button type="button" onclick="openModal('urlModal'); toggleMobileHeaderMenu();"
+         class="px-2.5 py-1.5 rounded bg-zinc-800 text-zinc-200 border border-zinc-600 font-medium">URL・案件設定</button>
+      <span id="mobileDataBadge" class="w-full text-[10px] text-orange-400 pt-0.5"></span>
+    </div>
+
+    <!-- 横スクロールタブ（スリム化） -->
+    <nav class="max-w-7xl mx-auto px-2 sm:px-6 flex overflow-x-auto scrollbar-hide gap-1 sm:gap-4 text-xs sm:text-sm">
+      <button type="button" onclick="switchTab('within3days')" id="tab-within3days" class="tab-active py-2 px-2 whitespace-nowrap flex items-center gap-1 transition">
+        <span>3日以内 未FIX</span>
+        <span id="badge-within3days" class="px-1.5 py-0.2 text-[10px] rounded-full bg-orange-500 text-zinc-950 font-black">0</span>
       </button>
-      <button type="button" onclick="switchTab('unfixed')" id="tab-unfixed" class="tab-inactive py-2.5 px-2.5 whitespace-nowrap flex items-center gap-1.5 transition">
+      <button type="button" onclick="switchTab('unfixed')" id="tab-unfixed" class="tab-inactive py-2 px-2 whitespace-nowrap flex items-center gap-1 transition">
         <span>未FIX人材</span>
-        <span id="badge-unfixed" class="px-1.5 py-0.5 text-[11px] rounded-full bg-zinc-800 text-zinc-300 font-bold">0</span>
+        <span id="badge-unfixed" class="px-1.5 py-0.2 text-[10px] rounded-full bg-zinc-800 text-zinc-300 font-bold">0</span>
       </button>
-      <button type="button" onclick="switchTab('hot')" id="tab-hot" class="tab-inactive py-2.5 px-2.5 whitespace-nowrap flex items-center gap-1.5 transition">
+      <button type="button" onclick="switchTab('hot')" id="tab-hot" class="tab-inactive py-2 px-2 whitespace-nowrap flex items-center gap-1 transition">
         <span>激熱掘起</span>
-        <span id="badge-hot" class="px-1.5 py-0.5 text-[11px] rounded-full bg-zinc-800 text-zinc-300 font-bold">0</span>
+        <span id="badge-hot" class="px-1.5 py-0.2 text-[10px] rounded-full bg-zinc-800 text-zinc-300 font-bold">0</span>
       </button>
-      <button type="button" onclick="switchTab('future')" id="tab-future" class="tab-inactive py-2.5 px-2.5 whitespace-nowrap flex items-center gap-1.5 transition">
+      <button type="button" onclick="switchTab('future')" id="tab-future" class="tab-inactive py-2 px-2 whitespace-nowrap flex items-center gap-1 transition">
         <span>未来人材</span>
-        <span id="badge-future" class="px-1.5 py-0.5 text-[11px] rounded-full bg-zinc-800 text-zinc-300 font-bold">0</span>
+        <span id="badge-future" class="px-1.5 py-0.2 text-[10px] rounded-full bg-zinc-800 text-zinc-300 font-bold">0</span>
       </button>
-      <button type="button" onclick="switchTab('normal')" id="tab-normal" class="tab-inactive py-2.5 px-2.5 whitespace-nowrap flex items-center gap-1.5 transition">
+      <button type="button" onclick="switchTab('normal')" id="tab-normal" class="tab-inactive py-2 px-2 whitespace-nowrap flex items-center gap-1 transition">
         <span>通常掘起</span>
-        <span id="badge-normal" class="px-1.5 py-0.5 text-[11px] rounded-full bg-zinc-800 text-zinc-300 font-bold">0</span>
+        <span id="badge-normal" class="px-1.5 py-0.2 text-[10px] rounded-full bg-zinc-800 text-zinc-300 font-bold">0</span>
       </button>
     </nav>
   </header>
 
-  <main class="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 py-4 space-y-3">
-    <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-      <button type="button" onclick="toggleGuide()" class="w-full px-4 py-2.5 flex items-center justify-between text-left text-xs sm:text-sm font-bold text-gray-800 hover:bg-gray-50 transition">
-        <span id="guideTitle" class="text-orange-600">【3日以内 未FIX人材】の抽出基準・アプローチ設計を見る</span>
-        <span id="guideArrow" class="text-gray-400 text-xs">開く ▼</span>
-      </button>
-      <div id="guideBody" class="hidden px-4 pb-3 pt-1 border-t border-gray-100 text-xs text-gray-600 space-y-1.5 bg-orange-50/40">
-        <p id="guideDesc"></p>
-        <p class="text-[11px] text-gray-500">※ searchOrder と同じく国土地理院API＋町丁目辞書で自宅番地から直線距離（派遣5km・紹介2km）を算出し、50件ずつの軽量段階表示で高速動作します。</p>
-      </div>
-    </div>
-
-    <div class="bg-white rounded-xl border border-gray-200 p-3 shadow-sm space-y-2.5">
-      <div class="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-gray-100">
-        <div class="inline-flex rounded-lg bg-zinc-100 p-1 border border-zinc-200">
-          <button type="button" onclick="switchArea('kanto')" id="area-kanto" class="px-3.5 py-1 rounded-md text-xs font-black bg-zinc-900 text-orange-400 shadow-sm transition">
-            関東（東京東・本社・埼玉・神奈川）
+  <main class="flex-1 max-w-7xl w-full mx-auto px-2.5 sm:px-6 py-2.5 sm:py-4 space-y-2.5">
+    <!-- スリム検索＆絞り込みバー（スマホでは検索＋エリア切替＋「詳細絞込」ボタンのみ初期表示） -->
+    <div class="bg-white rounded-xl border border-gray-200 p-2.5 shadow-sm space-y-2">
+      <div class="flex items-center gap-1.5">
+        <div class="inline-flex rounded-lg bg-zinc-100 p-0.5 border border-zinc-200 shrink-0">
+          <button type="button" onclick="switchArea('kanto')" id="area-kanto" class="px-2.5 py-1 rounded-md text-[11px] sm:text-xs font-black bg-zinc-900 text-orange-400 shadow-sm transition">
+            関東
           </button>
-          <button type="button" onclick="switchArea('all')" id="area-all" class="px-3.5 py-1 rounded-md text-xs font-bold text-gray-600 hover:text-gray-900 transition">
-            全エリア（関西・名古屋含む）
+          <button type="button" onclick="switchArea('all')" id="area-all" class="px-2.5 py-1 rounded-md text-[11px] sm:text-xs font-bold text-gray-600 hover:text-gray-900 transition">
+            全エリア
           </button>
         </div>
-
-        <div class="flex flex-wrap items-center gap-2 text-xs">
-          <button type="button" onclick="syncHistoryFromGithub(true)" class="px-2.5 py-1 rounded-md bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 font-bold transition">
-            🔄 履歴再同期
-          </button>
-          <button type="button" onclick="openModal('excludedModal')" class="px-2.5 py-1 rounded-md bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold transition flex items-center gap-1">
-            <span>除外済リスト</span>
-            <span id="excludedCountBadge" class="px-1.5 py-0.2 bg-rose-600 text-white rounded-full text-[10px]">0</span>
-          </button>
-          <button type="button" onclick="openModal('mergeInfoModal')" class="px-2.5 py-1 rounded-md bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium transition">
-            名寄せ・履歴内訳
-          </button>
-        </div>
-      </div>
-
-      <div class="grid grid-cols-1 sm:grid-cols-5 gap-2">
-        <select id="filterPref" onchange="resetPageAndRender()" class="rounded-lg border border-gray-300 px-3 py-1.5 text-xs bg-white focus:outline-none focus:border-orange-500">
-          <option value="">都道府県：すべて</option>
-        </select>
-        <select id="filterStaff" onchange="resetPageAndRender()" class="rounded-lg border border-gray-300 px-3 py-1.5 text-xs bg-white focus:outline-none focus:border-orange-500">
-          <option value="">アテンド担当ユーザー：すべて</option>
-        </select>
-        <select id="filterBranch" onchange="resetPageAndRender()" class="rounded-lg border border-gray-300 px-3 py-1.5 text-xs bg-white focus:outline-none focus:border-orange-500">
-          <option value="">担当支店：すべて</option>
-        </select>
-        <label class="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-indigo-200 bg-indigo-50/70 text-xs font-bold text-indigo-900 cursor-pointer select-none">
-          <input type="checkbox" id="filterNightShift" onchange="resetPageAndRender()" class="accent-indigo-600 w-4 h-4 rounded" />
-          <span>🌙 夜勤求人を表示（OFF=日勤のみ）</span>
-        </label>
-        <label class="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-orange-200 bg-orange-50/70 text-xs font-bold text-gray-800 cursor-pointer select-none">
-          <input type="checkbox" id="filterUnactedOnly" checked onchange="resetPageAndRender()" class="accent-orange-500 w-4 h-4 rounded" />
-          <span>未対応のみ表示</span>
-        </label>
-      </div>
-
-      <div class="flex flex-col sm:flex-row gap-2">
-        <input type="text" id="searchInput" oninput="onSearchInput()" placeholder="氏名・フリガナ・電話番号・ID・エリア・資格で検索（入力時は対応済も横断ヒット）..."
-               class="flex-1 rounded-lg border border-gray-300 px-3 py-1.5 text-xs focus:outline-none focus:border-orange-500" />
-        <button type="button" onclick="quickExportCurrent()" class="px-4 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-orange-400 border border-zinc-700 text-xs font-bold whitespace-nowrap transition shadow-sm">
-          表示中を即CSV出力
+        <input type="text" id="searchInput" oninput="onSearchInput()" placeholder="氏名・TEL・エリア・資格で検索..."
+               class="flex-1 min-w-0 rounded-lg border border-gray-300 px-2.5 py-1.5 text-xs focus:outline-none focus:border-orange-500" />
+        <button type="button" onclick="toggleMobileFilters()" id="btnToggleFilters"
+                class="md:hidden px-2.5 py-1.5 rounded-lg bg-zinc-100 hover:bg-zinc-200 text-gray-800 border border-gray-300 text-[11px] font-bold whitespace-nowrap shrink-0">
+          絞り込み ▼
         </button>
+      </div>
+
+      <!-- 詳細フィルター群（PCでは常時表示、スマホでは「絞り込み ▼」タップで開閉） -->
+      <div id="collapsibleFilterBody" class="hidden md:block space-y-2 pt-1.5 border-t border-gray-100">
+        <div class="grid grid-cols-1 sm:grid-cols-5 gap-2">
+          <select id="filterPref" onchange="resetPageAndRender()" class="rounded-lg border border-gray-300 px-3 py-1.5 text-xs bg-white focus:outline-none focus:border-orange-500">
+            <option value="">都道府県：すべて</option>
+          </select>
+          <select id="filterStaff" onchange="resetPageAndRender()" class="rounded-lg border border-gray-300 px-3 py-1.5 text-xs bg-white focus:outline-none focus:border-orange-500">
+            <option value="">アテンド担当ユーザー：すべて</option>
+          </select>
+          <select id="filterBranch" onchange="resetPageAndRender()" class="rounded-lg border border-gray-300 px-3 py-1.5 text-xs bg-white focus:outline-none focus:border-orange-500">
+            <option value="">担当支店：すべて</option>
+          </select>
+          <label class="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-indigo-200 bg-indigo-50/70 text-xs font-bold text-indigo-900 cursor-pointer select-none">
+            <input type="checkbox" id="filterNightShift" onchange="resetPageAndRender()" class="accent-indigo-600 w-4 h-4 rounded" />
+            <span>🌙 夜勤求人（OFF=日勤）</span>
+          </label>
+          <label class="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-orange-200 bg-orange-50/70 text-xs font-bold text-gray-800 cursor-pointer select-none">
+            <input type="checkbox" id="filterUnactedOnly" checked onchange="resetPageAndRender()" class="accent-orange-500 w-4 h-4 rounded" />
+            <span>未対応のみ表示</span>
+          </label>
+        </div>
+
+        <div class="flex flex-wrap items-center justify-between gap-2 text-xs pt-0.5">
+          <div class="flex flex-wrap items-center gap-1.5">
+            <button type="button" onclick="syncHistoryFromGithub(true)" class="px-2.5 py-1 rounded-md bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 font-bold transition">
+              🔄 履歴再同期
+            </button>
+            <button type="button" onclick="openModal('excludedModal')" class="px-2.5 py-1 rounded-md bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold transition flex items-center gap-1">
+              <span>除外済</span>
+              <span id="excludedCountBadge" class="px-1.5 py-0.2 bg-rose-600 text-white rounded-full text-[10px]">0</span>
+            </button>
+            <button type="button" onclick="openModal('mergeInfoModal')" class="px-2.5 py-1 rounded-md bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium transition">
+              名寄せ内訳
+            </button>
+            <button type="button" onclick="toggleGuide()" class="px-2.5 py-1 rounded-md bg-orange-50 hover:bg-orange-100 text-orange-700 border border-orange-200 font-bold transition">
+              抽出基準を見る
+            </button>
+          </div>
+          <button type="button" onclick="quickExportCurrent()" class="px-3 py-1 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-orange-400 border border-zinc-700 text-xs font-bold whitespace-nowrap transition">
+            表示中を即CSV出力
+          </button>
+        </div>
+
+        <div id="guideBody" class="hidden px-3 py-2 rounded-lg border border-orange-100 text-xs text-gray-600 space-y-1 bg-orange-50/40">
+          <p id="guideTitle" class="font-bold text-orange-700">【3日以内 未FIX人材】の抽出基準</p>
+          <p id="guideDesc"></p>
+        </div>
       </div>
     </div>
 
@@ -215,7 +230,7 @@
         <button type="button" onclick="closeModal('msgModal')" class="px-3.5 py-2 rounded-xl border border-gray-300 text-gray-700 text-xs font-bold hover:bg-gray-100">閉じる</button>
         <button type="button" onclick="copyMessageOnly()" class="px-3.5 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-bold">文面コピー</button>
         <button type="button" onclick="copyAndRecordAction()" class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-zinc-950 text-xs font-black shadow-sm">📋 コピー＆完了記録</button>
-        <button type="button" onclick="launchSmsAndRecordModal()" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black shadow">📱 SMS起動＆完了記録</button>
+        <button type="button" onclick="launchSmsAndRecordModal()" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black shadow">📱 SMS起動＆コピー＆完了記録</button>
       </div>
     </div>
   </div>
@@ -988,6 +1003,8 @@
     if (elPa) elPa.value = state.settings.ghPath || 'data.js';
     var elTk = document.getElementById('ghTokenInput');
     if (elTk) elTk.value = state.settings.ghToken || '';
+    var elUnacted = document.getElementById('filterUnactedOnly');
+    if (elUnacted) elUnacted.checked = true;
   }
 
   function saveActionLogs() {
@@ -1078,6 +1095,8 @@
   function processCandidates(rawList, badgeLabel) {
     state.rawCandidates = rawList;
     document.getElementById('dataSourceBadge').textContent = badgeLabel;
+    var mobBadge = document.getElementById('mobileDataBadge');
+    if (mobBadge) mobBadge.textContent = 'データ：' + badgeLabel;
 
     var activePhones = new Set();
     var activePersons = [];
@@ -1265,6 +1284,31 @@
     return nightMode ? hasNight : hasDay;
   }
 
+  function resolveCandidateRoleCategory(c) {
+    var jt = String(c.jobType || '').trim();
+    var qual = String(c.qualification || '').trim();
+    // 職種チェックがあれば職種を優先、空欄・未選択なら保有資格から参照
+    var src = jt ? jt : qual;
+    // もし職種に「介護」「看護」のどちらも入っていない場合も資格から補完
+    if (src.indexOf('看護') === -1 && src.indexOf('介護') === -1 && qual) {
+      src = qual;
+    }
+    var hasNurse = /(看護|正看|准看|保健師|助産師)/.test(src);
+    var hasCare = /(介護|初任者|実務者|ヘルパー|ケアマネ|福祉士)/.test(src);
+    // どっちも（介護＋看護）の場合は看護を優先
+    if (hasNurse) return 'nurse';
+    if (hasCare) return 'care';
+    return 'care';
+  }
+
+  function getHourlyRateNote(c) {
+    var roleCat = resolveCandidateRoleCategory(c);
+    if (roleCat === 'nurse') {
+      return '※時給相場：看護 2,200〜2,450円程度（資格・経験により変動します）';
+    }
+    return '※時給相場：介護 1,500〜1,800円程度（資格・経験により変動します）';
+  }
+
   function getMatchedJobs(c, nightModeOverride) {
     if (!state.searchOrderJobs || state.searchOrderJobs.length === 0) {
       return { dispatch: [], direct: [], status: 'loading' };
@@ -1277,8 +1321,8 @@
     var globalNight = globalNightEl ? globalNightEl.checked : false;
     var nightMode = (nightModeOverride !== undefined) ? nightModeOverride : (globalNight || c.isNightDefault);
 
-    var cType = String(c.jobType || '介護');
-    var isNurse = cType.indexOf('看護') !== -1;
+    var roleCat = resolveCandidateRoleCategory(c);
+    var isNurse = (roleCat === 'nurse');
 
     var rawDispList = [];
     var rawDirList = [];
@@ -1391,13 +1435,24 @@
         : '';
       var shortJobs = (shortLines || '・ご自宅近隣の新着求人を確保しております。') + shortDirect;
 
+      var shortRateNote = getHourlyRateNote(c);
       if (tab === 'within3days') {
         return [
           sal.text + ' お世話になっております。株式会社ビースタイルです。',
           '先日お話しさせていただいた応募求人について、先ほど先方から連絡があり、枠が埋まってしまったとのことでした。力不足で大変申し訳ございません。',
           '代わりに近隣の好条件求人を確保いたしました。',
           shortJobs,
+          shortRateNote,
           '気になる案件があればご返信ください！'
+        ].join(LF);
+      }
+      if (tab === 'unfixed') {
+        return [
+          sal.text + ' お世話になっております。株式会社ビースタイルです。',
+          '先日ご提案させていただきました件、その後ご状況はいかがでしょうか？',
+          shortJobs,
+          shortRateNote,
+          'ご状況だけでもぜひご返信ください！'
         ].join(LF);
       }
       if (tab === 'future') {
@@ -1405,6 +1460,7 @@
           sal.text + ' お世話になっております。株式会社ビースタイルです。',
           '以前伺っていたご就業時期が近づいてまいりましたので、最新の募集状況のご案内です！',
           shortJobs,
+          shortRateNote,
           '今週・来週で面談した場合の週何日か、以前応募時と変わっていないか（不明な場合は就業日数だけ返信お願いします）お知らせください！'
         ].join(LF);
       }
@@ -1412,6 +1468,7 @@
         sal.text + ' お世話になっております。株式会社ビースタイルです。',
         'ご自宅周辺で以下の新着求人が出ております！',
         shortJobs,
+        shortRateNote,
         '詳細ご希望の際はぜひお気軽にご返信ください！'
       ].join(LF);
     }
@@ -1433,6 +1490,8 @@
 
     var bodyJobs = (jobLines || '・ご自宅近隣エリアの好条件求人を複数確保しております。') + directHook;
 
+    var rateNote = getHourlyRateNote(c);
+
     if (tab === 'within3days') {
       var reason = reasonOverride || SLIDE_REASONS_3DAYS[state.currentReasonIdx % SLIDE_REASONS_3DAYS.length];
       return [
@@ -1442,6 +1501,7 @@
         '力不足で大変申し訳ございません。',
         '代わりにご自宅から通いやすい近隣エリアで、条件に合う新着求人をピックアップいたしました。', '',
         bodyJobs, '',
+        rateNote, '',
         'もし気になるものがございましたら、すぐ詳細をお送りしますのでお気軽にご返信ください！'
       ].join(LF);
     }
@@ -1453,6 +1513,7 @@
         '以前伺っていたご就業時期が近づいてまいりましたので、最新の募集状況のご案内です！', '',
         '現在、ご自宅周辺で以下の好条件案件が出ております。', '',
         bodyJobs, '',
+        rateNote, '',
         '今週・来週で面談した場合、ご希望の就業日数は週何日くらいになりそうでしょうか？',
         '以前応募時と条件が変わっていないかもあわせて教えていただけますと幸いです。（不明な場合は就業日数だけ返信お願いします）'
       ].join(LF);
@@ -1465,6 +1526,7 @@
         '先日ご提案させていただきました件、その後ご状況はいかがでしょうか？', '',
         '現在もご自宅から5km圏内で以下の求人が募集中となっております。', '',
         bodyJobs, '',
+        rateNote, '',
         '「まずは条件だけ詳しく聞きたい」「他で決まった」など、一言だけでもご返信いただけますと幸いです！'
       ].join(LF);
     }
@@ -1483,6 +1545,7 @@
         'ご無沙汰しております！株式会社ビースタイルです。',
         '以前お話しさせていただいたご希望条件にぴったりの新着案件が入りましたので、優先的にご連絡いたしました！', '',
         bodyJobs, '',
+        rateNote, '',
         '今すぐのご転職でなくても情報収集だけでも大歓迎ですので、ぜひお気軽にご返信ください！'
       ].join(LF);
     }
@@ -1493,6 +1556,7 @@
       'その後、お仕事のご状況はいかがでしょうか？', '',
       '現在、お住まいのエリア周辺で新しい募集枠が複数出ておりますのでご案内いたします。', '',
       bodyJobs, '',
+      rateNote, '',
       '現在のシフト希望やご状況に合わせて改めてお探しすることも可能ですので、ぜひお気軽にお声がけください！'
     ].join(LF);
   }
@@ -1639,6 +1703,24 @@
     renderList();
   };
 
+  window.toggleMobileHeaderMenu = function() {
+    var m = document.getElementById('mobileHeaderMenu');
+    if (m) m.classList.toggle('hidden');
+  };
+
+  window.toggleMobileFilters = function() {
+    var body = document.getElementById('collapsibleFilterBody');
+    var btn = document.getElementById('btnToggleFilters');
+    if (!body) return;
+    if (body.classList.contains('hidden')) {
+      body.classList.remove('hidden');
+      if (btn) btn.textContent = '閉じる ▲';
+    } else {
+      body.classList.add('hidden');
+      if (btn) btn.textContent = '絞り込み ▼';
+    }
+  };
+
   window.switchTab = function(tabId) {
     state.currentTab = tabId;
     state.displayLimit = PAGE_SIZE;
@@ -1646,11 +1728,11 @@
       var btn = document.getElementById('tab-' + t);
       var badge = document.getElementById('badge-' + t);
       if (t === tabId) {
-        btn.className = 'tab-active py-2.5 px-2.5 whitespace-nowrap flex items-center gap-1.5 transition';
-        badge.className = 'px-1.5 py-0.5 text-[11px] rounded-full bg-orange-500 text-zinc-950 font-black';
+        btn.className = 'tab-active py-2 px-2 whitespace-nowrap flex items-center gap-1 transition';
+        badge.className = 'px-1.5 py-0.2 text-[10px] rounded-full bg-orange-500 text-zinc-950 font-black';
       } else {
-        btn.className = 'tab-inactive py-2.5 px-2.5 whitespace-nowrap flex items-center gap-1.5 transition';
-        badge.className = 'px-1.5 py-0.5 text-[11px] rounded-full bg-zinc-800 text-zinc-300 font-bold';
+        btn.className = 'tab-inactive py-2 px-2 whitespace-nowrap flex items-center gap-1 transition';
+        badge.className = 'px-1.5 py-0.2 text-[10px] rounded-full bg-zinc-800 text-zinc-300 font-bold';
       }
     });
     updateGuideText();
@@ -1663,11 +1745,11 @@
     var kBtn = document.getElementById('area-kanto');
     var aBtn = document.getElementById('area-all');
     if (areaId === 'kanto') {
-      kBtn.className = 'px-3.5 py-1 rounded-md text-xs font-black bg-zinc-900 text-orange-400 shadow-sm transition';
-      aBtn.className = 'px-3.5 py-1 rounded-md text-xs font-bold text-gray-600 hover:text-gray-900 transition';
+      kBtn.className = 'px-2.5 py-1 rounded-md text-[11px] sm:text-xs font-black bg-zinc-900 text-orange-400 shadow-sm transition';
+      aBtn.className = 'px-2.5 py-1 rounded-md text-[11px] sm:text-xs font-bold text-gray-600 hover:text-gray-900 transition';
     } else {
-      aBtn.className = 'px-3.5 py-1 rounded-md text-xs font-black bg-zinc-900 text-orange-400 shadow-sm transition';
-      kBtn.className = 'px-3.5 py-1 rounded-md text-xs font-bold text-gray-600 hover:text-gray-900 transition';
+      aBtn.className = 'px-2.5 py-1 rounded-md text-[11px] sm:text-xs font-black bg-zinc-900 text-orange-400 shadow-sm transition';
+      kBtn.className = 'px-2.5 py-1 rounded-md text-[11px] sm:text-xs font-bold text-gray-600 hover:text-gray-900 transition';
     }
     updateTabBadges();
     renderList();
@@ -1703,14 +1785,7 @@
 
   window.toggleGuide = function() {
     var body = document.getElementById('guideBody');
-    var arrow = document.getElementById('guideArrow');
-    if (body.classList.contains('hidden')) {
-      body.classList.remove('hidden');
-      arrow.textContent = '閉じる ▲';
-    } else {
-      body.classList.add('hidden');
-      arrow.textContent = '開く ▼';
-    }
+    if (body) body.classList.toggle('hidden');
   };
 
   function populateFilterOptions() {
@@ -1805,10 +1880,10 @@
         '<span>本人確定のため永続除外する（全端末共有）</span></label></div>'
       ) : '';
 
-      return '<div class="bg-white rounded-2xl border ' + (c.activeWarning ? 'border-amber-400 ring-2 ring-amber-200' : 'border-gray-200') + ' p-4 shadow-sm hover:shadow-md transition space-y-3">' +
+      return '<div class="' + (act.isActed ? 'bg-gray-50/90 opacity-90' : 'bg-white') + ' rounded-2xl border ' + (c.activeWarning ? 'border-amber-400 ring-2 ring-amber-200' : 'border-gray-200') + ' p-3.5 sm:p-4 shadow-sm hover:shadow-md transition space-y-2.5 sm:space-y-3">' +
         '<div class="flex flex-wrap items-center justify-between gap-2">' +
           '<div class="flex flex-wrap items-center gap-1.5 text-[11px]">' +
-            '<span class="px-2 py-0.5 rounded bg-zinc-100 text-zinc-700 font-bold">' + escapeHtml(c.jobType || '介護') + '</span>' +
+            '<span class="px-2 py-0.5 rounded bg-zinc-100 text-zinc-700 font-bold">' + escapeHtml(c.jobType || (resolveCandidateRoleCategory(c) === 'nurse' ? '看護(資格判定)' : '介護(資格判定)')) + '</span>' +
             shiftBadge +
             '<span class="px-2 py-0.5 rounded border font-bold ' + statusBadgeClass + '">' + escapeHtml(act.label) + '</span>' +
             (bSt ? '<span class="px-2 py-0.5 rounded bg-orange-50 text-orange-700 border border-orange-200 font-bold">B列: ' + escapeHtml(bSt) + '</span>' : '') +
@@ -1829,7 +1904,7 @@
             '<span class="text-xs text-gray-500">' + escapeHtml(c.kana || '') + (c.age ? '（' + c.age + '歳）' : '') + ' ／ ' + escapeHtml(c.address || '住所未登録') + '</span>' +
           '</div>' +
           '<div class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-600">' +
-            (c.phone ? '<span class="font-bold text-gray-900">TEL: ' + escapeHtml(c.phone) + '</span>' : '') +
+            (c.phone ? '<a href="tel:' + normalizePhone(c.phone) + '" class="font-bold text-sky-700 underline">📞 ' + escapeHtml(c.phone) + '</a>' : '') +
             '<span>応募日: ' + escapeHtml(c.applyDate || '-') + '</span>' +
             '<span>アテンド日: ' + escapeHtml(c.attendDate || '-') + '</span>' +
             '<span>資格: ' + escapeHtml(c.qualification || '-') + '</span>' +
@@ -1843,11 +1918,12 @@
           '<div id="' + condId + '" class="hidden px-3 pb-3 pt-1.5 border-t border-gray-200 text-xs text-gray-700 leading-relaxed whitespace-pre-wrap bg-white">' + escapeHtml(c.conditions || '把握済条件の記載なし') + '</div>' +
         '</div>' +
         '<div class="space-y-1.5">' + directHtml + dispHtml + '</div>' +
-        '<div class="flex flex-wrap items-center gap-2 pt-1">' +
-          '<button type="button" onclick="openMessageModal(' + SQ + escapeHtml(c.personKey) + SQ + ')" class="flex-1 min-w-[140px] py-2.5 px-3 rounded-xl bg-zinc-800 hover:bg-zinc-900 text-white text-xs font-black transition shadow-sm">文面作成・確認</button>' +
-          '<button type="button" onclick="launchDirectSms(' + SQ + escapeHtml(c.personKey) + SQ + ')" class="flex-1 min-w-[160px] py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black transition shadow-sm">📱 SMS起動＆完了記録</button>' +
-          '<button type="button" onclick="quickMarkDone(' + SQ + escapeHtml(c.personKey) + SQ + ')" class="flex-1 min-w-[140px] py-2.5 px-3 rounded-xl bg-white hover:bg-orange-50 text-gray-900 border border-gray-300 hover:border-orange-400 text-xs font-bold transition">送信記録をつける</button>' +
-          '<button type="button" onclick="undoActionLog(' + SQ + escapeHtml(c.personKey) + SQ + ')" class="py-2.5 px-3 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs font-bold transition">戻す</button>' +
+        '<div class="grid grid-cols-2 gap-2 pt-1">' +
+          '<button type="button" onclick="openMessageModal(' + SQ + escapeHtml(c.personKey) + SQ + ')" class="py-2.5 px-3 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-orange-400 text-xs font-black transition shadow-sm">文面作成</button>' +
+          (act.isActed
+            ? '<button type="button" onclick="undoActionLog(' + SQ + escapeHtml(c.personKey) + SQ + ')" class="py-2.5 px-3 rounded-xl bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs font-bold transition">記録を取り消す</button>'
+            : '<button type="button" onclick="quickMarkDone(' + SQ + escapeHtml(c.personKey) + SQ + ')" class="py-2.5 px-3 rounded-xl bg-white hover:bg-orange-50 text-gray-900 border border-gray-300 hover:border-orange-400 text-xs font-black transition">記録をつける</button>'
+          ) +
         '</div>' +
       '</div>';
     }).join('');
@@ -2077,7 +2153,7 @@
           branch: pick(['担当支店', '支店', 'エリア']),
           staff: pick(['アテンド担当ユーザー', '担当者', '担当']),
           qualification: pick(['保有資格', '資格']),
-          jobType: pick(['職種', '希望職種']) || '介護',
+          jobType: pick(['職種', '希望職種']),
           status: pick(['ステータス', '応募ステータス', '進捗']),
           finalStatus: finalStVal,
           applyDate: pick(['応募日', '応募日時']),
