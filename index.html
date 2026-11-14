@@ -477,14 +477,16 @@
   </div>
 
     <!-- 12秒間 即時取り消し＆短縮版再送トーストバー（連続送信の邪魔をしない画面下部スリムバー） -->
-  <div id="undoToastBar" class="hidden fixed bottom-3 left-1/2 -translate-x-1/2 z-40 w-[95%] max-w-lg bg-zinc-950/95 text-white border border-orange-500/70 rounded-xl px-3 py-2 shadow-2xl flex items-center justify-between gap-2 text-xs">
-    <div class="truncate">
-      <span id="undoToastText" class="font-bold text-emerald-400">✅ 記録済</span>
-      <span id="undoToastCountdown" class="text-[11px] text-zinc-400 ml-1">(12秒)</span>
-    </div>
-    <div class="flex items-center gap-1.5 shrink-0">
-      <button type="button" onclick="undoLastSentAction()" class="px-2.5 py-1 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-white border border-zinc-600 font-bold">↩ 戻す</button>
-      <button type="button" onclick="resendLastAsShortSms()" class="px-2.5 py-1 rounded-lg bg-orange-500 hover:bg-orange-600 text-zinc-950 font-black">📱 短縮版で再送</button>
+  <div id="undoToastBar" style="position:fixed; bottom:0; left:0; right:0; z-index:9999; padding-bottom: env(safe-area-inset-bottom, 0px);" class="hidden bg-zinc-950/95 text-white border-t-2 border-orange-500 shadow-2xl">
+    <div class="max-w-3xl mx-auto px-3 py-2.5 flex items-center justify-between gap-2 text-xs">
+      <div class="truncate">
+        <span id="undoToastText" class="font-bold text-emerald-400">✅ 記録済</span>
+        <span id="undoToastCountdown" class="text-[11px] text-zinc-400 ml-1">(12秒)</span>
+      </div>
+      <div class="flex items-center gap-1.5 shrink-0">
+        <button type="button" onclick="undoLastSentAction()" class="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-white border border-zinc-600 font-bold">↩ 戻す</button>
+        <button type="button" onclick="resendLastAsShortSms()" class="px-3 py-1.5 rounded-lg bg-orange-500 hover:bg-orange-600 text-zinc-950 font-black">📱 短縮版で再送</button>
+      </div>
     </div>
   </div>
 
