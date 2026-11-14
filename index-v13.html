@@ -1,0 +1,2913 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ビースタイル 追客・掘り起こし管理</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="./data.js" onerror="window.BSTYLE_DATA_MISSING=true"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap');
+    body { font-family: 'Noto Sans JP', sans-serif; background-color: #f3f4f6; color: #111827; }
+    .scrollbar-hide::-webkit-scrollbar { display: none; }
+    .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+    .tab-active { border-bottom: 3px solid #f97316; color: #ffffff; font-weight: 700; }
+    .tab-inactive { border-bottom: 3px solid transparent; color: #9ca3af; }
+    .tab-inactive:hover { color: #e5e7eb; }
+    .modal-backdrop { background-color: rgba(17, 24, 39, 0.72); backdrop-filter: blur(2px); }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <header class="bg-zinc-950 text-white sticky top-0 z-30 shadow-md border-b border-zinc-800">
+    <div class="max-w-7xl mx-auto px-2.5 sm:px-6 pt-2 pb-1.5 flex items-center justify-between gap-2">
+      <div class="flex items-center gap-2 min-w-0">
+        <div class="w-7 h-7 rounded-lg bg-orange-500 text-zinc-950 font-black flex items-center justify-center text-base shadow shrink-0">B</div>
+        <h1 class="font-bold text-sm sm:text-lg tracking-tight truncate">ビースタイル 追客管理</h1>
+        <span id="dataSourceBadge" class="hidden sm:inline-block text-[11px] px-2 py-0.5 rounded-full bg-zinc-800 text-orange-400 border border-zinc-700 font-medium whitespace-nowrap">読込中...</span>
+        <span id="historySyncBadge" class="text-[10px] sm:text-[11px] px-1.5 sm:px-2 py-0.5 rounded-full bg-zinc-900 text-emerald-400 border border-emerald-700/50 font-medium whitespace-nowrap">履歴同期中</span>
+      </div>
+
+      <!-- PC表示用メニュー -->
+      <div class="hidden md:flex items-center gap-1.5 text-xs">
+        <a href="https://refo.link/haken-oubo/applications" target="_blank" rel="noopener noreferrer"
+           class="px-2.5 py-1.5 rounded-md bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-zinc-700 font-medium transition">Refo ↗</a>
+        <a href="https://kawazoedaichi.github.io/searchOrder/" target="_blank" rel="noopener noreferrer"
+           class="px-2.5 py-1.5 rounded-md bg-zinc-900 hover:bg-zinc-800 text-orange-400 border border-orange-500/40 font-bold transition">案件詳細 ↗</a>
+        <button type="button" onclick="openModal('githubModal')"
+           class="px-2.5 py-1.5 rounded-md bg-zinc-900 hover:bg-zinc-800 text-emerald-400 border border-emerald-500/40 font-bold transition">🚀 GitHub同期</button>
+        <button type="button" onclick="openModal('exportModal')"
+           class="px-3 py-1.5 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white font-black transition shadow-sm">📥 CSV出力</button>
+        <button type="button" onclick="openModal('urlModal')"
+           class="px-2.5 py-1.5 rounded-md bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-600 font-medium transition">設定</button>
+        <button type="button" onclick="openModal('csvModal')"
+           class="px-3 py-1.5 rounded-md bg-orange-500 hover:bg-orange-600 text-zinc-950 font-black transition shadow-sm">CSV読込</button>
+      </div>
+
+      <!-- スマホ表示用コンパクトメニュー（1行に収める） -->
+      <div class="flex md:hidden items-center gap-1 text-[11px] shrink-0">
+        <button type="button" onclick="openModal('exportModal')"
+           class="px-2 py-1 rounded bg-emerald-600 text-white font-black">📥 出力</button>
+        <button type="button" onclick="openModal('csvModal')"
+           class="px-2 py-1 rounded bg-orange-500 text-zinc-950 font-black">読込</button>
+        <button type="button" onclick="toggleMobileHeaderMenu()"
+           class="px-2 py-1 rounded bg-zinc-800 text-zinc-200 border border-zinc-700 font-bold">⚙️</button>
+      </div>
+    </div>
+
+    <!-- スマホ用折りたたみ管理メニュー -->
+    <div id="mobileHeaderMenu" class="hidden md:hidden px-2.5 pb-2 pt-1 border-t border-zinc-800 bg-zinc-900/95 flex flex-wrap items-center gap-1.5 text-[11px]">
+      <a href="https://refo.link/haken-oubo/applications" target="_blank" rel="noopener noreferrer"
+         class="px-2.5 py-1.5 rounded bg-zinc-800 text-zinc-200 border border-zinc-700 font-medium">Refo応募一覧 ↗</a>
+      <button type="button" onclick="openModal('githubModal'); toggleMobileHeaderMenu();"
+         class="px-2.5 py-1.5 rounded bg-zinc-800 text-emerald-400 border border-emerald-500/40 font-bold">🚀 GitHub同期設定</button>
+      <button type="button" onclick="openModal('exportModal'); toggleMobileHeaderMenu();"
+         class="px-2.5 py-1.5 rounded bg-zinc-800 text-white border border-zinc-600 font-bold">CSV出力</button>
+      <button type="button" onclick="openModal('urlModal'); toggleMobileHeaderMenu();"
+         class="px-2.5 py-1.5 rounded bg-zinc-800 text-zinc-200 border border-zinc-600 font-medium">URL・案件設定</button>
+      <span id="mobileDataBadge" class="w-full text-[10px] text-orange-400 pt-0.5"></span>
+    </div>
+
+    <!-- 横スクロールタブ（スリム化） -->
+    <nav class="max-w-7xl mx-auto px-2 sm:px-6 flex overflow-x-auto scrollbar-hide gap-1 sm:gap-4 text-xs sm:text-sm">
+      <button type="button" onclick="switchTab('within3days')" id="tab-within3days" class="tab-active py-2 px-2 whitespace-nowrap flex items-center gap-1 transition">
+        <span>3日以内 未FIX</span>
+        <span id="badge-within3days" class="px-1.5 py-0.2 text-[10px] rounded-full bg-orange-500 text-zinc-950 font-black">0</span>
+      </button>
+      <button type="button" onclick="switchTab('unfixed')" id="tab-unfixed" class="tab-inactive py-2 px-2 whitespace-nowrap flex items-center gap-1 transition">
+        <span>未FIX人材</span>
+        <span id="badge-unfixed" class="px-1.5 py-0.2 text-[10px] rounded-full bg-zinc-800 text-zinc-300 font-bold">0</span>
+      </button>
+      <button type="button" onclick="switchTab('hot')" id="tab-hot" class="tab-inactive py-2 px-2 whitespace-nowrap flex items-center gap-1 transition">
+        <span>激熱掘起</span>
+        <span id="badge-hot" class="px-1.5 py-0.2 text-[10px] rounded-full bg-zinc-800 text-zinc-300 font-bold">0</span>
+      </button>
+      <button type="button" onclick="switchTab('future')" id="tab-future" class="tab-inactive py-2 px-2 whitespace-nowrap flex items-center gap-1 transition">
+        <span>未来人材</span>
+        <span id="badge-future" class="px-1.5 py-0.2 text-[10px] rounded-full bg-zinc-800 text-zinc-300 font-bold">0</span>
+      </button>
+      <button type="button" onclick="switchTab('normal')" id="tab-normal" class="tab-inactive py-2 px-2 whitespace-nowrap flex items-center gap-1 transition">
+        <span>通常掘起</span>
+        <span id="badge-normal" class="px-1.5 py-0.2 text-[10px] rounded-full bg-zinc-800 text-zinc-300 font-bold">0</span>
+      </button>
+    </nav>
+  </header>
+
+  <main class="flex-1 max-w-7xl w-full mx-auto px-2.5 sm:px-6 py-2.5 sm:py-4 space-y-2.5">
+    <!-- スリム検索＆絞り込みバー（スマホでは検索＋エリア切替＋「詳細絞込」ボタンのみ初期表示） -->
+    <div class="bg-white rounded-xl border border-gray-200 p-2.5 shadow-sm space-y-2">
+      <div class="flex items-center gap-1.5">
+        <div class="inline-flex rounded-lg bg-zinc-100 p-0.5 border border-zinc-200 shrink-0">
+          <button type="button" onclick="switchArea('kanto')" id="area-kanto" class="px-2.5 py-1 rounded-md text-[11px] sm:text-xs font-black bg-zinc-900 text-orange-400 shadow-sm transition">
+            関東
+          </button>
+          <button type="button" onclick="switchArea('all')" id="area-all" class="px-2.5 py-1 rounded-md text-[11px] sm:text-xs font-bold text-gray-600 hover:text-gray-900 transition">
+            全エリア
+          </button>
+        </div>
+        <input type="text" id="searchInput" oninput="onSearchInput()" placeholder="氏名・TEL・エリア・資格で検索..."
+               class="flex-1 min-w-0 rounded-lg border border-gray-300 px-2.5 py-1.5 text-xs focus:outline-none focus:border-orange-500" />
+        <button type="button" onclick="toggleMobileFilters()" id="btnToggleFilters"
+                class="md:hidden px-2.5 py-1.5 rounded-lg bg-zinc-100 hover:bg-zinc-200 text-gray-800 border border-gray-300 text-[11px] font-bold whitespace-nowrap shrink-0">
+          絞り込み ▼
+        </button>
+      </div>
+
+      <!-- 詳細フィルター群（PCでは常時表示、スマホでは「絞り込み ▼」タップで開閉） -->
+      <div id="collapsibleFilterBody" class="hidden md:block space-y-2 pt-1.5 border-t border-gray-100">
+        <div class="grid grid-cols-1 sm:grid-cols-5 gap-2">
+          <select id="filterPref" onchange="resetPageAndRender()" class="rounded-lg border border-gray-300 px-3 py-1.5 text-xs bg-white focus:outline-none focus:border-orange-500">
+            <option value="">都道府県：すべて</option>
+          </select>
+          <select id="filterStaff" onchange="resetPageAndRender()" class="rounded-lg border border-gray-300 px-3 py-1.5 text-xs bg-white focus:outline-none focus:border-orange-500">
+            <option value="">アテンド担当ユーザー：すべて</option>
+          </select>
+          <select id="filterBranch" onchange="resetPageAndRender()" class="rounded-lg border border-gray-300 px-3 py-1.5 text-xs bg-white focus:outline-none focus:border-orange-500">
+            <option value="">担当支店：すべて</option>
+          </select>
+          <label class="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-indigo-200 bg-indigo-50/70 text-xs font-bold text-indigo-900 cursor-pointer select-none">
+            <input type="checkbox" id="filterNightShift" onchange="resetPageAndRender()" class="accent-indigo-600 w-4 h-4 rounded" />
+            <span>🌙 夜勤求人（OFF=日勤）</span>
+          </label>
+          <label class="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-orange-200 bg-orange-50/70 text-xs font-bold text-gray-800 cursor-pointer select-none">
+            <input type="checkbox" id="filterUnactedOnly" checked onchange="resetPageAndRender()" class="accent-orange-500 w-4 h-4 rounded" />
+            <span>未対応のみ表示</span>
+          </label>
+        </div>
+
+        <div class="flex flex-wrap items-center justify-between gap-2 text-xs pt-0.5">
+          <div class="flex flex-wrap items-center gap-1.5">
+            <button type="button" onclick="syncHistoryFromGithub(true)" class="px-2.5 py-1 rounded-md bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 font-bold transition">
+              🔄 履歴再同期
+            </button>
+            <button type="button" onclick="openModal('excludedModal')" class="px-2.5 py-1 rounded-md bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold transition flex items-center gap-1">
+              <span>除外済</span>
+              <span id="excludedCountBadge" class="px-1.5 py-0.2 bg-rose-600 text-white rounded-full text-[10px]">0</span>
+            </button>
+            <button type="button" onclick="openModal('mergeInfoModal')" class="px-2.5 py-1 rounded-md bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium transition">
+              名寄せ内訳
+            </button>
+            <button type="button" onclick="toggleGuide()" class="px-2.5 py-1 rounded-md bg-orange-50 hover:bg-orange-100 text-orange-700 border border-orange-200 font-bold transition">
+              抽出基準を見る
+            </button>
+          </div>
+          <button type="button" onclick="quickExportCurrent()" class="px-3 py-1 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-orange-400 border border-zinc-700 text-xs font-bold whitespace-nowrap transition">
+            表示中を即CSV出力
+          </button>
+        </div>
+
+        <div id="guideBody" class="hidden px-3 py-2 rounded-lg border border-orange-100 text-xs text-gray-600 space-y-1 bg-orange-50/40">
+          <p id="guideTitle" class="font-bold text-orange-700">【3日以内 未FIX人材】の抽出基準</p>
+          <p id="guideDesc"></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex flex-wrap items-center justify-between gap-2 px-1 text-xs text-gray-600">
+      <div class="flex flex-wrap items-center gap-2">
+        <span class="font-bold text-gray-900" id="resultCountText">該当: 0件</span>
+        <span class="text-gray-400">|</span>
+        <span id="jobMasterSummary" class="font-semibold text-emerald-700">searchOrder案件同期中...</span>
+        <span id="gsiStatusSummary" class="text-sky-700 font-medium"></span>
+        <span id="autoExcludedSummary" class="text-rose-600 font-medium"></span>
+      </div>
+      <div class="flex flex-wrap items-center gap-1.5">
+        <button type="button" onclick="quickExportCurrent()" class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-black shadow-sm transition">
+          📥 表示中を即CSV出力
+        </button>
+        <button type="button" onclick="openModal('exportModal')" class="px-2.5 py-1 rounded-lg bg-zinc-800 hover:bg-zinc-900 text-orange-400 text-[11px] font-bold transition">
+          詳細CSV出力（全タブ一括・元列連結）
+        </button>
+      </div>
+    </div>
+
+    <div id="candidateList" class="space-y-3 pb-4"></div>
+
+    <div id="paginationBox" class="hidden pb-12 text-center">
+      <button type="button" onclick="loadMoreItems()" id="loadMoreBtn" class="px-6 py-3 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-orange-400 font-black text-xs shadow-md transition">
+        さらに次の50件を表示する
+      </button>
+    </div>
+  </main>
+
+  <div id="msgModal" class="hidden fixed inset-0 z-50 modal-backdrop flex items-center justify-center p-3">
+    <div class="bg-white rounded-2xl max-w-2xl w-full shadow-2xl border border-gray-200 overflow-hidden flex flex-col max-h-[92vh]">
+      <div class="bg-zinc-950 text-white px-5 py-3.5 flex items-center justify-between">
+        <div>
+          <span id="modalTabBadge" class="text-[11px] px-2 py-0.5 rounded bg-orange-500 text-zinc-950 font-black mr-2">追客</span>
+          <span id="modalCandidateName" class="font-bold text-base">氏名</span>
+        </div>
+        <button type="button" onclick="closeModal('msgModal')" class="text-gray-400 hover:text-white text-xl font-bold px-2">×</button>
+      </div>
+      <div class="p-4 sm:p-5 overflow-y-auto space-y-3 text-xs">
+        <div class="flex flex-wrap items-center justify-between gap-2 bg-gray-100 p-2.5 rounded-xl border border-gray-200">
+          <div class="inline-flex rounded-lg bg-white p-0.5 border border-gray-300">
+            <button type="button" onclick="setMsgMode('normal')" id="btnModeNormal" class="px-3 py-1 rounded-md text-xs font-black bg-zinc-900 text-orange-400 transition">📄 通常版（標準文面）</button>
+            <button type="button" onclick="setMsgMode('short')" id="btnModeShort" class="px-3 py-1 rounded-md text-xs font-bold text-gray-600 hover:text-gray-900 transition">📱 SMS短縮版（分割防止）</button>
+          </div>
+          <label class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white border border-indigo-200 font-bold text-indigo-900 cursor-pointer">
+            <input type="checkbox" id="modalNightShiftCheck" onchange="onModalShiftToggle()" class="accent-indigo-600 w-3.5 h-3.5" />
+            <span>🌙 夜勤求人で作成</span>
+          </label>
+        </div>
+
+        <div id="shuffleReasonBox" class="hidden bg-orange-50 border border-orange-200 rounded-xl p-3 flex flex-wrap items-center justify-between gap-2">
+          <div class="flex-1 min-w-[200px]">
+            <span class="font-bold text-orange-800 block mb-0.5">選択中の先方連絡理由（4パターン）：</span>
+            <span id="currentReasonText" class="font-medium text-gray-900"></span>
+          </div>
+          <button type="button" onclick="shuffleReason()" class="px-3 py-1.5 rounded-lg bg-orange-500 hover:bg-orange-600 text-zinc-950 font-black transition shadow-sm whitespace-nowrap">
+            🔄 別パターンに切替
+          </button>
+        </div>
+        <div id="remindNoticeBox" class="hidden bg-amber-50 border border-amber-300 rounded-xl p-3 text-amber-900 font-bold">
+          🔔 激熱掘起：初回送信の翌日リマインド対象です。送信すると30日間（1ヶ月）自動で非表示（クールダウン）になります。
+        </div>
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <label class="font-bold text-gray-700">送信メッセージ文面（編集可能）</label>
+            <span id="modalSalutationInfo" class="text-[11px] text-orange-600 font-bold"></span>
+          </div>
+          <textarea id="modalMessageText" rows="12" class="w-full rounded-xl border border-gray-300 p-3 text-xs sm:text-sm leading-relaxed focus:outline-none focus:border-orange-500 font-sans"></textarea>
+        </div>
+      </div>
+      <div class="bg-gray-50 px-5 py-3.5 border-t border-gray-200 flex flex-wrap items-center justify-end gap-2">
+        <button type="button" onclick="closeModal('msgModal')" class="px-3.5 py-2 rounded-xl border border-gray-300 text-gray-700 text-xs font-bold hover:bg-gray-100">閉じる</button>
+        <button type="button" onclick="copyMessageOnly()" class="px-3.5 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-bold">文面コピー</button>
+        <button type="button" onclick="copyAndRecordAction()" class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-zinc-950 text-xs font-black shadow-sm">📋 コピー＆完了記録</button>
+        <button type="button" onclick="launchSmsAndRecordModal()" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black shadow">📱 SMS起動＆コピー＆完了記録</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="csvModal" class="hidden fixed inset-0 z-50 modal-backdrop flex items-center justify-center p-3">
+    <div class="bg-white rounded-2xl max-w-xl w-full shadow-2xl border border-gray-200 overflow-hidden">
+      <div class="bg-zinc-950 text-white px-5 py-3.5 flex items-center justify-between">
+        <h2 class="font-bold text-base">CSV読込・外部データ（data.js）書き出し</h2>
+        <button type="button" onclick="closeModal('csvModal')" class="text-gray-400 hover:text-white text-xl font-bold px-2">×</button>
+      </div>
+      <div class="p-5 space-y-4 text-xs">
+        <div class="bg-orange-50 border border-orange-200 rounded-xl p-3 flex items-center justify-between gap-2">
+          <div>
+            <p class="font-bold text-gray-900">1. Refoから全列CSVをダウンロード</p>
+            <p class="text-[11px] text-gray-600">B列（2列目）を「最終ステータス」として自動参照し、不要な空列を自動軽量化して読み込みます</p>
+          </div>
+          <a href="https://refo.link/haken-oubo/applications" target="_blank" rel="noopener noreferrer"
+             class="px-3 py-2 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-orange-400 font-bold whitespace-nowrap shadow-sm">
+            📥 Refo応募一覧を開く ↗
+          </a>
+        </div>
+        <div id="dropZone" onclick="document.getElementById('csvFileInput').click()"
+             class="border-2 border-dashed border-gray-300 hover:border-orange-500 rounded-2xl p-7 text-center cursor-pointer transition bg-gray-50 hover:bg-orange-50/30">
+          <p class="font-black text-sm text-gray-800 mb-1">2. クリックして全列CSVファイルを選択</p>
+          <p class="text-gray-500">またはここにCSVファイルをドラッグ＆ドロップ（UTF-8 / Shift-JIS自動判定）</p>
+          <input type="file" id="csvFileInput" accept=".csv" class="hidden" onchange="handleCsvFileSelect(event)" />
+        </div>
+        <div class="bg-zinc-900 text-white rounded-xl p-3.5 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-orange-400">📦 チーム配布・軽量化用 data.js 書き出し</span>
+            <span class="text-[10px] text-zinc-400">超軽量圧縮済み</span>
+          </div>
+          <p class="text-[11px] text-zinc-300">読み込んだCSVから不要な空白列を省き、爆速読み込みできる <code class="text-orange-300">data.js</code> として書き出します。</p>
+          <button type="button" onclick="exportDataJsFile()" class="w-full py-2 rounded-lg bg-orange-500 hover:bg-orange-600 text-zinc-950 font-black transition">
+            📦 軽量化済み data.js を書き出し
+          </button>
+        </div>
+        <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-gray-100">
+          <button type="button" onclick="resetToDemoData()" class="px-3 py-1.5 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-100 font-medium">デモデータに戻す</button>
+          <button type="button" onclick="clearActionHistory()" class="px-3 py-1.5 rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 font-medium">送信・クールダウン履歴をリセット</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="exportModal" class="hidden fixed inset-0 z-50 modal-backdrop flex items-center justify-center p-3">
+    <div class="bg-white rounded-2xl max-w-3xl w-full shadow-2xl border border-gray-200 overflow-hidden flex flex-col max-h-[92vh]">
+      <div class="bg-zinc-950 text-white px-5 py-3.5 flex items-center justify-between">
+        <h2 class="font-bold text-base">📥 Excel・一斉SMS配信ツール対応 CSVエクスポート</h2>
+        <button type="button" onclick="closeModal('exportModal')" class="text-gray-400 hover:text-white text-xl font-bold px-2">×</button>
+      </div>
+      <div class="p-4 sm:p-5 overflow-y-auto space-y-4 text-xs">
+        <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-3 space-y-2">
+          <p class="font-black text-emerald-900">⚡ ワンクリック即ダウンロード（よく使う出力）</p>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <button type="button" onclick="quickPresetExport('current', false)" class="py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black shadow-sm transition text-center">
+              ① 今の表示条件を即DL
+            </button>
+            <button type="button" onclick="quickPresetExport('allTabs', false)" class="py-2.5 px-3 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-orange-400 font-black shadow-sm transition text-center">
+              ② 全5タブ一括（未対応）即DL
+            </button>
+            <button type="button" onclick="quickPresetExport('current', true)" class="py-2.5 px-3 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-black shadow-sm transition text-center">
+              📱 SMS配信用（TEL＋文面のみ）
+            </button>
+          </div>
+        </div>
+
+        <div class="border-t border-gray-200 pt-3 space-y-3">
+          <p class="font-bold text-gray-800">カスタム条件でプレビュー＆ダウンロード</p>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <label class="border rounded-xl p-3 cursor-pointer hover:border-orange-500 flex items-start gap-2 bg-orange-50/40 border-orange-300">
+              <input type="radio" name="exportScope" value="current" checked onchange="updateExportPreview()" class="mt-0.5 accent-orange-500" />
+              <div><p class="font-bold text-gray-900">① 現在の表示条件</p><p class="text-[11px] text-gray-500">選択中エリア・タブ・検索条件通り</p></div>
+            </label>
+            <label class="border border-gray-200 rounded-xl p-3 cursor-pointer hover:border-orange-500 flex items-start gap-2">
+              <input type="radio" name="exportScope" value="tabAll" onchange="updateExportPreview()" class="mt-0.5 accent-orange-500" />
+              <div><p class="font-bold text-gray-900">② 現在のタブ全件</p><p class="text-[11px] text-gray-500">選択中エリアの現タブ全件</p></div>
+            </label>
+            <label class="border border-gray-200 rounded-xl p-3 cursor-pointer hover:border-orange-500 flex items-start gap-2">
+              <input type="radio" name="exportScope" value="allTabs" onchange="updateExportPreview()" class="mt-0.5 accent-orange-500" />
+              <div><p class="font-bold text-gray-900">③ 全5タブ一括出力</p><p class="text-[11px] text-gray-500">全追客対象をまとめて1ファイル化</p></div>
+            </label>
+          </div>
+          <div class="flex flex-wrap items-center gap-4 bg-gray-50 p-3 rounded-xl border border-gray-200">
+            <label class="flex items-center gap-2 font-bold text-gray-800 cursor-pointer">
+              <input type="checkbox" id="exportUnactedOnly" checked onchange="updateExportPreview()" class="accent-orange-500 w-4 h-4" />
+              <span>未対応のみ出力する</span>
+            </label>
+            <label class="flex items-center gap-2 font-bold text-gray-800 cursor-pointer">
+              <input type="checkbox" id="exportIncludeRaw" onchange="updateExportPreview()" class="accent-orange-500 w-4 h-4" />
+              <span>元CSVの全列を後ろに連結して出力</span>
+            </label>
+            <label class="flex items-center gap-2 font-bold text-sky-900 cursor-pointer">
+              <input type="checkbox" id="exportSmsSlimOnly" onchange="updateExportPreview()" class="accent-sky-600 w-4 h-4" />
+              <span>SMS配信ツール用（電話番号・氏名・送信文面のみ）</span>
+            </label>
+          </div>
+          <div>
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="font-bold text-gray-800">出力プレビュー（先頭3件）</span>
+              <span id="exportTargetCountBadge" class="font-black text-orange-600">対象: 0件</span>
+            </div>
+            <div class="overflow-x-auto border border-gray-200 rounded-xl">
+              <table class="min-w-full text-[11px] text-left">
+                <thead class="bg-zinc-900 text-white">
+                  <tr>
+                    <th class="px-2.5 py-2">追客区分</th>
+                    <th class="px-2.5 py-2">対応状況</th>
+                    <th class="px-2.5 py-2">氏名</th>
+                    <th class="px-2.5 py-2">宛名</th>
+                    <th class="px-2.5 py-2">電話番号</th>
+                    <th class="px-2.5 py-2">担当支店</th>
+                    <th class="px-2.5 py-2">候補BO(施設形態・距離入)</th>
+                  </tr>
+                </thead>
+                <tbody id="exportPreviewBody" class="divide-y divide-gray-200 bg-white"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="bg-gray-50 px-5 py-3.5 border-t border-gray-200 flex items-center justify-end gap-2">
+        <button type="button" onclick="closeModal('exportModal')" class="px-4 py-2 rounded-xl border border-gray-300 text-gray-700 text-xs font-bold">閉じる</button>
+        <button type="button" onclick="executeCsvExport()" class="px-5 py-2 rounded-xl bg-orange-500 hover:bg-orange-600 text-zinc-950 text-xs font-black shadow">📥 指定条件でCSVダウンロード</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="urlModal" class="hidden fixed inset-0 z-50 modal-backdrop flex items-center justify-center p-3">
+    <div class="bg-white rounded-2xl max-w-xl w-full shadow-2xl border border-gray-200 overflow-hidden">
+      <div class="bg-zinc-950 text-white px-5 py-3.5 flex items-center justify-between">
+        <h2 class="font-bold text-base">searchOrder 案件マスタ自動連携・外部データ設定</h2>
+        <button type="button" onclick="closeModal('urlModal')" class="text-gray-400 hover:text-white text-xl font-bold px-2">×</button>
+      </div>
+      <div class="p-5 space-y-4 text-xs">
+        <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-3 space-y-1.5">
+          <p class="font-bold text-emerald-900">✅ searchOrder 公開データ＋国土地理院APIとの自動連携</p>
+          <p class="text-[11px] text-emerald-800">起動時に自動で searchOrder の案件・座標辞書を取得し、さらに画面表示中の求職者は国土地理院APIで番地ピンポイント座標に自動補正します。</p>
+          <button type="button" onclick="syncFromSearchOrderPublic(true)" class="mt-1 px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold">🔄 今すぐ searchOrder 最新案件を再同期する</button>
+        </div>
+        <div>
+          <label class="block font-bold text-gray-800 mb-1">① 外部求職者データURL（別サイトの data.js / JSON）</label>
+          <div class="flex gap-2">
+            <input type="text" id="externalDataUrlInput" placeholder="https://kawazoedaichi.github.io/staff/data.js" class="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-xs" />
+            <button type="button" onclick="saveAndLoadExternalDataUrl()" class="px-3.5 py-2 rounded-lg bg-zinc-900 text-orange-400 font-bold">読込・保存</button>
+          </div>
+        </div>
+        <div class="border-t border-gray-200 pt-3 space-y-2">
+          <label class="block font-bold text-gray-800">② カスタム案件マスタURL（変更する場合のみ）</label>
+          <div class="flex gap-2">
+            <input type="text" id="jobMasterUrlInput" value="https://kawazoedaichi.github.io/searchOrder/jobs.json" class="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-xs" />
+            <button type="button" onclick="fetchJobMasterFromUrl()" class="px-3.5 py-2 rounded-lg bg-orange-500 text-zinc-950 font-black">URLから同期</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="githubModal" class="hidden fixed inset-0 z-50 modal-backdrop flex items-center justify-center p-3">
+    <div class="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-gray-200 overflow-hidden">
+      <div class="bg-zinc-950 text-white px-5 py-3.5 flex items-center justify-between">
+        <h2 class="font-bold text-base text-emerald-400">🚀 GitHub自動反映・端末間履歴共有設定</h2>
+        <button type="button" onclick="closeModal('githubModal')" class="text-gray-400 hover:text-white text-xl font-bold px-2">×</button>
+      </div>
+      <div class="p-5 space-y-3 text-xs">
+        <p class="text-gray-600 leading-relaxed">Token を設定しておくと、①CSV更新時の <strong><code>data.js</code></strong> 反映だけでなく、②日々の「完了」「除外」操作も <strong><code>history.json</code></strong> に自動保存され、別のパソコンやスマホからも完了済が即共有されます。</p>
+        <div class="space-y-2 bg-gray-50 p-3.5 rounded-xl border border-gray-200">
+          <div>
+            <label class="block font-bold text-gray-700 mb-0.5">GitHub リポジトリ（オーナー/リポジトリ名）</label>
+            <input type="text" id="ghRepoInput" value="kawazoedaichi/staff" class="w-full rounded-lg border border-gray-300 px-3 py-1.5 bg-white" />
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block font-bold text-gray-700 mb-0.5">ブランチ名</label>
+              <input type="text" id="ghBranchInput" value="main" class="w-full rounded-lg border border-gray-300 px-3 py-1.5 bg-white" />
+            </div>
+            <div>
+              <label class="block font-bold text-gray-700 mb-0.5">更新ファイルパス</label>
+              <input type="text" id="ghPathInput" value="data.js" class="w-full rounded-lg border border-gray-300 px-3 py-1.5 bg-white" />
+            </div>
+          </div>
+          <div>
+            <label class="block font-bold text-gray-700 mb-0.5">GitHub Personal Access Token（完了・除外の自動同期にも使用）</label>
+            <input type="password" id="ghTokenInput" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" class="w-full rounded-lg border border-gray-300 px-3 py-1.5 bg-white" />
+          </div>
+        </div>
+        <div class="flex flex-wrap items-center justify-between gap-2 pt-2">
+          <button type="button" onclick="saveGithubConfig()" class="px-3.5 py-2 rounded-lg border border-gray-300 text-gray-700 font-bold hover:bg-gray-100">設定保存＆履歴同期</button>
+          <button type="button" onclick="pushDataJsToGithub()" id="ghPushBtn" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black shadow transition">🚀 GitHubの data.js を今すぐ自動更新</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="excludedModal" class="hidden fixed inset-0 z-50 modal-backdrop flex items-center justify-center p-3">
+    <div class="bg-white rounded-2xl max-w-2xl w-full shadow-2xl border border-gray-200 overflow-hidden flex flex-col max-h-[88vh]">
+      <div class="bg-zinc-950 text-white px-5 py-3.5 flex items-center justify-between">
+        <h2 class="font-bold text-base">除外済リスト（端末間共有・永続保存）</h2>
+        <button type="button" onclick="closeModal('excludedModal')" class="text-gray-400 hover:text-white text-xl font-bold px-2">×</button>
+      </div>
+      <div class="p-4 overflow-y-auto space-y-2 text-xs" id="excludedListContainer"></div>
+      <div class="bg-gray-50 px-5 py-3 border-t border-gray-200 flex justify-end">
+        <button type="button" onclick="closeModal('excludedModal')" class="px-4 py-1.5 rounded-lg bg-zinc-900 text-white font-bold text-xs">閉じる</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="mergeInfoModal" class="hidden fixed inset-0 z-50 modal-backdrop flex items-center justify-center p-3">
+    <div class="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-gray-200 overflow-hidden">
+      <div class="bg-zinc-950 text-white px-5 py-3.5 flex items-center justify-between">
+        <h2 class="font-bold text-base">名寄せ・重複除外・履歴同期内訳</h2>
+        <button type="button" onclick="closeModal('mergeInfoModal')" class="text-gray-400 hover:text-white text-xl font-bold px-2">×</button>
+      </div>
+      <div id="mergeInfoBody" class="p-5 space-y-2.5 text-xs text-gray-700"></div>
+      <div class="bg-gray-50 px-5 py-3 border-t border-gray-200 flex justify-end">
+        <button type="button" onclick="closeModal('mergeInfoModal')" class="px-4 py-1.5 rounded-lg bg-zinc-900 text-white font-bold text-xs">閉じる</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="rawRowModal" class="hidden fixed inset-0 z-50 modal-backdrop flex items-center justify-center p-3">
+    <div class="bg-white rounded-2xl max-w-2xl w-full shadow-2xl border border-gray-200 overflow-hidden flex flex-col max-h-[88vh]">
+      <div class="bg-zinc-950 text-white px-5 py-3.5 flex items-center justify-between">
+        <h2 id="rawRowModalTitle" class="font-bold text-base">元CSV 全列データ詳細</h2>
+        <button type="button" onclick="closeModal('rawRowModal')" class="text-gray-400 hover:text-white text-xl font-bold px-2">×</button>
+      </div>
+      <div class="px-5 py-2 bg-gray-100 border-b border-gray-200 flex items-center justify-between text-xs">
+        <label class="flex items-center gap-1.5 font-bold text-gray-700 cursor-pointer">
+          <input type="checkbox" id="rawHideEmpty" checked onchange="renderCurrentRawModal()" class="accent-orange-500" />
+          <span>値が入っている列のみ表示</span>
+        </label>
+        <span id="rawColCountText" class="text-gray-500"></span>
+      </div>
+      <div id="rawRowModalBody" class="p-4 overflow-y-auto divide-y divide-gray-100 text-xs"></div>
+    </div>
+  </div>
+
+    <!-- 12秒間 即時取り消し＆短縮版再送トーストバー（連続送信の邪魔をしない画面下部スリムバー） -->
+  <div id="undoToastBar" class="hidden fixed bottom-3 left-1/2 -translate-x-1/2 z-40 w-[95%] max-w-lg bg-zinc-950/95 text-white border border-orange-500/70 rounded-xl px-3 py-2 shadow-2xl flex items-center justify-between gap-2 text-xs">
+    <div class="truncate">
+      <span id="undoToastText" class="font-bold text-emerald-400">✅ 記録済</span>
+      <span id="undoToastCountdown" class="text-[11px] text-zinc-400 ml-1">(12秒)</span>
+    </div>
+    <div class="flex items-center gap-1.5 shrink-0">
+      <button type="button" onclick="undoLastSentAction()" class="px-2.5 py-1 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-white border border-zinc-600 font-bold">↩ 戻す</button>
+      <button type="button" onclick="resendLastAsShortSms()" class="px-2.5 py-1 rounded-lg bg-orange-500 hover:bg-orange-600 text-zinc-950 font-black">📱 短縮版で再送</button>
+    </div>
+  </div>
+
+  <div id="popupModal" class="hidden fixed inset-0 z-50 modal-backdrop flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl border-2 border-orange-500 p-6 text-center space-y-3">
+      <div class="w-12 h-12 rounded-full bg-orange-100 text-orange-600 font-black text-2xl flex items-center justify-center mx-auto">✓</div>
+      <h3 id="popupTitle" class="font-black text-lg text-gray-900">完了しました</h3>
+      <p id="popupMessage" class="text-xs text-gray-600 leading-relaxed whitespace-pre-line"></p>
+      <div class="pt-2">
+        <button type="button" onclick="closeModal('popupModal')" class="w-full py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-orange-400 font-black text-sm shadow">OK</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+(function() {
+  var CR = String.fromCharCode(13);
+  var LF = String.fromCharCode(10);
+  var CRLF = CR + LF;
+  var DQ = String.fromCharCode(34);
+  var SQ = String.fromCharCode(39);
+  var AMP = String.fromCharCode(38);
+
+  var SEARCH_ORDER_JOBS_URL = 'https://kawazoedaichi.github.io/searchOrder/jobs.json';
+  var SEARCH_ORDER_DICT_URL = 'https://kawazoedaichi.github.io/searchOrder/coords_dict.json';
+  var GSI_SEARCH_URL = 'https://msearch.gsi.go.jp/address-search/AddressSearch?q=';
+
+  var STORAGE_KEYS = {
+    ACTION_LOGS: 'bstyle_staff_action_logs_v5',
+    EXCLUDED_LIST: 'bstyle_staff_excluded_v5',
+    CANDIDATE_CACHE: 'bstyle_staff_candidates_v5',
+    GSI_CACHE: 'bstyle_staff_gsi_cache_v5',
+    SETTINGS: 'bstyle_staff_settings_v5'
+  };
+
+  var KANTO_BRANCHES = ['東京東', '本社', '埼玉', '神奈川'];
+  var ACTIVE_OR_PENDING_KEYWORDS = ['稼働中', '稼動中', '就業中', '職見待ち', '職場見学待ち', '職見', '内定待ち', '採用待ち', '入社待ち', '決定', '成約'];
+
+  var PREF_COORDS = {
+    "北海道":[43.0642,141.3469],"青森県":[40.8244,140.74],"岩手県":[39.7036,141.1527],"宮城県":[38.2688,140.8721],
+    "秋田県":[39.7186,140.1024],"山形県":[38.2404,140.3633],"福島県":[37.75,140.4678],"茨城県":[36.3418,140.4468],
+    "栃木県":[36.5657,139.8836],"群馬県":[36.3907,139.0604],"埼玉県":[35.8569,139.6489],"千葉県":[35.6051,140.1233],
+    "東京都":[35.6895,139.6917],"神奈川県":[35.4478,139.6425],"新潟県":[37.9026,139.0232],"富山県":[36.6953,137.2113],
+    "石川県":[36.5947,136.6256],"福井県":[36.0652,136.2216],"山梨県":[35.6642,138.5684],"長野県":[36.6513,138.181],
+    "岐阜県":[35.3912,136.7223],"静岡県":[34.9769,138.3831],"愛知県":[35.1802,136.9066],"三重県":[34.7303,136.5086],
+    "滋賀県":[35.0045,135.8686],"京都府":[35.0214,135.7556],"大阪府":[34.6863,135.52],"兵庫県":[34.6913,135.183],
+    "奈良県":[34.6851,135.8327],"和歌山県":[34.226,135.1675],"鳥取県":[35.5039,134.2377],"島根県":[35.4723,133.0505],
+    "岡山県":[34.6618,133.9344],"広島県":[34.3966,132.4596],"山口県":[34.1859,131.4706],"徳島県":[34.0658,134.5593],
+    "香川県":[34.3401,134.0434],"愛媛県":[33.8416,132.7657],"高知県":[33.5597,133.5311],"福岡県":[33.6064,130.4183],
+    "佐賀県":[33.2494,130.2988],"長崎県":[32.7448,129.8737],"熊本県":[32.7898,130.7417],"大分県":[33.2382,131.6126],
+    "宮崎県":[31.9111,131.4239],"鹿児島県":[31.5602,130.5581],"沖縄県":[26.2124,127.6809]
+  };
+
+  var SLIDE_REASONS_3DAYS = [
+    '先日お話しさせていただいた応募求人について、先ほど先方から連絡があり、急きょ他の方で募集枠が埋まってしまったとのことでした。',
+    '先日お話しさせていただいた応募求人について、先ほど先方から連絡があり、今回の募集枠が一時停止となってしまったとのことでした。',
+    '先日お話しさせていただいた応募求人について、先ほど先方から連絡があり、現在のシフト体制の都合で今回は見送りとなってしまったとのことでした。',
+    '先日お話しさせていただいた応募求人について、先ほど先方から連絡があり、タッチの差で選考が終了してしまったとのことでした。'
+  ];
+
+  var PAGE_SIZE = 50;
+
+  var state = {
+    currentTab: 'within3days',
+    currentArea: 'kanto',
+    displayLimit: PAGE_SIZE,
+    rawCandidates: [],
+    mergedCandidates: [],
+    activePhonesSet: new Set(),
+    activePersonsList: [],
+    autoExcludedCount: 0,
+    mergedDupCount: 0,
+    csvHeaders: [],
+    townCoordsDict: {},
+    dictReady: false,
+    searchOrderJobs: [],
+    jobsReady: false,
+    gsiCache: {},
+    gsiQueueRunning: false,
+    actionLogs: {},
+    excludedMap: {},
+    historyPushTimer: null,
+    settings: {
+      externalDataUrl: '',
+      jobMasterUrl: SEARCH_ORDER_JOBS_URL,
+      ghRepo: 'kawazoedaichi/staff',
+      ghBranch: 'main',
+      ghPath: 'data.js',
+      ghToken: ''
+    },
+    modalTarget: null,
+    modalMode: 'normal',
+    currentReasonIdx: 0,
+    currentRawCandidate: null,
+    lastUndoKey: null,
+    lastUndoPrevLog: null,
+    undoToastTimer: null,
+    undoToastInterval: null
+  };
+
+  function utf8ToBase64(str) {
+    var bytes = new TextEncoder().encode(str);
+    var bin = '';
+    var chunk = 8192;
+    for (var i = 0; i < bytes.length; i += chunk) {
+      bin += String.fromCharCode.apply(null, bytes.subarray(i, i + chunk));
+    }
+    return btoa(bin);
+  }
+
+  function idbGet(key) {
+    return new Promise(function(resolve) {
+      try {
+        var req = indexedDB.open('bstyleStaffGeoDB', 1);
+        req.onupgradeneeded = function() { req.result.createObjectStore('kv'); };
+        req.onsuccess = function() {
+          var tx = req.result.transaction('kv', 'readonly');
+          var g = tx.objectStore('kv').get(key);
+          g.onsuccess = function() { resolve(g.result || null); };
+          g.onerror = function() { resolve(null); };
+        };
+        req.onerror = function() { resolve(null); };
+      } catch (e) { resolve(null); }
+    });
+  }
+  function idbSet(key, val) {
+    return new Promise(function(resolve) {
+      try {
+        var req = indexedDB.open('bstyleStaffGeoDB', 1);
+        req.onupgradeneeded = function() { req.result.createObjectStore('kv'); };
+        req.onsuccess = function() {
+          var tx = req.result.transaction('kv', 'readwrite');
+          tx.objectStore('kv').put(val, key);
+          tx.oncomplete = function() { resolve(true); };
+          tx.onerror = function() { resolve(false); };
+        };
+        req.onerror = function() { resolve(false); };
+      } catch (e) { resolve(false); }
+    });
+  }
+
+  function kanjiChomeToNum(str) {
+    if (!str) return '';
+    var digitMap = { '〇':'0', '一':'1', '二':'2', '三':'3', '四':'4', '五':'5', '六':'6', '七':'7', '八':'8', '九':'9' };
+    var s = String(str).normalize('NFKC')
+      .replace(/[‐‑‒–—―ー−]/g, '-')
+      .replace(/ヶ/g, 'ケ').replace(/之/g, 'ノ').replace(/ッ/g, 'ツ');
+    s = s.replace(/十([一二三四五六七八九])丁目/g, function(_, d) { return '1' + digitMap[d] + '-'; });
+    s = s.replace(/([二三四五六七八九])十([一二三四五六七八九])丁目/g, function(_, d1, d2) { return digitMap[d1] + digitMap[d2] + '-'; });
+    s = s.replace(/([二三四五六七八九])十丁目/g, function(_, d) { return digitMap[d] + '0-'; });
+    s = s.replace(/十丁目/g, '10-');
+    s = s.replace(/([一二三四五六七八九])丁目/g, function(_, d) { return digitMap[d] + '-'; });
+    s = s.replace(/(\d+)丁目/g, '$1-');
+    return s;
+  }
+
+  function cleanAddressForGsi(addr) {
+    if (!addr) return '';
+    var s = String(addr).normalize('NFKC').trim();
+    s = s.replace(/[\s　]+[^\s　]*(アパート|マンション|ハイツ|コーポ|メゾン|レジデンス|ビル|荘|館|棟|号室|号).*$/, '');
+    s = s.replace(/(\d+-\d+-\d+)[\s　]+.*$/, '$1');
+    s = s.replace(/(\d+-\d+)[\s　]+.*$/, '$1');
+    return s.trim();
+  }
+
+  function extractPrefFromAddress(addr, prefHint) {
+    if (prefHint && state.townCoordsDict[prefHint]) return prefHint;
+    if (prefHint && PREF_COORDS[prefHint]) return prefHint;
+    var s = String(addr || '');
+    var prefs = Object.keys(PREF_COORDS);
+    for (var i = 0; i < prefs.length; i++) {
+      if (s.indexOf(prefs[i]) !== -1) return prefs[i];
+    }
+    return prefHint || '';
+  }
+
+  function lookupCoordsFromDict(prefHint, address) {
+    var cacheKey = cleanAddressForGsi((prefHint || '') + (address || ''));
+    if (cacheKey && state.gsiCache[cacheKey]) {
+      var cached = state.gsiCache[cacheKey];
+      return { lat: cached.lat, lng: cached.lng, isCoarse: false, isGsi: true, matched: cached.title || cacheKey };
+    }
+
+    var pref = extractPrefFromAddress(address, prefHint);
+    if (!pref || !state.townCoordsDict[pref]) {
+      if (pref && PREF_COORDS[pref]) {
+        return { lat: PREF_COORDS[pref][0], lng: PREF_COORDS[pref][1], isCoarse: true, matched: pref };
+      }
+      return null;
+    }
+    var prefObj = state.townCoordsDict[pref];
+    var sortedCityKeys = Object.keys(prefObj).sort(function(a, b) { return b.length - a.length; });
+    var cityKey = null;
+    var addrStr = String(address || '');
+
+    for (var i = 0; i < sortedCityKeys.length; i++) {
+      var k = sortedCityKeys[i];
+      var shortK = k.replace(/^.*郡/, '');
+      if (addrStr.indexOf(k) !== -1 || (shortK.length >= 2 && addrStr.indexOf(shortK) !== -1)) {
+        cityKey = k;
+        break;
+      }
+    }
+
+    if (!cityKey) {
+      if (PREF_COORDS[pref]) return { lat: PREF_COORDS[pref][0], lng: PREF_COORDS[pref][1], isCoarse: true, matched: pref };
+      return null;
+    }
+
+    var townsObj = prefObj[cityKey];
+    var townKeys = Object.keys(townsObj).sort(function(a, b) { return b.length - a.length; });
+    var addrBody = addrStr.replace(pref, '').replace(cityKey, '').trim();
+    var normAddr = kanjiChomeToNum(addrBody);
+
+    for (var j = 0; j < townKeys.length; j++) {
+      var t = townKeys[j];
+      var normT = kanjiChomeToNum(t);
+      if (addrBody.indexOf(t) !== -1 || normAddr.indexOf(normT) !== -1) {
+        return { lat: townsObj[t][0], lng: townsObj[t][1], isCoarse: false, matched: pref + cityKey + t };
+      }
+    }
+
+    for (var j2 = 0; j2 < townKeys.length; j2++) {
+      var t2 = townKeys[j2];
+      var strippedT = t2.replace(/^(大字|字)/, '');
+      if (strippedT.length >= 2) {
+        var normStripped = kanjiChomeToNum(strippedT);
+        if (addrBody.indexOf(strippedT) !== -1 || normAddr.indexOf(normStripped) !== -1) {
+          return { lat: townsObj[t2][0], lng: townsObj[t2][1], isCoarse: false, matched: pref + cityKey + t2 };
+        }
+      }
+    }
+
+    var addrBaseName = normAddr.replace(/[0-9\-]+.*$/, '').trim();
+    if (addrBaseName.length >= 2) {
+      var sameBase = townKeys.filter(function(t3) {
+        var baseT = kanjiChomeToNum(t3).replace(/^(大字|字)/, '').replace(/\d+-$/, '');
+        return baseT === addrBaseName;
+      });
+      if (sameBase.length > 0) {
+        var sLat = 0, sLng = 0;
+        sameBase.forEach(function(t3) { sLat += townsObj[t3][0]; sLng += townsObj[t3][1]; });
+        return {
+          lat: Number((sLat / sameBase.length).toFixed(6)),
+          lng: Number((sLng / sameBase.length).toFixed(6)),
+          isCoarse: false,
+          matched: pref + cityKey + addrBaseName
+        };
+      }
+    }
+
+    if (townKeys.length > 0) {
+      var sumLat = 0, sumLng = 0;
+      townKeys.forEach(function(t4) { sumLat += townsObj[t4][0]; sumLng += townsObj[t4][1]; });
+      return {
+        lat: Number((sumLat / townKeys.length).toFixed(5)),
+        lng: Number((sumLng / townKeys.length).toFixed(5)),
+        isCoarse: false,
+        matched: pref + cityKey
+      };
+    }
+    return null;
+  }
+
+  // 表示中の求職者のみ国土地理院APIで番地ピンポイント座標に補正（searchOrderと完全一致させる）
+  async function refineVisibleCandidatesWithGsi(visibleList) {
+    if (state.gsiQueueRunning) return;
+    var targets = visibleList.filter(function(c) {
+      if (!c.address || c.isGsiCoord) return false;
+      var q = cleanAddressForGsi((c.pref && c.address.indexOf(c.pref) === -1 ? c.pref : '') + c.address);
+      return q.length >= 5 && !state.gsiCache[q];
+    }).slice(0, 15);
+
+    if (targets.length === 0) return;
+    state.gsiQueueRunning = true;
+    var updated = false;
+
+    for (var i = 0; i < targets.length; i++) {
+      var c = targets[i];
+      var q = cleanAddressForGsi((c.pref && c.address.indexOf(c.pref) === -1 ? c.pref : '') + c.address);
+      if (!q || state.gsiCache[q]) continue;
+      try {
+        var res = await fetch(GSI_SEARCH_URL + encodeURIComponent(q));
+        if (res.ok) {
+          var data = await res.json();
+          if (Array.isArray(data) && data.length > 0 && data[0].geometry && Array.isArray(data[0].geometry.coordinates)) {
+            var coords = data[0].geometry.coordinates;
+            var title = (data[0].properties && data[0].properties.title) || q;
+            state.gsiCache[q] = { lat: coords[1], lng: coords[0], title: title };
+            c.lat = coords[1];
+            c.lng = coords[0];
+            c.isGsiCoord = true;
+            c.coordMatched = title;
+            updated = true;
+          } else {
+            state.gsiCache[q] = { lat: c.lat, lng: c.lng, title: c.coordMatched || q, fallback: true };
+          }
+        }
+      } catch (e) {}
+      await new Promise(function(r) { setTimeout(r, 120); });
+    }
+
+    state.gsiQueueRunning = false;
+    if (updated) {
+      try { localStorage.setItem(STORAGE_KEYS.GSI_CACHE, JSON.stringify(state.gsiCache)); } catch (e) {}
+      renderList(true);
+    }
+  }
+
+  function calcDistanceKm(lat1, lon1, lat2, lon2) {
+    if (lat1 == null || lon1 == null || lat2 == null || lon2 == null) return null;
+    var R = 6371;
+    var dLat = (lat2 - lat1) * Math.PI / 180;
+    var dLon = (lon2 - lon1) * Math.PI / 180;
+    var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  }
+
+  function formatSearchOrderJobAddress(j) {
+    var pref = j.pref || '';
+    var city = j.city || '';
+    var addr = j.address || '';
+    if (pref && addr.indexOf(pref) === 0) addr = addr.slice(pref.length);
+    if (city && addr.indexOf(city) === 0) addr = addr.slice(city.length);
+    return pref + city + addr;
+  }
+
+  function formatBoDateShort(dateStr, ts) {
+    var t = ts;
+    if (!t && dateStr) {
+      var m1 = String(dateStr).match(/(\d{1,2})月\s*(\d{1,2}),\s*(\d{4})/);
+      if (m1) return m1[3] + '/' + m1[1] + '/' + m1[2];
+      var p = Date.parse(String(dateStr).replace(/\//g, '-'));
+      if (!isNaN(p)) t = p;
+    }
+    if (t && t > 0) {
+      var d = new Date(t);
+      return d.getFullYear() + '/' + (d.getMonth() + 1) + '/' + d.getDate();
+    }
+    return String(dateStr || '-').slice(0, 10);
+  }
+
+  window.syncFromSearchOrderPublic = async function(showAlert) {
+    var summaryEl = document.getElementById('jobMasterSummary');
+    if (summaryEl) summaryEl.textContent = 'searchOrder 案件・座標辞書を同期中...';
+
+    try {
+      var cachedDict = await idbGet('coords_dict_v1');
+      if (cachedDict && cachedDict.data) {
+        state.townCoordsDict = cachedDict.data;
+        state.dictReady = true;
+      }
+      var cachedJobs = await idbGet('searchOrder_jobs_v1');
+      if (cachedJobs && Array.isArray(cachedJobs.jobs) && cachedJobs.jobs.length > 0) {
+        state.searchOrderJobs = cachedJobs.jobs;
+        state.jobsReady = true;
+        recomputeAllCandidateCoords();
+        renderList();
+      }
+
+      var jobsUrl = state.settings.jobMasterUrl || SEARCH_ORDER_JOBS_URL;
+      var results = await Promise.all([
+        fetch(SEARCH_ORDER_DICT_URL, { cache: 'no-cache' }).then(function(r) { return r.ok ? r.json() : null; }).catch(function() { return null; }),
+        fetch(jobsUrl, { cache: 'no-cache' }).then(function(r) { return r.ok ? r.json() : null; }).catch(function() { return null; })
+      ]);
+
+      var remoteDict = results[0];
+      var remoteJobs = results[1];
+
+      if (remoteDict && typeof remoteDict === 'object' && Object.keys(remoteDict).length > 0) {
+        state.townCoordsDict = remoteDict;
+        state.dictReady = true;
+        await idbSet('coords_dict_v1', { ts: Date.now(), data: remoteDict });
+      }
+
+      if (Array.isArray(remoteJobs) && remoteJobs.length > 0) {
+        var normalizedJobs = remoteJobs.map(function(j, idx) {
+          var fullAddr = formatSearchOrderJobAddress(j);
+          var lat = j.lat;
+          var lng = j.lng;
+          if ((lat == null || lng == null || isNaN(lat) || isNaN(lng)) && state.dictReady) {
+            var c = lookupCoordsFromDict(j.pref, fullAddr);
+            if (c) { lat = c.lat; lng = c.lng; }
+          }
+          return {
+            id: j.id || ('SO-' + idx),
+            name: j.facility || j.name || '施設名未設定',
+            address: fullAddr,
+            pref: j.pref || '',
+            jobType: j.jobType || '介護',
+            facilityType: extractRawFacilityType(j),
+            empType: j.empType || '派遣',
+            empTypes: Array.isArray(j.empTypes) ? j.empTypes : [j.empType || '派遣'],
+            shifts: Array.isArray(j.shifts) ? j.shifts : [],
+            date: j.date || '',
+            timestamp: j.timestamp || 0,
+            lat: lat,
+            lng: lng
+          };
+        });
+        state.searchOrderJobs = normalizedJobs;
+        state.jobsReady = true;
+        await idbSet('searchOrder_jobs_v1', { ts: Date.now(), jobs: normalizedJobs });
+      }
+
+      recomputeAllCandidateCoords();
+      renderList();
+
+      if (showAlert) {
+        closeModal('urlModal');
+        showPopup('searchOrder 同期完了！', 'searchOrder の最新案件 ' + state.searchOrderJobs.length.toLocaleString() + ' 件と高精度座標辞書を同期しました。');
+      }
+    } catch (e) {
+      if (summaryEl) summaryEl.textContent = '案件マスタ：同期待機（ネットワーク確認）';
+    }
+  };
+
+  function recomputeAllCandidateCoords() {
+    if (!state.mergedCandidates || state.mergedCandidates.length === 0) return;
+    state.mergedCandidates.forEach(function(c) {
+      var found = lookupCoordsFromDict(c.pref, c.address);
+      if (found) {
+        c.lat = found.lat;
+        c.lng = found.lng;
+        c.coordMatched = found.matched;
+        c.isCoarseCoord = found.isCoarse;
+        if (found.isGsi) c.isGsiCoord = true;
+      }
+    });
+  }
+
+  // GitHub上の history.json を自動同期（端末間の完了・除外共有）
+  window.syncHistoryFromGithub = async function(showToast) {
+    var badge = document.getElementById('historySyncBadge');
+    var repo = state.settings.ghRepo || 'kawazoedaichi/staff';
+    var branch = state.settings.ghBranch || 'main';
+    if (badge) badge.textContent = '履歴同期中...';
+
+    try {
+      var rawUrl = 'https://raw.githubusercontent.com/' + repo + '/' + encodeURIComponent(branch) + '/history.json?t=' + Date.now();
+      var res = await fetch(rawUrl, { cache: 'no-store' });
+      if (res.ok) {
+        var remoteData = await res.json();
+        var mergedLogs = Object.assign({}, remoteData.actionLogs || {}, state.actionLogs);
+        // リモート側が新しい場合は上書きマージ
+        if (remoteData.actionLogs) {
+          Object.keys(remoteData.actionLogs).forEach(function(k) {
+            var rItem = remoteData.actionLogs[k];
+            var lItem = state.actionLogs[k];
+            if (!lItem || (rItem.lastSentAt || 0) >= (lItem.lastSentAt || 0)) {
+              mergedLogs[k] = rItem;
+            }
+          });
+        }
+        state.actionLogs = mergedLogs;
+        state.excludedMap = Object.assign({}, remoteData.excludedMap || {}, state.excludedMap);
+        try {
+          localStorage.setItem(STORAGE_KEYS.ACTION_LOGS, JSON.stringify(state.actionLogs));
+          localStorage.setItem(STORAGE_KEYS.EXCLUDED_LIST, JSON.stringify(state.excludedMap));
+        } catch (e) {}
+        if (badge) badge.textContent = '✅ 履歴同期済';
+        renderList();
+        if (showToast) showPopup('履歴同期完了', 'GitHub上の最新の完了・除外履歴と同期しました。');
+      } else {
+        if (badge) badge.textContent = state.settings.ghToken ? '履歴待機(未作成)' : 'ローカル履歴のみ';
+      }
+    } catch (e) {
+      if (badge) badge.textContent = 'ローカル履歴のみ';
+    }
+  };
+
+  function scheduleHistoryPushToGithub() {
+    if (!state.settings.ghToken || !state.settings.ghRepo) return;
+    if (state.historyPushTimer) clearTimeout(state.historyPushTimer);
+    state.historyPushTimer = setTimeout(function() {
+      pushHistoryJsonToGithub();
+    }, 1200);
+  }
+
+  async function pushHistoryJsonToGithub() {
+    var ghRepo = state.settings.ghRepo;
+    var ghBranch = state.settings.ghBranch || 'main';
+    var ghToken = state.settings.ghToken;
+    if (!ghRepo || !ghToken) return;
+
+    var badge = document.getElementById('historySyncBadge');
+    if (badge) badge.textContent = '⏳ 履歴共有中...';
+
+    var headers = {
+      'Authorization': 'Bearer ' + ghToken,
+      'Accept': 'application/vnd.github+json',
+      'Content-Type': 'application/json'
+    };
+    var apiUrl = 'https://api.github.com/repos/' + ghRepo + '/contents/history.json';
+
+    try {
+      var sha = null;
+      var getRes = await fetch(apiUrl + '?ref=' + encodeURIComponent(ghBranch) + '&t=' + Date.now(), { headers: headers });
+      if (getRes.ok) {
+        var existingFile = await getRes.json();
+        sha = existingFile.sha;
+        try {
+          var decoded = decodeURIComponent(escape(atob(existingFile.content.replace(/\n/g, ''))));
+          var remoteJson = JSON.parse(decoded);
+          if (remoteJson.actionLogs) {
+            Object.keys(remoteJson.actionLogs).forEach(function(k) {
+              if (!state.actionLogs[k]) state.actionLogs[k] = remoteJson.actionLogs[k];
+            });
+          }
+          if (remoteJson.excludedMap) {
+            Object.keys(remoteJson.excludedMap).forEach(function(k) {
+              if (!state.excludedMap[k]) state.excludedMap[k] = remoteJson.excludedMap[k];
+            });
+          }
+        } catch (e) {}
+      }
+
+      var payload = {
+        updatedAt: new Date().toISOString(),
+        actionLogs: state.actionLogs,
+        excludedMap: state.excludedMap
+      };
+      var bodyObj = {
+        message: 'Sync history.json (' + Object.keys(state.actionLogs).length + ' logs)',
+        content: utf8ToBase64(JSON.stringify(payload)),
+        branch: ghBranch
+      };
+      if (sha) bodyObj.sha = sha;
+
+      var putRes = await fetch(apiUrl, {
+        method: 'PUT',
+        headers: headers,
+        body: JSON.stringify(bodyObj)
+      });
+      if (putRes.ok) {
+        if (badge) badge.textContent = '✅ 端末間共有済';
+      } else {
+        if (badge) badge.textContent = '⚠️ 履歴Push失敗';
+      }
+    } catch (e) {
+      if (badge) badge.textContent = '⚠️ 履歴同期エラー';
+    }
+  }
+
+  function loadPersistentStorage() {
+    try { var l = localStorage.getItem(STORAGE_KEYS.ACTION_LOGS); if (l) state.actionLogs = JSON.parse(l); } catch (e) {}
+    try { var x = localStorage.getItem(STORAGE_KEYS.EXCLUDED_LIST); if (x) state.excludedMap = JSON.parse(x); } catch (e) {}
+    try { var g = localStorage.getItem(STORAGE_KEYS.GSI_CACHE); if (g) state.gsiCache = JSON.parse(g); } catch (e) {}
+    try { var s = localStorage.getItem(STORAGE_KEYS.SETTINGS); if (s) state.settings = Object.assign({}, state.settings, JSON.parse(s)); } catch (e) {}
+
+    var elExt = document.getElementById('externalDataUrlInput');
+    if (elExt) elExt.value = state.settings.externalDataUrl || '';
+    var elJob = document.getElementById('jobMasterUrlInput');
+    if (elJob) elJob.value = state.settings.jobMasterUrl || SEARCH_ORDER_JOBS_URL;
+    var elRepo = document.getElementById('ghRepoInput');
+    if (elRepo) elRepo.value = state.settings.ghRepo || 'kawazoedaichi/staff';
+    var elBr = document.getElementById('ghBranchInput');
+    if (elBr) elBr.value = state.settings.ghBranch || 'main';
+    var elPa = document.getElementById('ghPathInput');
+    if (elPa) elPa.value = state.settings.ghPath || 'data.js';
+    var elTk = document.getElementById('ghTokenInput');
+    if (elTk) elTk.value = state.settings.ghToken || '';
+    var elUnacted = document.getElementById('filterUnactedOnly');
+    if (elUnacted) elUnacted.checked = true;
+  }
+
+  function saveActionLogs() {
+    try { localStorage.setItem(STORAGE_KEYS.ACTION_LOGS, JSON.stringify(state.actionLogs)); } catch (e) {}
+    scheduleHistoryPushToGithub();
+  }
+
+  function saveExcludedMap() {
+    try { localStorage.setItem(STORAGE_KEYS.EXCLUDED_LIST, JSON.stringify(state.excludedMap)); } catch (e) {}
+    scheduleHistoryPushToGithub();
+  }
+
+  function loadInitialData() {
+    var cachedCsv = null;
+    try { cachedCsv = localStorage.getItem(STORAGE_KEYS.CANDIDATE_CACHE); } catch (e) {}
+    if (cachedCsv) {
+      try {
+        var pc = JSON.parse(cachedCsv);
+        state.csvHeaders = pc.headers || [];
+        processCandidates(pc.candidates || [], 'CSV読込済 (全' + state.csvHeaders.length + '列)');
+        return;
+      } catch (e) {}
+    }
+
+    if (window.BSTYLE_APP_DATA && Array.isArray(window.BSTYLE_APP_DATA.demoCandidates) && window.BSTYLE_APP_DATA.demoCandidates.length > 0) {
+      state.csvHeaders = window.BSTYLE_APP_DATA.headers || Object.keys(window.BSTYLE_APP_DATA.demoCandidates[0].rawRow || {});
+      processCandidates(window.BSTYLE_APP_DATA.demoCandidates, window.BSTYLE_APP_DATA.sourceLabel || '外部 data.js 読込済');
+      return;
+    }
+
+    var fallbackSamples = [
+      { id: '01M4R001', name: '鈴木 恵美', kana: 'スズキ エミ', phone: '09011112222', dob: '1985-04-12', age: 41, address: '東京都世田谷区三軒茶屋1-22', pref: '東京都', branch: '東京東', staff: '山上 健太', qualification: '介護福祉士', jobType: '介護', status: 'アテンド済', finalStatus: 'FIX待ち', applyDate: '2026-11-10 10:00', attendDate: '2026-11-13 16:00', contactDate: '2026-11-13 16:00', startDate: '', shiftPref: '', conditions: 'シフト:早番・日勤 / 週4日 / 希望時給:1750円' }
+    ];
+    state.csvHeaders = ['応募者ID', '最終ステータス', '氏名', 'フリガナ', '電話番号', '生年月日', '年齢', '住所', '都道府県', '担当支店', 'アテンド担当ユーザー', '保有資格', '職種', 'ステータス', '応募日', 'アテンド日', '接触日時', '就業開始希望日', '把握済条件'];
+    processCandidates(fallbackSamples, 'デモデータ');
+  }
+
+  function normalizePhone(p) { return String(p || '').replace(/[^\d]/g, ''); }
+  function normalizeText(t) { return String(t || '').replace(/[\s　]+/g, '').trim(); }
+
+  function getColBFinalStatus(c) {
+    if (c.rawRow && state.csvHeaders && state.csvHeaders.length >= 2) {
+      var colBHeader = state.csvHeaders[1];
+      if (colBHeader && c.rawRow[colBHeader] !== undefined && String(c.rawRow[colBHeader]).trim() !== '') {
+        return String(c.rawRow[colBHeader]).trim();
+      }
+    }
+    if (c.rawRow && c.rawRow['最終ステータス'] !== undefined && String(c.rawRow['最終ステータス']).trim() !== '') {
+      return String(c.rawRow['最終ステータス']).trim();
+    }
+    return String(c.finalStatus || '').trim();
+  }
+
+  function isActiveOrPendingRecord(c) {
+    var bStatus = getColBFinalStatus(c);
+    var combined = (c.status || '') + ' ' + bStatus;
+    for (var i = 0; i < ACTIVE_OR_PENDING_KEYWORDS.length; i++) {
+      if (combined.indexOf(ACTIVE_OR_PENDING_KEYWORDS[i]) !== -1) return true;
+    }
+    return false;
+  }
+
+  function getPersonKey(c) {
+    var ph = normalizePhone(c.phone);
+    if (ph.length >= 9) return 'PH_' + ph;
+    var nk = normalizeText(c.kana || c.name);
+    var db = normalizeText(c.dob);
+    if (nk && db) return 'KD_' + nk + '_' + db;
+    return 'ID_' + (c.id || Math.random().toString(36).slice(2));
+  }
+
+  // 元データの「勤務可能シフト(夜勤)」列に丸（○/◯/〇/●/1/可/希望/✓等）がついているかで機械的に判定
+  function isCircleOrTruthyMark(val) {
+    var s = String(val || '').normalize('NFKC').trim();
+    if (!s) return false;
+    if (/^[-－ー―×✕✖✗✘不可なし無0falseFALSE]+$/i.test(s)) return false;
+    return true;
+  }
+
+  function isNightShiftCandidate(c) {
+    if (c.rawRow) {
+      if (c.rawRow['勤務可能シフト(夜勤)'] !== undefined) {
+        return isCircleOrTruthyMark(c.rawRow['勤務可能シフト(夜勤)']);
+      }
+      var keys = Object.keys(c.rawRow);
+      for (var i = 0; i < keys.length; i++) {
+        if (keys[i].indexOf('勤務可能シフト') !== -1 && keys[i].indexOf('夜勤') !== -1) {
+          return isCircleOrTruthyMark(c.rawRow[keys[i]]);
+        }
+      }
+    }
+    var sp = String(c.shiftPref || '').trim();
+    if (sp === '夜勤' || sp.indexOf('夜勤') !== -1) return true;
+    return false;
+  }
+
+  function processCandidates(rawList, badgeLabel) {
+    state.rawCandidates = rawList;
+    document.getElementById('dataSourceBadge').textContent = badgeLabel;
+    var mobBadge = document.getElementById('mobileDataBadge');
+    if (mobBadge) mobBadge.textContent = 'データ：' + badgeLabel;
+
+    var activePhones = new Set();
+    var activePersons = [];
+    rawList.forEach(function(c) {
+      var bSt = getColBFinalStatus(c);
+      if (bSt) c.finalStatus = bSt;
+      if (isActiveOrPendingRecord(c)) {
+        var ph = normalizePhone(c.phone);
+        if (ph.length >= 9) activePhones.add(ph);
+        activePersons.push({
+          name: normalizeText(c.name),
+          kana: normalizeText(c.kana),
+          address: normalizeText(c.address),
+          statusLabel: String(bSt || c.status || '稼働・待ち')
+        });
+      }
+    });
+    state.activePhonesSet = activePhones;
+    state.activePersonsList = activePersons;
+
+    var map = new Map();
+    var dupCount = 0;
+
+    rawList.forEach(function(item) {
+      var key = getPersonKey(item);
+      if (!map.has(key)) {
+        map.set(key, Object.assign({}, item, { personKey: key, mergedIds: [item.id], mergedCount: 1 }));
+      } else {
+        dupCount++;
+        var existing = map.get(key);
+        existing.mergedCount += 1;
+        if (item.id && existing.mergedIds.indexOf(item.id) === -1) existing.mergedIds.push(item.id);
+        if (getProgressScore(item) > getProgressScore(existing)) {
+          var keepIds = existing.mergedIds;
+          var keepCount = existing.mergedCount;
+          map.set(key, Object.assign({}, item, { personKey: key, mergedIds: keepIds, mergedCount: keepCount }));
+        }
+      }
+    });
+
+    state.mergedDupCount = dupCount;
+
+    var autoExc = 0;
+    var finalMerged = [];
+
+    map.forEach(function(c) {
+      var ph = normalizePhone(c.phone);
+      if (ph.length >= 9 && activePhones.has(ph)) {
+        autoExc++;
+        return;
+      }
+
+      var nName = normalizeText(c.name);
+      var nKana = normalizeText(c.kana);
+      var nAddr = normalizeText(c.address);
+      var warnMatch = null;
+      if (nName || nKana) {
+        warnMatch = activePersons.find(function(ap) {
+          var nameSame = (nName && ap.name === nName) || (nKana && ap.kana === nKana);
+          if (!nameSame) return false;
+          if (!nAddr || !ap.address) return true;
+          return ap.address.slice(0, 6) === nAddr.slice(0, 6);
+        });
+      }
+      c.activeWarning = warnMatch ? '⚠️ 稼働・職見・内定待ちかも（' + warnMatch.statusLabel + 'と氏名/住所一致）' : '';
+      c.assignedTab = classifyCandidateTab(c);
+      c.isNightDefault = isNightShiftCandidate(c);
+
+      var coord = lookupCoordsFromDict(c.pref, c.address);
+      if (coord) {
+        c.lat = coord.lat;
+        c.lng = coord.lng;
+        c.coordMatched = coord.matched;
+        c.isCoarseCoord = coord.isCoarse;
+        if (coord.isGsi) c.isGsiCoord = true;
+      }
+
+      finalMerged.push(c);
+    });
+
+    state.autoExcludedCount = autoExc;
+    state.mergedCandidates = finalMerged;
+
+    populateFilterOptions();
+    updateTabBadges();
+    renderList();
+  }
+
+  function getProgressScore(c) {
+    var score = 0;
+    var bSt = getColBFinalStatus(c);
+    if (isActiveOrPendingRecord(c)) score += 100;
+    if (bSt.indexOf('FIX待ち') !== -1) score += 50;
+    if (c.attendDate) score += 20;
+    if (c.startDate) score += 15;
+    var d = parseDateSafe(c.attendDate || c.contactDate || c.applyDate);
+    if (d) score += d.getTime() / 1e11;
+    return score;
+  }
+
+  function parseDateSafe(str) {
+    if (!str) return null;
+    var clean = String(str).trim().replace(/\//g, '-');
+    var d = new Date(clean);
+    return isNaN(d.getTime()) ? null : d;
+  }
+
+  function classifyCandidateTab(c) {
+    var now = new Date();
+    var todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    var finalSt = getColBFinalStatus(c);
+    var st = String(c.status || '');
+    var attendD = parseDateSafe(c.attendDate || c.contactDate);
+    var applyD = parseDateSafe(c.applyDate);
+    var startD = parseDateSafe(c.startDate);
+
+    var daysFromTodayToStart = null;
+    if (startD) {
+      var startDayOnly = new Date(startD.getFullYear(), startD.getMonth(), startD.getDate());
+      daysFromTodayToStart = Math.round((startDayOnly.getTime() - todayStart.getTime()) / (1000 * 60 * 60 * 24));
+      if (daysFromTodayToStart >= 0) {
+        c.daysUntilStart = daysFromTodayToStart;
+      }
+    }
+
+    var isFixWait = (finalSt.indexOf('FIX待ち') !== -1);
+    var isStartUnder30OrEmpty = (daysFromTodayToStart === null || daysFromTodayToStart <= 29);
+    var isStart30OrMore = (daysFromTodayToStart !== null && daysFromTodayToStart >= 30);
+
+    if (isFixWait && isStartUnder30OrEmpty && attendD) {
+      var diffHours = (now.getTime() - attendD.getTime()) / (1000 * 60 * 60);
+      if (diffHours >= 12 && diffHours <= 72) return 'within3days';
+      if (diffHours >= 73 && diffHours <= 240) return 'unfixed';
+    }
+
+    if (isFixWait && isStartUnder30OrEmpty && applyD) {
+      var applyDaysForHot = (now.getTime() - applyD.getTime()) / (1000 * 60 * 60 * 24);
+      if (applyDaysForHot >= 60) return 'hot';
+    }
+
+    if (isStart30OrMore || finalSt.indexOf('未来') !== -1 || st.indexOf('未来') !== -1) {
+      return 'future';
+    }
+
+    if (!isFixWait && applyD) {
+      var applyDays = (now.getTime() - applyD.getTime()) / (1000 * 60 * 60 * 24);
+      if (applyDays >= 45) return 'normal';
+    }
+
+    return 'excluded_other';
+  }
+
+  function extractSafeSalutation(c) {
+    if (c.rawRow && c.rawRow['姓'] && String(c.rawRow['姓']).trim()) {
+      return { text: String(c.rawRow['姓']).trim() + '様', mode: '名字抽出' };
+    }
+    var fullName = String(c.name || '').trim();
+    if (!fullName) return { text: 'ご担当者様', mode: 'デフォルト' };
+    var parts = fullName.split(/[\s　]+/).filter(Boolean);
+    if (parts.length >= 2) return { text: parts[0] + '様', mode: '名字抽出' };
+    return { text: fullName + '様', mode: 'フルネーム安全表記' };
+  }
+
+  function normalizeFacilityForDedup(name) {
+    return String(name || '').normalize('NFKC')
+      .replace(/[\s\u3000・･．.（）()【】\[\]「」『』<>＜＞\-－―ー−_＿/／]+/g, '')
+      .replace(/株式会社|\(株\)|（株）|有限会社|\(有\)|（有）|社会福祉法人|\(福\)|（福）|医療法人社団|医療法人財団|医療法人|\(医\)|（医）|一般社団法人|合同会社/g, '')
+      .toLowerCase();
+  }
+
+  function normalizeAddressForDedup(addr) {
+    return String(addr || '').normalize('NFKC')
+      .replace(/[\s\u3000]+/g, '')
+      .replace(/[‐‑‒–—―ー−]/g, '-')
+      .replace(/ヶ/g, 'ケ').replace(/之/g, 'ノ').replace(/ッ/g, 'ツ')
+      .toLowerCase();
+  }
+
+  // シフト判定：nightMode === true なら「夜勤」を含む求人のみ、false なら「早出・日勤・遅出」のいずれかを含む日勤求人
+  function matchShiftRule(jobShifts, nightMode) {
+    var arr = Array.isArray(jobShifts) ? jobShifts : [];
+    if (arr.length === 0) return true;
+    var hasNight = arr.indexOf('夜勤') !== -1;
+    var hasDay = arr.indexOf('早出') !== -1 || arr.indexOf('日勤') !== -1 || arr.indexOf('遅出') !== -1;
+    return nightMode ? hasNight : hasDay;
+  }
+
+  function resolveCandidateRoleCategory(c) {
+    var jt = String(c.jobType || '').trim();
+    var qual = String(c.qualification || '').trim();
+    // 職種チェックがあれば職種を優先、空欄・未選択なら保有資格から参照
+    var src = jt ? jt : qual;
+    // もし職種に「介護」「看護」のどちらも入っていない場合も資格から補完
+    if (src.indexOf('看護') === -1 && src.indexOf('介護') === -1 && qual) {
+      src = qual;
+    }
+    var hasNurse = /(看護|正看|准看|保健師|助産師)/.test(src);
+    var hasCare = /(介護|初任者|実務者|ヘルパー|ケアマネ|福祉士)/.test(src);
+    // どっちも（介護＋看護）の場合は看護を優先
+    if (hasNurse) return 'nurse';
+    if (hasCare) return 'care';
+    return 'care';
+  }
+
+  function getHourlyRateNote(c) {
+    var roleCat = resolveCandidateRoleCategory(c);
+    if (roleCat === 'nurse') {
+      return '※時給相場：看護 2,200〜2,450円程度（資格・経験により変動します）';
+    }
+    return '※時給相場：介護 1,500〜1,800円程度（資格・経験により変動します）';
+  }
+
+  function extractRawFacilityType(j) {
+    var keys = ['facilityType', 'serviceType', 'facilityCategory', 'category', 'type', 'genre', 'subType', 'facility_type', 'service_type'];
+    var parts = [];
+    for (var i = 0; i < keys.length; i++) {
+      var v = j[keys[i]];
+      if (Array.isArray(v)) parts.push(v.join(' '));
+      else if (v) parts.push(String(v));
+    }
+    var raw = parts.join(' ').trim();
+    return raw || String(j.facility || j.name || '');
+  }
+
+  function getNormalizedFacilityCategory(j) {
+    var src = (String(j.facilityType || '') + ' ' + String(j.name || '')).normalize('NFKC');
+    if (/(グループホーム|認知症対応型共同|認知症型共同|認知症共同|\bGH\b|ＧＨ)/i.test(src)) return 'GH';
+    if (/(デイサービス|通所介護|通所施設|デイケア|通所リハ|デイ)/i.test(src)) return 'デイサービス';
+    if (/(サービス付き高齢者|サ高住)/i.test(src)) return 'サ高住';
+    if (/(特別養護老人ホーム|特養)/i.test(src)) return '特養';
+    if (/(介護老人保健施設|老健)/i.test(src)) return '老健';
+    if (/(クリニック|診療所|医院)/i.test(src)) return 'クリニック';
+    if (/(訪問看護|訪看)/i.test(src)) return '訪問看護';
+    if (/(有料老人ホーム|有料)/i.test(src)) return '有料';
+    if (/(病院|ホスピタル)/i.test(src)) return '病院';
+    if (/(小規模多機能|小多機)/i.test(src)) return '小規模多機能';
+    if (/(訪問介護|ヘルパーステーション)/i.test(src)) return '訪問介護';
+    return String(j.facilityType || 'その他').trim() || 'その他';
+  }
+
+  function matchTargetFacilityCategories(cat, allowedList) {
+    for (var i = 0; i < allowedList.length; i++) {
+      var target = allowedList[i];
+      if (cat === target) return true;
+      // 看護・日勤では「有料」に「訪問看護」も含めて判定
+      if (target === '有料' && cat === '訪問看護') return true;
+    }
+    return false;
+  }
+
+  function dedupJobList(list, externalUsedNames, externalUsedAddrs) {
+    var seenNames = new Set(externalUsedNames || []);
+    var seenAddrs = new Set(externalUsedAddrs || []);
+    var out = [];
+    for (var i = 0; i < list.length; i++) {
+      var item = list[i];
+      var nName = normalizeFacilityForDedup(item.name);
+      var nAddr = normalizeAddressForDedup(item.address);
+      if ((nName && seenNames.has(nName)) || (nAddr && seenAddrs.has(nAddr))) continue;
+      if (nName) seenNames.add(nName);
+      if (nAddr) seenAddrs.add(nAddr);
+      out.push(item);
+    }
+    return out;
+  }
+
+  function sortByNewestBo(a, b) {
+    if ((b.timestamp || 0) !== (a.timestamp || 0)) return (b.timestamp || 0) - (a.timestamp || 0);
+    return a.distKm - b.distKm;
+  }
+
+  function sortByClosestDist(a, b) {
+    if (a.distKm !== b.distKm) return a.distKm - b.distKm;
+    return (b.timestamp || 0) - (a.timestamp || 0);
+  }
+
+  // 同じ施設形態3つはNG、2つまで（看護・夜勤用）
+  function pickMaxTwoPerFacilityType(sortedList, limit) {
+    var counts = {};
+    var picked = [];
+    for (var i = 0; i < sortedList.length; i++) {
+      var item = sortedList[i];
+      var cat = item.facilityCat || 'その他';
+      if ((counts[cat] || 0) >= 2) continue;
+      counts[cat] = (counts[cat] || 0) + 1;
+      picked.push(item);
+      if (picked.length >= limit) break;
+    }
+    return picked;
+  }
+
+  function getMatchedJobs(c, nightModeOverride) {
+    if (!state.searchOrderJobs || state.searchOrderJobs.length === 0) {
+      return { dispatch: [], direct: [], isFarFallback: false, status: 'loading' };
+    }
+    if (c.lat == null || c.lng == null) {
+      return { dispatch: [], direct: [], isFarFallback: false, status: 'no_coord' };
+    }
+
+    var globalNightEl = document.getElementById('filterNightShift');
+    var globalNight = globalNightEl ? globalNightEl.checked : false;
+    var nightMode = (nightModeOverride !== undefined) ? nightModeOverride : (globalNight || c.isNightDefault);
+
+    var roleCat = resolveCandidateRoleCategory(c);
+    var isNurse = (roleCat === 'nurse');
+
+    // 4パターンのルール定義
+    var profileKey = (isNurse ? 'nurse' : 'care') + '_' + (nightMode ? 'night' : 'day');
+    var RULES = {
+      care_day: {
+        directTypes: ['GH', 'デイサービス'],
+        dispTypes: ['GH', 'デイサービス'],
+        maxTwoSameType: false
+      },
+      care_night: {
+        directTypes: ['GH', '有料'],
+        dispTypes: ['GH', '有料'],
+        maxTwoSameType: false
+      },
+      nurse_day: {
+        directTypes: ['デイサービス', 'クリニック', '有料'],
+        dispTypes: ['サ高住', 'デイサービス', 'クリニック', '有料', '特養'],
+        maxTwoSameType: false
+      },
+      nurse_night: {
+        directTypes: ['特養', '老健', '有料'],
+        dispTypes: null, // 全施設形態対象（ただし同じ施設形態は2つまで）
+        maxTwoSameType: true
+      }
+    };
+    var rule = RULES[profileKey];
+
+    var rawDispAll = [];
+    var rawDirAll = [];
+
+    for (var i = 0; i < state.searchOrderJobs.length; i++) {
+      var j = state.searchOrderJobs[i];
+      if (j.lat == null || j.lng == null) continue;
+
+      var jNurse = String(j.jobType || '').indexOf('看護') !== -1;
+      if (isNurse ? !jNurse : jNurse) continue;
+
+      if (!matchShiftRule(j.shifts, nightMode)) continue;
+
+      var dKm = calcDistanceKm(c.lat, c.lng, j.lat, j.lng);
+      if (dKm === null || dKm > 30.0) continue;
+
+      var empList = j.empTypes || [j.empType || '派遣'];
+      var isDirect = empList.indexOf('紹介') !== -1;
+      var isDispatch = empList.indexOf('派遣') !== -1 || empList.indexOf('紹介予定派遣') !== -1;
+      var fCat = getNormalizedFacilityCategory(j);
+
+      var jobObj = {
+        name: j.name,
+        address: j.address,
+        distKm: Number(dKm.toFixed(1)),
+        boDate: formatBoDateShort(j.date, j.timestamp),
+        timestamp: j.timestamp || 0,
+        shifts: (j.shifts || []).join('・'),
+        facilityCat: fCat
+      };
+
+      if (isDispatch && dKm <= 30.0) {
+        rawDispAll.push(jobObj);
+      }
+      if (isDirect && dKm <= 2.0 && matchTargetFacilityCategories(fCat, rule.directTypes)) {
+        rawDirAll.push(jobObj);
+      }
+    }
+
+    // 1. 派遣の選定
+    var allDispDedup = dedupJobList(rawDispAll.slice().sort(sortByNewestBo));
+    var within10All = allDispDedup.filter(function(x) { return x.distKm <= 10.0; });
+    var within10Typed = rule.dispTypes
+      ? within10All.filter(function(x) { return matchTargetFacilityCategories(x.facilityCat, rule.dispTypes); })
+      : within10All;
+
+    var selectedDispatch = [];
+    var isFarFallback = false;
+
+    if (within10Typed.length > 0) {
+      // 【優先順位1】10km以内で1番最近取得したBO順
+      var p1Sorted = within10Typed.slice().sort(sortByNewestBo);
+      if (rule.maxTwoSameType) {
+        selectedDispatch = pickMaxTwoPerFacilityType(p1Sorted, 3);
+      } else {
+        selectedDispatch = p1Sorted.slice(0, 3);
+      }
+
+      // 優先順位1で選ばれた施設のうち「5km以内が1つもない」場合は、施設縛りなしで1番近い施設を1つ入れて合計3つにする
+      var hasWithin5 = selectedDispatch.some(function(x) { return x.distKm <= 5.0; });
+      if (!hasWithin5) {
+        var usedN = new Set(selectedDispatch.map(function(x) { return normalizeFacilityForDedup(x.name); }));
+        var usedA = new Set(selectedDispatch.map(function(x) { return normalizeAddressForDedup(x.address); }));
+        var closestAnyCandidates = allDispDedup.filter(function(x) {
+          var nn = normalizeFacilityForDedup(x.name);
+          var na = normalizeAddressForDedup(x.address);
+          if ((nn && usedN.has(nn)) || (na && usedA.has(na))) return false;
+          if (rule.maxTwoSameType) {
+            var sameCnt = selectedDispatch.filter(function(s) { return s.facilityCat === x.facilityCat; }).length;
+            if (sameCnt >= 2) return false;
+          }
+          return true;
+        }).sort(sortByClosestDist);
+
+        if (closestAnyCandidates.length > 0) {
+          var baseTwo = selectedDispatch.slice(0, 2);
+          baseTwo.push(closestAnyCandidates[0]);
+          selectedDispatch = baseTwo;
+        }
+      }
+    } else {
+      // 【1施設もない時（10km圏内0件）】30km以内の1番近い施設順に3つ＋遠方文面②フラグON
+      var within30Closest = dedupJobList(rawDispAll.slice().sort(sortByClosestDist));
+      if (within30Closest.length > 0) {
+        isFarFallback = true;
+        if (rule.maxTwoSameType) {
+          selectedDispatch = pickMaxTwoPerFacilityType(within30Closest, 3);
+        } else {
+          // 指定施設形態（GH/デイ、GH/有料、サ高住/デイ/クリニック/有料）を1つは必ず含める
+          var reqTypes30 = (profileKey === 'nurse_day')
+            ? ['サ高住', 'デイサービス', 'クリニック', '有料']
+            : rule.dispTypes;
+          var top3 = within30Closest.slice(0, 3);
+          var hasReq = top3.some(function(x) { return matchTargetFacilityCategories(x.facilityCat, reqTypes30); });
+          if (!hasReq) {
+            var reqMatch = within30Closest.find(function(x) { return matchTargetFacilityCategories(x.facilityCat, reqTypes30); });
+            if (reqMatch) {
+              top3 = within30Closest.slice(0, 2);
+              top3.push(reqMatch);
+            }
+          }
+          selectedDispatch = top3;
+        }
+      }
+    }
+
+    // 2. 紹介（直接雇用・2km以内・指定施設形態のみ）の選定（派遣と重複しないように）
+    var crossNames = new Set(selectedDispatch.map(function(x) { return normalizeFacilityForDedup(x.name); }));
+    var crossAddrs = new Set(selectedDispatch.map(function(x) { return normalizeAddressForDedup(x.address); }));
+    var sortedDir = rawDirAll.slice().sort(sortByNewestBo);
+    var uniqueDir = dedupJobList(sortedDir, crossNames, crossAddrs);
+
+    return {
+      dispatch: selectedDispatch,
+      direct: uniqueDir.slice(0, 2),
+      totalDispCount: within10Typed.length > 0 ? within10Typed.length : selectedDispatch.length,
+      totalDirCount: uniqueDir.length,
+      nightMode: nightMode,
+      isFarFallback: isFarFallback,
+      profileKey: profileKey,
+      status: 'ok'
+    };
+  }
+
+  function isApplyWithinOneWeek(c) {
+    var applyD = parseDateSafe(c.applyDate);
+    if (!applyD) return false;
+    var now = new Date();
+    var diffDays = (now.getTime() - applyD.getTime()) / (1000 * 60 * 60 * 24);
+    return diffDays >= 0 && diffDays <= 7.0;
+  }
+
+  function buildMessageForCandidate(c, reasonOverride, modeOverride, nightOverride) {
+    var sal = extractSafeSalutation(c);
+    var jobs = getMatchedJobs(c, nightOverride);
+    var log = state.actionLogs[c.personKey];
+    var tab = c.assignedTab;
+    var mode = modeOverride || 'normal';
+    var withinOneWeek = isApplyWithinOneWeek(c);
+
+    // ①、②、④（リマインドも）、⑤ 共通の返信FM
+    var replyFmStandard = [
+      '▼ご返信の際は以下をコピーしてご返信ください',
+      '・気になる求人番号：',
+      '・ご希望の勤務日数・シフト：',
+      '・電話NGの時間帯：'
+    ].join(LF);
+
+    // ③ 未来人材の返信FM
+    var replyFmFuture = [
+      '▼ご返信の際は以下をコピーしてご返信ください',
+      '・最短勤務可能日：〇月',
+      '・ご希望の就業日数：週〇日',
+      '・気になる求人番号：'
+    ].join(LF);
+
+    var shortLines = jobs.dispatch.slice(0, 2).map(function(j, idx) {
+      return '・候補' + (idx + 1) + '：' + j.name + '（約' + j.distKm + 'km）';
+    }).join(LF);
+    var shortDirect = jobs.direct.length > 0
+      ? LF + '・直接雇用：' + jobs.direct[0].name + '（約' + jobs.direct[0].distKm + 'km）'
+      : '';
+    var shortJobs = (shortLines || '・ご自宅近隣の新着求人を確保しております。') + shortDirect;
+    var shortRateNote = getHourlyRateNote(c);
+
+    // ④ 激熱掘起の2通目（翌日リマインド）は常に短縮版で送る（「先日お送りさせていただきました」に変更）
+    if (tab === 'hot' && log && log.status === 'reminded') {
+      return [
+        sal.text + ' 以前ご応募いただきました、株式会社ビースタイルです。',
+        '先日お送りさせていただきました募集案件ですが、枠が埋まりやすくなっているため念のためご連絡いたしました。',
+        shortJobs,
+        shortRateNote,
+        replyFmStandard
+      ].join(LF);
+    }
+
+    if (mode === 'short') {
+      if (jobs.isFarFallback) {
+        var farIntroShort = withinOneWeek
+          ? '先日、応募いただきました求人ですが充足してしまったと報告ありました。近場で求人が中々無く、少し距離のあるエリアにはなってしまいますがご検討可能でしょうか？'
+          : '以前伺っていた希望条件ですが、近場で求人が中々無く、少し距離のあるエリアにはなってしまいますがご検討可能でしょうか？';
+        return [
+          sal.text + ' お世話になります。株式会社ビースタイルです。',
+          farIntroShort,
+          shortJobs,
+          shortRateNote,
+          replyFmStandard
+        ].join(LF);
+      }
+
+      if (tab === 'within3days') {
+        return [
+          sal.text + ' お世話になっております。株式会社ビースタイルです。',
+          '先日お話しさせていただいた応募求人について、先ほど先方から連絡があり、枠が埋まってしまったとのことでした。力不足で大変申し訳ございません。',
+          '代わりに近隣の好条件求人を確保いたしました。',
+          shortJobs,
+          shortRateNote,
+          replyFmStandard
+        ].join(LF);
+      }
+      if (tab === 'unfixed') {
+        return [
+          sal.text + ' お世話になっております。株式会社ビースタイルです。',
+          '先日ご提案させていただきました件、その後ご状況はいかがでしょうか？',
+          shortJobs,
+          shortRateNote,
+          replyFmStandard
+        ].join(LF);
+      }
+      if (tab === 'future') {
+        return [
+          sal.text + ' お世話になっております。株式会社ビースタイルです。',
+          '以前伺っていたご就業時期が近づいてまいりましたので、最新の募集状況のご案内です！',
+          shortJobs,
+          shortRateNote,
+          '来週中で内定が出た場合、最短の勤務開始は何月くらいになりそうでしょうか？',
+          '以前応募時と条件が変わっていないかもあわせて教えていただけますと幸いです。',
+          replyFmFuture
+        ].join(LF);
+      }
+      if (tab === 'hot') {
+        return [
+          sal.text + ' 以前ご応募いただきました、株式会社ビースタイルです。',
+          'ご希望条件に合う新着案件が入りましたので優先的にご連絡いたしました！',
+          shortJobs,
+          shortRateNote,
+          replyFmStandard
+        ].join(LF);
+      }
+      return [
+        sal.text + ' 以前ご応募いただきました、株式会社ビースタイルです。',
+        'その後お仕事のご状況はいかがでしょうか？新しい募集枠が出ておりますのでご案内いたします！',
+        shortJobs,
+        shortRateNote,
+        replyFmStandard
+      ].join(LF);
+    }
+
+    var jobLines = jobs.dispatch.map(function(j, idx) {
+      var catLabel = (j.facilityCat && j.facilityCat !== 'その他') ? '【' + j.facilityCat + '】' : '';
+      return '【候補' + (idx + 1) + '】' + catLabel + j.name + LF + '・住所：' + (j.address || '詳細はお問い合わせください') + '（ご自宅から約' + j.distKm + 'km）' + (j.shifts ? LF + '・シフト：' + j.shifts : '');
+    }).join(LF + LF);
+
+    var directHook = '';
+    if (jobs.direct.length > 0) {
+      var d0 = jobs.direct[0];
+      var dCatLabel = (d0.facilityCat && d0.facilityCat !== 'その他') ? '【' + d0.facilityCat + '】' : '';
+      directHook = LF + LF + [
+        '【直接雇用求人】' + dCatLabel + d0.name,
+        '・住所：' + (d0.address || '詳細はお問い合わせください') + '（ご自宅から約' + d0.distKm + 'km）',
+        '・シフト：' + (d0.shifts || '日勤'),
+        '※担当者から是非とお声いただいております'
+      ].join(LF);
+    }
+
+    var bodyJobs = (jobLines || '・ご自宅近隣エリアの好条件求人を複数確保しております。') + directHook;
+    var rateNote = getHourlyRateNote(c);
+
+    // 【共通】10km圏内に該当求人がなく、30km圏内の遠方求人を提示する場合の専用文面
+    if (jobs.isFarFallback) {
+      var farLeadLines = withinOneWeek
+        ? [
+            '先日、応募いただきました求人ですが充足してしまったと報告ありました。', '',
+            '近場で求人が中々無く、少し距離のあるエリアにはなってしまいますがご検討可能でしょうか？'
+          ]
+        : [
+            '以前伺っていた希望条件ですが、近場で求人が中々無く、少し距離のあるエリアにはなってしまいますがご検討可能でしょうか？'
+          ];
+
+      return [
+        sal.text, '',
+        'お世話になります。',
+        '株式会社ビースタイルです。', ''
+      ].concat(farLeadLines).concat([
+        '現在ご自宅から通える範囲内で、条件に近い以下の募集が出ております。', '',
+        bodyJobs, '',
+        rateNote, '',
+        '距離面も含めて一度ご相談できればと思いますので、気になる求人がございましたらお気軽にご返信ください！', '',
+        replyFmStandard
+      ]).join(LF);
+    }
+
+    // ① 3日以内 未FIX人材
+    if (tab === 'within3days') {
+      var reason = reasonOverride || SLIDE_REASONS_3DAYS[state.currentReasonIdx % SLIDE_REASONS_3DAYS.length];
+      return [
+        sal.text, '',
+        'お世話になっております。株式会社ビースタイルです。',
+        reason, '',
+        '力不足で大変申し訳ございません。',
+        '代わりにご自宅から通いやすい近隣エリアで、条件に合う新着求人をピックアップいたしました。', '',
+        bodyJobs, '',
+        rateNote, '',
+        'もし気になるものがございましたら、すぐ詳細をお送りしますのでお気軽にご返信ください！', '',
+        replyFmStandard
+      ].join(LF);
+    }
+
+    // ③ 未来人材
+    if (tab === 'future') {
+      return [
+        sal.text, '',
+        'お世話になっております。株式会社ビースタイルです。',
+        '以前伺っていたご就業時期が近づいてまいりましたので、最新の募集状況のご案内です！', '',
+        '現在、ご自宅周辺で以下の好条件案件が出ております。', '',
+        bodyJobs, '',
+        rateNote, '',
+        '来週中で内定が出た場合、最短の勤務開始は何月くらいになりそうでしょうか？', '',
+        '以前応募時と条件が変わっていないかもあわせて教えていただけますと幸いです。', '',
+        replyFmFuture
+      ].join(LF);
+    }
+
+    // ② 未FIX人材
+    if (tab === 'unfixed') {
+      return [
+        sal.text, '',
+        'お世話になっております。株式会社ビースタイルです。',
+        '先日ご提案させていただきました件、その後ご状況はいかがでしょうか？', '',
+        '現在もご自宅から近隣エリアで以下の求人が募集中となっております。', '',
+        bodyJobs, '',
+        rateNote, '',
+        '「まずは条件だけ詳しく聞きたい」「他で決まった」など、一言だけでもご返信いただけますと幸いです！', '',
+        replyFmStandard
+      ].join(LF);
+    }
+
+    // ④ 激熱掘起（1通目）
+    if (tab === 'hot') {
+      return [
+        sal.text, '',
+        '以前ご応募いただきました、株式会社ビースタイルです。',
+        '以前お話しさせていただいたご希望条件にぴったりの新着案件が入りましたので、優先的にご連絡いたしました！', '',
+        bodyJobs, '',
+        rateNote, '',
+        '今すぐのご転職でなくても情報収集だけでも大歓迎ですので、ぜひお気軽にご返信ください！', '',
+        replyFmStandard
+      ].join(LF);
+    }
+
+    // ⑤ 通常掘起
+    return [
+      sal.text, '',
+      '以前ご応募いただきました、株式会社ビースタイルです。',
+      'その後、お仕事のご状況はいかがでしょうか？', '',
+      '現在、ご希望に合いそうな新しい募集枠が出ておりますのでご案内いたします。', '',
+      bodyJobs, '',
+      rateNote, '',
+      '現在のシフト希望やご状況に合わせて改めてお探しすることも可能ですので、ぜひお気軽にお声がけください！', '',
+      replyFmStandard
+    ].join(LF);
+  }
+
+  function buildSmsUrl(phone, bodyText) {
+    var cleanPhone = normalizePhone(phone);
+    var isIos = /iPhone|iPad|iPod/i.test(navigator.userAgent || '');
+    var sep = isIos ? AMP : '?';
+    return 'sms:' + cleanPhone + sep + 'body=' + encodeURIComponent(bodyText);
+  }
+
+  window.launchDirectSms = function(personKey) {
+    var c = state.mergedCandidates.find(function(x) { return x.personKey === personKey; });
+    if (!c) return;
+    if (!c.phone) {
+      alert('この求職者には電話番号が登録されていません。');
+      return;
+    }
+    var rIdx = Math.floor(Math.random() * SLIDE_REASONS_3DAYS.length);
+    var msg = buildMessageForCandidate(c, SLIDE_REASONS_3DAYS[rIdx], 'normal');
+    if (navigator.clipboard) navigator.clipboard.writeText(msg).catch(function() {});
+    recordSentAction(personKey);
+    window.location.href = buildSmsUrl(c.phone, msg);
+  };
+
+  window.launchSmsAndRecordModal = function() {
+    if (!state.modalTarget) return;
+    var c = state.modalTarget;
+    var txt = document.getElementById('modalMessageText').value;
+    if (navigator.clipboard) navigator.clipboard.writeText(txt).catch(function() {});
+    var key = c.personKey;
+    closeModal('msgModal');
+    recordSentAction(key);
+    if (c.phone) {
+      window.location.href = buildSmsUrl(c.phone, txt);
+    } else {
+      showPopup('送信記録完了', '電話番号が未登録のためSMS起動はスキップし、文面コピーと完了記録を行いました。');
+    }
+  };
+
+  function isKantoCandidate(c) {
+    var branch = String(c.branch || '').trim();
+    for (var i = 0; i < KANTO_BRANCHES.length; i++) {
+      if (branch.indexOf(KANTO_BRANCHES[i]) !== -1) return true;
+    }
+    var pref = String(c.pref || c.address || '');
+    if (!branch && /(東京都|神奈川県|埼玉県|千葉県|茨城県|栃木県|群馬県)/.test(pref)) return true;
+    return false;
+  }
+
+  function getActionState(c) {
+    var log = state.actionLogs[c.personKey];
+    if (!log) return { isHidden: false, isActed: false, label: '未対応' };
+
+    var now = Date.now();
+    if (log.cooldownUntil && now < log.cooldownUntil) {
+      var remDays = Math.ceil((log.cooldownUntil - now) / (1000 * 60 * 60 * 24));
+      return { isHidden: true, isActed: true, label: '30日クールダウン中（残' + remDays + '日）' };
+    }
+
+    if (c.assignedTab === 'hot' && log.status === 'wait_remind') {
+      if (now >= (log.remindReadyAt || 0)) {
+        log.status = 'reminded';
+        saveActionLogs();
+        return { isHidden: false, isActed: false, isRemindReady: true, label: '🔔 翌日リマインド対象' };
+      }
+      return { isHidden: false, isActed: true, label: '初回送信済（翌日リマインド待機）' };
+    }
+
+    if (log.status === 'reminded') {
+      return { isHidden: false, isActed: false, isRemindReady: true, label: '🔔 翌日リマインド対象' };
+    }
+
+    if (log.status === 'done') {
+      var dt = log.lastSentAt ? new Date(log.lastSentAt).toLocaleDateString('ja-JP') : '';
+      return { isHidden: false, isActed: true, label: '対応済（' + dt + '送信）' };
+    }
+
+    return { isHidden: false, isActed: false, label: '未対応' };
+  }
+
+  function getFilteredCandidates(options) {
+    options = options || {};
+    var targetTab = options.tab !== undefined ? options.tab : state.currentTab;
+    var targetArea = options.area !== undefined ? options.area : state.currentArea;
+    var unactedOnly = options.unactedOnly !== undefined ? options.unactedOnly : document.getElementById('filterUnactedOnly').checked;
+    var prefVal = options.ignoreFilters ? '' : document.getElementById('filterPref').value;
+    var staffVal = options.ignoreFilters ? '' : document.getElementById('filterStaff').value;
+    var branchVal = options.ignoreFilters ? '' : document.getElementById('filterBranch').value;
+    var q = options.ignoreFilters ? '' : normalizeText(document.getElementById('searchInput').value).toLowerCase();
+
+    var isSearching = q.length > 0;
+
+    return state.mergedCandidates.filter(function(c) {
+      if (state.excludedMap[c.personKey]) return false;
+      if (targetArea === 'kanto' && !isKantoCandidate(c)) return false;
+
+      if (targetTab) {
+        if (c.assignedTab !== targetTab) return false;
+      } else {
+        if (['within3days', 'unfixed', 'hot', 'future', 'normal'].indexOf(c.assignedTab) === -1) return false;
+      }
+
+      var act = getActionState(c);
+      // 検索入力中は、対応済やクールダウン中の人も折り返し逆引きできるように表示する
+      if (!isSearching) {
+        if (act.isHidden) return false;
+        if (unactedOnly && act.isActed) return false;
+      }
+
+      if (prefVal && c.pref !== prefVal) return false;
+      if (staffVal && c.staff !== staffVal) return false;
+      if (branchVal && c.branch !== branchVal) return false;
+      if (q) {
+        var hay = (c.name + ' ' + c.kana + ' ' + c.phone + ' ' + c.id + ' ' + c.address + ' ' + c.qualification).toLowerCase();
+        if (hay.indexOf(q) === -1) return false;
+      }
+      return true;
+    });
+  }
+
+  function updateTabBadges() {
+    var tabs = ['within3days', 'unfixed', 'hot', 'future', 'normal'];
+    tabs.forEach(function(t) {
+      var list = getFilteredCandidates({ tab: t, unactedOnly: true, ignoreFilters: true });
+      var badge = document.getElementById('badge-' + t);
+      if (badge) badge.textContent = list.length;
+    });
+    document.getElementById('excludedCountBadge').textContent = Object.keys(state.excludedMap).length;
+  }
+
+  window.resetPageAndRender = function() {
+    state.displayLimit = PAGE_SIZE;
+    renderList();
+  };
+
+  window.onSearchInput = function() {
+    state.displayLimit = PAGE_SIZE;
+    renderList();
+  };
+
+  window.loadMoreItems = function() {
+    state.displayLimit += PAGE_SIZE;
+    renderList();
+  };
+
+  window.toggleMobileHeaderMenu = function() {
+    var m = document.getElementById('mobileHeaderMenu');
+    if (m) m.classList.toggle('hidden');
+  };
+
+  window.toggleMobileFilters = function() {
+    var body = document.getElementById('collapsibleFilterBody');
+    var btn = document.getElementById('btnToggleFilters');
+    if (!body) return;
+    if (body.classList.contains('hidden')) {
+      body.classList.remove('hidden');
+      if (btn) btn.textContent = '閉じる ▲';
+    } else {
+      body.classList.add('hidden');
+      if (btn) btn.textContent = '絞り込み ▼';
+    }
+  };
+
+  window.switchTab = function(tabId) {
+    state.currentTab = tabId;
+    state.displayLimit = PAGE_SIZE;
+    ['within3days', 'unfixed', 'hot', 'future', 'normal'].forEach(function(t) {
+      var btn = document.getElementById('tab-' + t);
+      var badge = document.getElementById('badge-' + t);
+      if (t === tabId) {
+        btn.className = 'tab-active py-2 px-2 whitespace-nowrap flex items-center gap-1 transition';
+        badge.className = 'px-1.5 py-0.2 text-[10px] rounded-full bg-orange-500 text-zinc-950 font-black';
+      } else {
+        btn.className = 'tab-inactive py-2 px-2 whitespace-nowrap flex items-center gap-1 transition';
+        badge.className = 'px-1.5 py-0.2 text-[10px] rounded-full bg-zinc-800 text-zinc-300 font-bold';
+      }
+    });
+    updateGuideText();
+    renderList();
+  };
+
+  window.switchArea = function(areaId) {
+    state.currentArea = areaId;
+    state.displayLimit = PAGE_SIZE;
+    var kBtn = document.getElementById('area-kanto');
+    var aBtn = document.getElementById('area-all');
+    if (areaId === 'kanto') {
+      kBtn.className = 'px-2.5 py-1 rounded-md text-[11px] sm:text-xs font-black bg-zinc-900 text-orange-400 shadow-sm transition';
+      aBtn.className = 'px-2.5 py-1 rounded-md text-[11px] sm:text-xs font-bold text-gray-600 hover:text-gray-900 transition';
+    } else {
+      aBtn.className = 'px-2.5 py-1 rounded-md text-[11px] sm:text-xs font-black bg-zinc-900 text-orange-400 shadow-sm transition';
+      kBtn.className = 'px-2.5 py-1 rounded-md text-[11px] sm:text-xs font-bold text-gray-600 hover:text-gray-900 transition';
+    }
+    updateTabBadges();
+    renderList();
+  };
+
+  function updateGuideText() {
+    var map = {
+      within3days: {
+        title: '【3日以内 未FIX人材】の抽出基準・アプローチ設計を見る',
+        desc: '①最優先判定：CSVのB列（最終ステータス）＝「FIX待ち」＋ 就業開始希望日が「本日から29日以内（または空欄・即日）」＋ アテンド・接触から12時間〜72時間以内の対象者のみを抽出します。'
+      },
+      unfixed: {
+        title: '【未FIX人材】の抽出基準・アプローチ設計を見る',
+        desc: '②判定：CSVのB列（最終ステータス）＝「FIX待ち」＋ 就業開始希望日が「本日から29日以内（または空欄・即日）」＋ アテンド・接触から73時間〜10日以内の対象者のみを抽出します。'
+      },
+      hot: {
+        title: '【激熱掘起】の抽出基準・アプローチ設計を見る',
+        desc: '③判定：CSVのB列（最終ステータス）＝「FIX待ち」＋ 就業開始希望日が「本日から29日以内（または空欄・即日）」＋ 応募日から2カ月（60日）以上経過した対象者を抽出します。'
+      },
+      future: {
+        title: '【未来人材】の抽出基準・アプローチ設計を見る',
+        desc: '④判定：就業開始希望日が本日から30日以上先の対象者（FIX待ち含む）、またはB列・ステータスが未来人材の対象者を抽出します。'
+      },
+      normal: {
+        title: '【通常掘起】の抽出基準・アプローチ設計を見る',
+        desc: '⑤判定：①〜④に該当せず、応募から45日以上経過した掘り起こし対象層を抽出します。送信後は30日間自動でクールダウンになります。'
+      }
+    };
+    var info = map[state.currentTab] || map.within3days;
+    document.getElementById('guideTitle').textContent = info.title;
+    document.getElementById('guideDesc').textContent = info.desc;
+  }
+
+  window.toggleGuide = function() {
+    var body = document.getElementById('guideBody');
+    if (body) body.classList.toggle('hidden');
+  };
+
+  function populateFilterOptions() {
+    var prefs = new Set(), staffs = new Set(), branches = new Set();
+    state.mergedCandidates.forEach(function(c) {
+      if (c.pref) prefs.add(c.pref);
+      if (c.staff) staffs.add(c.staff);
+      if (c.branch) branches.add(c.branch);
+    });
+    fillSelect('filterPref', '都道府県：すべて', Array.from(prefs));
+    fillSelect('filterStaff', 'アテンド担当ユーザー：すべて', Array.from(staffs));
+    fillSelect('filterBranch', '担当支店：すべて', Array.from(branches));
+  }
+
+  function fillSelect(id, defaultLabel, items) {
+    var sel = document.getElementById(id);
+    var prev = sel.value;
+    sel.innerHTML = '<option value="">' + defaultLabel + '</option>' +
+      items.map(function(v) { return '<option value="' + escapeHtml(v) + '">' + escapeHtml(v) + '</option>'; }).join('');
+    if (items.indexOf(prev) !== -1) sel.value = prev;
+  }
+
+  window.renderList = function(skipGsi) {
+    updateTabBadges();
+    var fullList = getFilteredCandidates();
+    var visibleList = fullList.slice(0, state.displayLimit);
+
+    document.getElementById('resultCountText').textContent = '該当: ' + fullList.length + '件（表示中: ' + visibleList.length + '件）';
+    if (state.jobsReady) {
+      document.getElementById('jobMasterSummary').textContent = '✅ searchOrder連携済：全' + state.searchOrderJobs.length.toLocaleString() + '件';
+    } else {
+      document.getElementById('jobMasterSummary').textContent = '⏳ searchOrder案件データ取得中...';
+    }
+    document.getElementById('autoExcludedSummary').textContent = state.autoExcludedCount > 0 ? '（稼働/職見/内定待ち自動除外: ' + state.autoExcludedCount + '件）' : '';
+
+    var pageBox = document.getElementById('paginationBox');
+    var loadBtn = document.getElementById('loadMoreBtn');
+    if (fullList.length > visibleList.length) {
+      pageBox.classList.remove('hidden');
+      loadBtn.textContent = 'さらに次の' + Math.min(PAGE_SIZE, fullList.length - visibleList.length) + '件を表示する（残り ' + (fullList.length - visibleList.length) + '件）';
+    } else {
+      pageBox.classList.add('hidden');
+    }
+
+    var container = document.getElementById('candidateList');
+    if (visibleList.length === 0) {
+      container.innerHTML = '<div class="bg-white rounded-2xl border border-gray-200 p-10 text-center text-gray-500 text-xs space-y-2"><p class="font-bold text-sm text-gray-700">該当する追客対象者はありません</p><p>エリア切替（関東 / 全エリア）や「未対応のみ表示」のチェックを外して確認できます。</p></div>';
+      return;
+    }
+
+    container.innerHTML = visibleList.map(function(c, idx) {
+      var sal = extractSafeSalutation(c);
+      var act = getActionState(c);
+      var jobs = getMatchedJobs(c);
+      var condId = 'cond-box-' + idx;
+      var bSt = getColBFinalStatus(c);
+      var statusBadgeClass = act.isRemindReady ? 'bg-amber-100 text-amber-800 border-amber-300 animate-pulse' : (act.isActed ? 'bg-sky-50 text-sky-700 border-sky-200' : 'bg-rose-50 text-rose-700 border-rose-200');
+
+      var shiftBadge = jobs.nightMode
+        ? '<span class="px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200 font-bold">🌙 夜勤求人抽出</span>'
+        : '<span class="px-2 py-0.5 rounded bg-sky-50 text-sky-700 border border-sky-200 font-bold">☀️ 日勤求人抽出</span>';
+
+      var directHtml = '';
+      if (jobs.status === 'ok' && jobs.direct.length > 0) {
+        directHtml = '<div class="rounded-xl bg-purple-50/70 border border-purple-200 px-3 py-2 text-xs space-y-1">' +
+          '<div class="flex items-center justify-between font-bold text-purple-800"><span>🏠 自宅から2km圏内・紹介（直接雇用）特別フック案件</span><span>該当' + jobs.totalDirCount + '件中 ' + jobs.direct.length + '件</span></div>' +
+          jobs.direct.map(function(d) {
+            return '<div class="flex flex-wrap items-center justify-between gap-1 text-gray-800 pt-0.5"><div><span class="font-bold">' + escapeHtml(d.name) + '</span><span class="text-[11px] text-purple-700 ml-1.5">📍 ' + escapeHtml(d.address) + '</span></div><span class="text-[11px] font-black text-purple-700">約' + d.distKm + 'km</span></div>';
+          }).join('') + '</div>';
+      }
+
+      var dispHtml = '';
+      if (jobs.status === 'loading') {
+        dispHtml = '<div class="rounded-xl bg-gray-50 border border-gray-200 px-3 py-2.5 text-xs text-gray-500">⏳ searchOrder の案件データ・座標辞書を読み込み中...</div>';
+      } else if (jobs.status === 'no_coord') {
+        dispHtml = '<div class="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 text-xs text-amber-800">⚠️ 求職者の住所情報から座標を特定できないため、5km圏内案件を算出できません</div>';
+      } else if (jobs.dispatch.length === 0) {
+        dispHtml = '<div class="rounded-xl bg-gray-50 border border-gray-200 px-3 py-2 text-xs text-gray-600">📍 自宅（' + escapeHtml(c.coordMatched || c.address || '') + '）から直線5km以内の該当派遣BOは現在0件です</div>';
+      } else {
+        var dispTitle = jobs.isFarFallback
+          ? '📍 10km圏内0件のため30km圏内（遠方打診②）から抽出'
+          : '📍 自宅から10km圏内の条件合致BO（5km無時は最寄り1件補完）';
+        dispHtml = '<div class="rounded-xl ' + (jobs.isFarFallback ? 'bg-amber-50/80 border-amber-300' : 'bg-orange-50/60 border-orange-200') + ' border px-3 py-2 text-xs space-y-1">' +
+          '<div class="flex items-center justify-between font-bold ' + (jobs.isFarFallback ? 'text-amber-900' : 'text-orange-800') + '"><span>' + dispTitle + '</span><span>提示 ' + jobs.dispatch.length + '件</span></div>' +
+          jobs.dispatch.map(function(j) {
+            var fTag = (j.facilityCat && j.facilityCat !== 'その他') ? '<span class="px-1.5 py-0.2 mr-1 rounded bg-white border border-orange-200 text-[10px] font-bold text-orange-800">' + escapeHtml(j.facilityCat) + '</span>' : '';
+            return '<div class="flex flex-wrap items-center justify-between gap-1 text-gray-800 border-t border-orange-100 pt-1"><div>' + fTag + '<span class="font-bold">' + escapeHtml(j.name) + '</span><span class="text-[11px] text-gray-600 ml-1.5">📍 ' + escapeHtml(j.address) + '</span></div><div class="text-[11px] whitespace-nowrap"><span class="font-black text-orange-700">約' + j.distKm + 'km</span><span class="text-gray-500 ml-1.5">BO:' + escapeHtml(j.boDate) + '</span></div></div>';
+          }).join('') + '</div>';
+      }
+
+      var warnHtml = c.activeWarning ? (
+        '<div class="bg-amber-50 border border-amber-300 rounded-xl px-3 py-2 flex flex-wrap items-center justify-between gap-2 text-xs">' +
+        '<span class="font-black text-amber-900">' + escapeHtml(c.activeWarning) + '</span>' +
+        '<label class="flex items-center gap-1.5 bg-white px-2.5 py-1 rounded-lg border border-amber-400 font-bold text-rose-700 cursor-pointer hover:bg-rose-50">' +
+        '<input type="checkbox" onchange="excludeCandidateForever(' + SQ + escapeHtml(c.personKey) + SQ + ')" class="accent-rose-600 w-4 h-4" />' +
+        '<span>本人確定のため永続除外する（全端末共有）</span></label></div>'
+      ) : '';
+
+      return '<div class="' + (act.isActed ? 'bg-gray-50/90 opacity-90' : 'bg-white') + ' rounded-2xl border ' + (c.activeWarning ? 'border-amber-400 ring-2 ring-amber-200' : 'border-gray-200') + ' p-3.5 sm:p-4 shadow-sm hover:shadow-md transition space-y-2.5 sm:space-y-3">' +
+        '<div class="flex flex-wrap items-center justify-between gap-2">' +
+          '<div class="flex flex-wrap items-center gap-1.5 text-[11px]">' +
+            '<span class="px-2 py-0.5 rounded bg-zinc-100 text-zinc-700 font-bold">' + escapeHtml(c.jobType || (resolveCandidateRoleCategory(c) === 'nurse' ? '看護(資格判定)' : '介護(資格判定)')) + '</span>' +
+            shiftBadge +
+            '<span class="px-2 py-0.5 rounded border font-bold ' + statusBadgeClass + '">' + escapeHtml(act.label) + '</span>' +
+            (bSt ? '<span class="px-2 py-0.5 rounded bg-orange-50 text-orange-700 border border-orange-200 font-bold">B列: ' + escapeHtml(bSt) + '</span>' : '') +
+            (typeof c.daysUntilStart === 'number' ? '<span class="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold">開始まであと' + c.daysUntilStart + '日</span>' : '') +
+            (c.mergedCount > 1 ? '<span class="px-2 py-0.5 rounded bg-purple-50 text-purple-700 border border-purple-200 font-bold">名寄せ: ' + c.mergedCount + '件</span>' : '') +
+          '</div>' +
+          '<div class="flex flex-wrap items-center gap-1.5 text-[11px]">' +
+            '<button type="button" onclick="openRawRowModal(' + SQ + escapeHtml(c.personKey) + SQ + ')" class="px-2 py-1 rounded bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold">全列データ</button>' +
+            '<span class="px-2 py-1 rounded bg-zinc-100 text-zinc-500 font-mono">ID: ' + escapeHtml(c.id || '-') + '</span>' +
+            '<a href="https://b-style-20260516.duo.arrove.jp/" target="_blank" rel="noopener noreferrer" onclick="copyIdToast(' + SQ + escapeHtml(c.id || '') + SQ + ')" class="px-2.5 py-1 rounded bg-zinc-900 hover:bg-zinc-800 text-white font-bold">希望日変更・修正 ↗</a>' +
+          '</div>' +
+        '</div>' +
+        warnHtml +
+        '<div>' +
+          '<div class="flex flex-wrap items-baseline gap-2">' +
+            '<h3 class="text-base sm:text-lg font-black text-gray-900">' + escapeHtml(c.name || '氏名不明') + '</h3>' +
+            '<span class="text-[11px] px-2 py-0.5 rounded bg-orange-50 text-orange-700 border border-orange-200 font-bold">宛名: ' + escapeHtml(sal.text) + '</span>' +
+            '<span class="text-xs text-gray-500">' + escapeHtml(c.kana || '') + (c.age ? '（' + c.age + '歳）' : '') + ' ／ ' + escapeHtml(c.address || '住所未登録') + '</span>' +
+          '</div>' +
+          '<div class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-600">' +
+            (c.phone ? '<a href="tel:' + normalizePhone(c.phone) + '" class="font-bold text-sky-700 underline">📞 ' + escapeHtml(c.phone) + '</a>' : '') +
+            '<span>応募日: ' + escapeHtml(c.applyDate || '-') + '</span>' +
+            '<span>アテンド日: ' + escapeHtml(c.attendDate || '-') + '</span>' +
+            '<span>資格: ' + escapeHtml(c.qualification || '-') + '</span>' +
+            '<span>担当: ' + escapeHtml(c.staff || '-') + '（' + escapeHtml(c.branch || '-') + '）</span>' +
+          '</div>' +
+        '</div>' +
+        '<div class="border border-gray-200 rounded-xl bg-gray-50/70 overflow-hidden">' +
+          '<button type="button" onclick="toggleConditionBox(' + SQ + condId + SQ + ', this)" class="w-full px-3 py-2 flex items-center justify-between text-left text-xs font-bold text-gray-700 hover:bg-gray-100 transition">' +
+            '<span>📋 把握済条件・詳細メモを見る（デフォルト非表示）</span><span class="text-gray-400">開く ▼</span>' +
+          '</button>' +
+          '<div id="' + condId + '" class="hidden px-3 pb-3 pt-1.5 border-t border-gray-200 text-xs text-gray-700 leading-relaxed whitespace-pre-wrap bg-white">' + escapeHtml(c.conditions || '把握済条件の記載なし') + '</div>' +
+        '</div>' +
+        '<div class="space-y-1.5">' + directHtml + dispHtml + '</div>' +
+        '<div class="grid grid-cols-2 gap-2 pt-1">' +
+          '<button type="button" onclick="openMessageModal(' + SQ + escapeHtml(c.personKey) + SQ + ')" class="py-2.5 px-3 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-orange-400 text-xs font-black transition shadow-sm">文面作成</button>' +
+          (act.isActed
+            ? '<button type="button" onclick="undoActionLog(' + SQ + escapeHtml(c.personKey) + SQ + ')" class="py-2.5 px-3 rounded-xl bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs font-bold transition">記録を取り消す</button>'
+            : '<button type="button" onclick="quickMarkDone(' + SQ + escapeHtml(c.personKey) + SQ + ')" class="py-2.5 px-3 rounded-xl bg-white hover:bg-orange-50 text-gray-900 border border-gray-300 hover:border-orange-400 text-xs font-black transition">記録をつける</button>'
+          ) +
+        '</div>' +
+      '</div>';
+    }).join('');
+
+    if (!skipGsi) {
+      refineVisibleCandidatesWithGsi(visibleList);
+    }
+  };
+
+  window.toggleConditionBox = function(id, btn) {
+    var el = document.getElementById(id);
+    var arrow = btn.querySelector('span:last-child');
+    if (el.classList.contains('hidden')) {
+      el.classList.remove('hidden');
+      arrow.textContent = '閉じる ▲';
+    } else {
+      el.classList.add('hidden');
+      arrow.textContent = '開く ▼';
+    }
+  };
+
+  window.copyIdToast = function(id) {
+    if (id && navigator.clipboard) navigator.clipboard.writeText(id).catch(function() {});
+  };
+
+  function showUndoToastBar(c) {
+    var bar = document.getElementById('undoToastBar');
+    var txt = document.getElementById('undoToastText');
+    var cnt = document.getElementById('undoToastCountdown');
+    if (!bar || !txt || !cnt) return;
+
+    if (state.undoToastTimer) clearTimeout(state.undoToastTimer);
+    if (state.undoToastInterval) clearInterval(state.undoToastInterval);
+
+    var rem = 12;
+    txt.textContent = '✅ ' + (c.name || '対象者') + '様を記録済';
+    cnt.textContent = '(' + rem + '秒)';
+    bar.classList.remove('hidden');
+
+    state.undoToastInterval = setInterval(function() {
+      rem--;
+      if (rem > 0) {
+        cnt.textContent = '(' + rem + '秒)';
+      } else {
+        clearInterval(state.undoToastInterval);
+      }
+    }, 1000);
+
+    state.undoToastTimer = setTimeout(function() {
+      bar.classList.add('hidden');
+      if (state.undoToastInterval) clearInterval(state.undoToastInterval);
+    }, 12000);
+  }
+
+  window.undoLastSentAction = function() {
+    var key = state.lastUndoKey;
+    if (!key) return;
+    if (state.lastUndoPrevLog) {
+      state.actionLogs[key] = state.lastUndoPrevLog;
+    } else {
+      delete state.actionLogs[key];
+    }
+    saveActionLogs();
+    var bar = document.getElementById('undoToastBar');
+    if (bar) bar.classList.add('hidden');
+    if (state.undoToastTimer) clearTimeout(state.undoToastTimer);
+    if (state.undoToastInterval) clearInterval(state.undoToastInterval);
+    renderList(true);
+  };
+
+  window.resendLastAsShortSms = function() {
+    var key = state.lastUndoKey;
+    if (!key) return;
+    window.undoLastSentAction();
+    openMessageModal(key);
+    setMsgMode('short', false);
+  };
+
+  function recordSentAction(personKey) {
+    var c = state.mergedCandidates.find(function(x) { return x.personKey === personKey; });
+    if (!c) return;
+    var now = Date.now();
+    var prev = state.actionLogs[personKey];
+    state.lastUndoKey = personKey;
+    state.lastUndoPrevLog = prev ? Object.assign({}, prev) : null;
+
+    var thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
+    var oneDayMs = 24 * 60 * 60 * 1000;
+
+    if (c.assignedTab === 'hot') {
+      if (prev && (prev.status === 'reminded' || prev.status === 'wait_remind')) {
+        state.actionLogs[personKey] = { status: 'cooldown', firstSentAt: prev.firstSentAt || now, lastSentAt: now, cooldownUntil: now + thirtyDaysMs, tab: c.assignedTab };
+      } else {
+        state.actionLogs[personKey] = { status: 'wait_remind', firstSentAt: now, lastSentAt: now, remindReadyAt: now + oneDayMs, tab: c.assignedTab };
+      }
+    } else if (c.assignedTab === 'normal') {
+      state.actionLogs[personKey] = { status: 'cooldown', firstSentAt: now, lastSentAt: now, cooldownUntil: now + thirtyDaysMs, tab: c.assignedTab };
+    } else {
+      state.actionLogs[personKey] = { status: 'done', firstSentAt: (prev && prev.firstSentAt) || now, lastSentAt: now, tab: c.assignedTab };
+    }
+    saveActionLogs();
+    renderList(true);
+    showUndoToastBar(c);
+  }
+
+  window.quickMarkDone = function(personKey) { recordSentAction(personKey); };
+  window.undoActionLog = function(personKey) { delete state.actionLogs[personKey]; saveActionLogs(); renderList(true); };
+
+  window.excludeCandidateForever = function(personKey) {
+    var c = state.mergedCandidates.find(function(x) { return x.personKey === personKey; });
+    if (!c) return;
+    var ts = new Date().toLocaleString('ja-JP');
+    state.excludedMap[personKey] = {
+      name: c.name || '不明',
+      phone: c.phone || '-',
+      address: c.address || '-',
+      reason: c.activeWarning || '手動チェック除外',
+      timestamp: ts
+    };
+    saveExcludedMap();
+    renderList(true);
+    showPopup('永続除外として格納しました', c.name + ' 様を除外リストへ保存し、全端末共有キューに登録しました。');
+  };
+
+  window.restoreExcludedCandidate = function(personKey) {
+    delete state.excludedMap[personKey];
+    saveExcludedMap();
+    renderExcludedModal();
+    renderList(true);
+  };
+
+  window.openMessageModal = function(personKey) {
+    var c = state.mergedCandidates.find(function(x) { return x.personKey === personKey; });
+    if (!c) return;
+    var log = state.actionLogs[c.personKey];
+    var defaultMode = (c.assignedTab === 'hot' && log && log.status === 'reminded') ? 'short' : 'normal';
+    state.modalTarget = c;
+    state.modalMode = defaultMode;
+    state.currentReasonIdx = Math.floor(Math.random() * SLIDE_REASONS_3DAYS.length);
+
+    var sal = extractSafeSalutation(c);
+    var globalNight = document.getElementById('filterNightShift').checked;
+    var nightCheck = document.getElementById('modalNightShiftCheck');
+    if (nightCheck) nightCheck.checked = (globalNight || c.isNightDefault);
+
+    setMsgMode(defaultMode, true);
+
+    document.getElementById('modalCandidateName').textContent = c.name + '（' + (c.branch || '-') + '）';
+    document.getElementById('modalSalutationInfo').textContent = '宛名判定：' + sal.text + '（' + sal.mode + '）';
+
+    var shuffleBox = document.getElementById('shuffleReasonBox');
+    if (c.assignedTab === 'within3days') {
+      shuffleBox.classList.remove('hidden');
+      document.getElementById('currentReasonText').textContent = SLIDE_REASONS_3DAYS[state.currentReasonIdx];
+    } else {
+      shuffleBox.classList.add('hidden');
+    }
+
+    var remindBox = document.getElementById('remindNoticeBox');
+    if (c.assignedTab === 'hot' && log && log.status === 'reminded') {
+      remindBox.classList.remove('hidden');
+    } else {
+      remindBox.classList.add('hidden');
+    }
+
+    refreshModalTextarea();
+    openModal('msgModal');
+  };
+
+  window.setMsgMode = function(mode, skipRefresh) {
+    state.modalMode = mode;
+    var bNorm = document.getElementById('btnModeNormal');
+    var bShort = document.getElementById('btnModeShort');
+    if (mode === 'normal') {
+      bNorm.className = 'px-3 py-1 rounded-md text-xs font-black bg-zinc-900 text-orange-400 transition';
+      bShort.className = 'px-3 py-1 rounded-md text-xs font-bold text-gray-600 hover:text-gray-900 transition';
+    } else {
+      bShort.className = 'px-3 py-1 rounded-md text-xs font-black bg-zinc-900 text-orange-400 transition';
+      bNorm.className = 'px-3 py-1 rounded-md text-xs font-bold text-gray-600 hover:text-gray-900 transition';
+    }
+    if (!skipRefresh) refreshModalTextarea();
+  };
+
+  window.onModalShiftToggle = function() {
+    refreshModalTextarea();
+  };
+
+  function refreshModalTextarea() {
+    if (!state.modalTarget) return;
+    var reason = SLIDE_REASONS_3DAYS[state.currentReasonIdx];
+    var nightEl = document.getElementById('modalNightShiftCheck');
+    var nightVal = nightEl ? nightEl.checked : false;
+    document.getElementById('modalMessageText').value = buildMessageForCandidate(state.modalTarget, reason, state.modalMode, nightVal);
+  }
+
+  window.shuffleReason = function() {
+    if (!state.modalTarget) return;
+    state.currentReasonIdx = (state.currentReasonIdx + 1) % SLIDE_REASONS_3DAYS.length;
+    document.getElementById('currentReasonText').textContent = SLIDE_REASONS_3DAYS[state.currentReasonIdx];
+    refreshModalTextarea();
+  };
+
+  window.copyMessageOnly = function() {
+    var txt = document.getElementById('modalMessageText').value;
+    if (navigator.clipboard) navigator.clipboard.writeText(txt);
+    showPopup('文面をコピーしました', 'クリップボードに送信文面をコピーしました。');
+  };
+
+  window.copyAndRecordAction = function() {
+    if (!state.modalTarget) return;
+    var txt = document.getElementById('modalMessageText').value;
+    if (navigator.clipboard) navigator.clipboard.writeText(txt);
+    var key = state.modalTarget.personKey;
+    closeModal('msgModal');
+    recordSentAction(key);
+  };
+
+  function setupDragAndDrop() {
+    var dz = document.getElementById('dropZone');
+    if (!dz) return;
+    dz.addEventListener('dragover', function(e) { e.preventDefault(); dz.classList.add('border-orange-500', 'bg-orange-50'); });
+    dz.addEventListener('dragleave', function() { dz.classList.remove('border-orange-500', 'bg-orange-50'); });
+    dz.addEventListener('drop', function(e) {
+      e.preventDefault();
+      dz.classList.remove('border-orange-500', 'bg-orange-50');
+      var file = e.dataTransfer.files[0];
+      if (file) readCsvFile(file);
+    });
+  }
+
+  window.handleCsvFileSelect = function(e) {
+    var file = e.target.files[0];
+    if (file) readCsvFile(file);
+    e.target.value = '';
+  };
+
+  function readCsvFile(file) {
+    var reader = new FileReader();
+    reader.onload = function(evt) {
+      var buf = evt.target.result;
+      var text = new TextDecoder('utf-8').decode(buf);
+      if (text.indexOf(String.fromCharCode(65533)) !== -1) text = new TextDecoder('shift-jis').decode(buf);
+      var rows = parseCsvRows(text);
+      if (rows.length < 2) { alert('CSVデータが正しく読み込めませんでした。'); return; }
+
+      var headers = rows[0].map(function(h) { return String(h || '').trim(); });
+      state.csvHeaders = headers;
+
+      var candidates = rows.slice(1).filter(function(r) {
+        return r.some(function(cell) { return String(cell || '').trim() !== ''; });
+      }).map(function(r, idx) {
+        var rawRow = {};
+        headers.forEach(function(h, i) {
+          var val = r[i] !== undefined ? String(r[i]).trim() : '';
+          if (val !== '') rawRow[h || ('列' + (i + 1))] = val;
+        });
+
+        var pick = function(keys) {
+          for (var i = 0; i < keys.length; i++) {
+            var k = keys[i];
+            if (rawRow[k]) return rawRow[k];
+            var foundKey = headers.find(function(h) { return h.indexOf(k) !== -1; });
+            if (foundKey && rawRow[foundKey]) return rawRow[foundKey];
+          }
+          return '';
+        };
+
+        var colBVal = (r[1] !== undefined) ? String(r[1]).trim() : '';
+        var finalStVal = colBVal || pick(['最終ステータス']);
+
+        var sei = pick(['姓']);
+        var mei = pick(['名']);
+        var fullName = pick(['氏名', '名前', '求職者名']) || (sei && mei ? sei + ' ' + mei : sei);
+
+        return {
+          id: pick(['応募者ID', '求職者ID', 'ID']) || ('ROW-' + (idx + 1)),
+          name: fullName,
+          kana: pick(['フリガナ', 'カナ', 'セイ']),
+          phone: pick(['電話番号', '携帯番号', 'TEL', '電話']),
+          dob: pick(['生年月日']),
+          age: pick(['年齢']),
+          address: pick(['住所', '現住所', '市区町村']),
+          pref: pick(['都道府県']),
+          branch: pick(['担当支店', '支店', 'エリア']),
+          staff: pick(['アテンド担当ユーザー', '担当者', '担当']),
+          qualification: pick(['保有資格', '資格']),
+          jobType: pick(['職種', '希望職種']),
+          status: pick(['ステータス', '応募ステータス', '進捗']),
+          finalStatus: finalStVal,
+          applyDate: pick(['応募日', '応募日時']),
+          attendDate: pick(['アテンド日', 'アテンド日時', '面談日']),
+          contactDate: pick(['接触日時', '最終接触日', '連絡日']),
+          startDate: pick(['就業開始希望日', '就業可能時期', '開始希望日']),
+          shiftPref: (rawRow['勤務可能シフト(夜勤)'] !== undefined ? rawRow['勤務可能シフト(夜勤)'] : pick(['勤務可能シフト(夜勤)', '希望シフト', 'シフト', '夜勤'])),
+          conditions: pick(['把握済条件', '備考', 'メモ', '希望条件']),
+          rawRow: rawRow
+        };
+      });
+
+      try { localStorage.setItem(STORAGE_KEYS.CANDIDATE_CACHE, JSON.stringify({ headers: headers, candidates: candidates })); } catch (e) {}
+
+      processCandidates(candidates, 'CSV読込済 (全' + headers.length + '列)');
+      closeModal('csvModal');
+      showPopup('インポート完了！', 'ファイル名：' + file.name + LF + '全 ' + headers.length + ' 列・' + candidates.length + ' 件を読み込みました。');
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  function parseCsvRows(text) {
+    var rows = [], row = [], cell = '', inQuotes = false;
+    for (var i = 0; i < text.length; i++) {
+      var ch = text[i], next = text[i + 1];
+      if (inQuotes) {
+        if (ch === DQ && next === DQ) { cell += DQ; i++; }
+        else if (ch === DQ) { inQuotes = false; }
+        else { cell += ch; }
+      } else {
+        if (ch === DQ) { inQuotes = true; }
+        else if (ch === ',') { row.push(cell); cell = ''; }
+        else if (ch === CR && next === LF) { row.push(cell); rows.push(row); row = []; cell = ''; i++; }
+        else if (ch === LF || ch === CR) { row.push(cell); rows.push(row); row = []; cell = ''; }
+        else { cell += ch; }
+      }
+    }
+    if (cell.length > 0 || row.length > 0) { row.push(cell); rows.push(row); }
+    return rows;
+  }
+
+  window.resetToDemoData = function() {
+    localStorage.removeItem(STORAGE_KEYS.CANDIDATE_CACHE);
+    closeModal('csvModal');
+    loadInitialData();
+    showPopup('デモデータに戻しました', '初期サンプルデータ表示に戻りました。');
+  };
+
+  window.clearActionHistory = function() {
+    if (!confirm('送信履歴・翌日リマインド・30日クールダウン履歴をリセットしますか？')) return;
+    state.actionLogs = {};
+    saveActionLogs();
+    renderList(true);
+    showPopup('履歴をリセットしました', 'すべての送信・クールダウン履歴を初期化しました。');
+  };
+
+  function getExportTargetList() {
+    var checkedRadio = document.querySelector('input[name="exportScope"]:checked');
+    var scope = checkedRadio ? checkedRadio.value : 'current';
+    var unactedEl = document.getElementById('exportUnactedOnly');
+    var unactedOnly = unactedEl ? unactedEl.checked : true;
+    if (scope === 'current') return getFilteredCandidates({ unactedOnly: unactedOnly });
+    if (scope === 'tabAll') return getFilteredCandidates({ unactedOnly: unactedOnly, ignoreFilters: true });
+    return getFilteredCandidates({ tab: '', unactedOnly: unactedOnly, ignoreFilters: true });
+  }
+
+  window.updateExportPreview = function() {
+    var list = getExportTargetList();
+    document.getElementById('exportTargetCountBadge').textContent = '対象: ' + list.length + '件';
+    var tbody = document.getElementById('exportPreviewBody');
+    var tabNames = { within3days: '3日以内未FIX', unfixed: '未FIX人材', hot: '激熱掘起', future: '未来人材', normal: '通常掘起' };
+    tbody.innerHTML = list.slice(0, 3).map(function(c) {
+      var sal = extractSafeSalutation(c);
+      var act = getActionState(c);
+      var jobs = getMatchedJobs(c);
+      var boSummary = jobs.dispatch.map(function(j) { return j.name + '(約' + j.distKm + 'km/' + j.address + ')'; }).join(' / ');
+      return '<tr><td class="px-2.5 py-1.5 font-bold text-orange-600 whitespace-nowrap">' + (tabNames[c.assignedTab] || c.assignedTab) + '</td><td class="px-2.5 py-1.5 whitespace-nowrap">' + escapeHtml(act.label) + '</td><td class="px-2.5 py-1.5 font-bold whitespace-nowrap">' + escapeHtml(c.name) + '</td><td class="px-2.5 py-1.5 whitespace-nowrap">' + escapeHtml(sal.text) + '</td><td class="px-2.5 py-1.5 whitespace-nowrap">' + escapeHtml(c.phone || '-') + '</td><td class="px-2.5 py-1.5 whitespace-nowrap">' + escapeHtml(c.branch || '-') + '</td><td class="px-2.5 py-1.5 max-w-[200px] truncate">' + escapeHtml(boSummary || '-') + '</td></tr>';
+    }).join('') || '<tr><td colspan="7" class="px-3 py-4 text-center text-gray-400">出力対象データがありません</td></tr>';
+  };
+
+  window.quickExportCurrent = function() {
+    downloadCsvFromList(getFilteredCandidates(), false, false);
+  };
+
+  window.quickPresetExport = function(scope, smsSlimOnly) {
+    var list = (scope === 'allTabs')
+      ? getFilteredCandidates({ tab: '', unactedOnly: true, ignoreFilters: true })
+      : getFilteredCandidates();
+    closeModal('exportModal');
+    downloadCsvFromList(list, false, smsSlimOnly, scope === 'allTabs' ? '全5タブ一括' : null);
+  };
+
+  window.executeCsvExport = function() {
+    var list = getExportTargetList();
+    var includeRaw = document.getElementById('exportIncludeRaw').checked;
+    var smsSlimEl = document.getElementById('exportSmsSlimOnly');
+    var smsSlimOnly = smsSlimEl ? smsSlimEl.checked : false;
+    closeModal('exportModal');
+    downloadCsvFromList(list, includeRaw, smsSlimOnly);
+  };
+
+  function downloadCsvFromList(list, includeRaw, smsSlimOnly, customLabel) {
+    if (!list || list.length === 0) { alert('出力対象のデータが0件です。'); return; }
+    var tabNames = { within3days: '3日以内未FIX', unfixed: '未FIX人材', hot: '激熱掘起', future: '未来人材', normal: '通常掘起' };
+    var dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    var areaLabel = state.currentArea === 'kanto' ? '関東' : '全エリア';
+    var tabLabel = customLabel || tabNames[state.currentTab] || '追客';
+
+    if (smsSlimOnly) {
+      var smsHeaders = ['電話番号', '氏名', '宛名', '追客区分', '送信文面'];
+      var smsLines = [smsHeaders.map(csvEscape).join(',')];
+      list.forEach(function(c) {
+        var sal = extractSafeSalutation(c);
+        var msg = buildMessageForCandidate(c);
+        smsLines.push([c.phone || '', c.name || '', sal.text, tabNames[c.assignedTab] || c.assignedTab, msg].map(csvEscape).join(','));
+      });
+      var bomSms = new Uint8Array([0xEF, 0xBB, 0xBF]);
+      var blobSms = new Blob([bomSms, smsLines.join(CRLF)], { type: 'text/csv;charset=utf-8;' });
+      var smsFileName = 'SMS配信用_' + areaLabel + '_' + tabLabel + '_' + list.length + '件_' + dateStr + '.csv';
+      triggerDownload(blobSms, smsFileName);
+      showPopup('SMS配信用CSV出力完了！', 'ファイル名：' + smsFileName + LF + '対象 ' + list.length + ' 件を出力しました。');
+      return;
+    }
+
+    var baseHeaders = ['追客区分', '対応状況', '氏名', '宛名', '電話番号', '担当支店', 'アテンド担当', '職種', '保有資格', 'B列_最終ステータス', '就業開始希望日', '遠方打診判定', '生成済み送信文面', '候補BO1_施設形態', '候補BO1_施設名', '候補BO1_住所', '候補BO1_距離km', '候補BO2_施設形態', '候補BO2_施設名', '候補BO2_住所', '候補BO2_距離km', '候補BO3_施設形態', '候補BO3_施設名', '候補BO3_住所', '候補BO3_距離km', '直接雇用求人_施設形態', '直接雇用求人_施設名', '直接雇用求人_住所', '直接雇用求人_距離km', '応募者ID'];
+    var rawHeaders = includeRaw ? state.csvHeaders : [];
+    var allHeaders = baseHeaders.concat(rawHeaders);
+    var csvLines = [allHeaders.map(csvEscape).join(',')];
+
+    list.forEach(function(c) {
+      var sal = extractSafeSalutation(c);
+      var act = getActionState(c);
+      var jobs = getMatchedJobs(c);
+      var msg = buildMessageForCandidate(c);
+      var d0 = jobs.dispatch[0] || {}, d1 = jobs.dispatch[1] || {}, d2 = jobs.dispatch[2] || {}, dir0 = jobs.direct[0] || {};
+      var row = [
+        tabNames[c.assignedTab] || c.assignedTab, act.label, c.name || '', sal.text, c.phone || '',
+        c.branch || '', c.staff || '', c.jobType || '', c.qualification || '', getColBFinalStatus(c),
+        c.startDate || '', jobs.isFarFallback ? '30km圏内(遠方②)' : '10km圏内', msg,
+        d0.facilityCat || '', d0.name || '', d0.address || '', d0.distKm !== undefined ? d0.distKm : '',
+        d1.facilityCat || '', d1.name || '', d1.address || '', d1.distKm !== undefined ? d1.distKm : '',
+        d2.facilityCat || '', d2.name || '', d2.address || '', d2.distKm !== undefined ? d2.distKm : '',
+        dir0.facilityCat || '', dir0.name || '', dir0.address || '', dir0.distKm !== undefined ? dir0.distKm : '',
+        c.id || ''
+      ];
+      if (includeRaw) {
+        rawHeaders.forEach(function(h) { row.push((c.rawRow && c.rawRow[h] !== undefined) ? c.rawRow[h] : ''); });
+      }
+      csvLines.push(row.map(csvEscape).join(','));
+    });
+
+    var bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
+    var blob = new Blob([bom, csvLines.join(CRLF)], { type: 'text/csv;charset=utf-8;' });
+    var fileName = '追客リスト_' + areaLabel + '_' + tabLabel + '_' + list.length + '件_' + dateStr + '.csv';
+    triggerDownload(blob, fileName);
+    showPopup('エクスポート完了！', 'ファイル名：' + fileName + LF + '対象 ' + list.length + ' 件をExcel対応CSVとしてダウンロードしました。');
+  }
+
+  function csvEscape(val) {
+    var s = String(val === undefined || val === null ? '' : val);
+    return DQ + s.split(DQ).join(DQ + DQ) + DQ;
+  }
+
+  function triggerDownload(blob, filename) {
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  function buildDataJsContent() {
+    var compactCandidates = state.rawCandidates.map(function(c) {
+      var cleanRaw = {};
+      if (c.rawRow) {
+        Object.keys(c.rawRow).forEach(function(k) {
+          if (c.rawRow[k] !== '' && c.rawRow[k] !== null && c.rawRow[k] !== undefined) {
+            cleanRaw[k] = c.rawRow[k];
+          }
+        });
+      }
+      var copy = Object.assign({}, c, { rawRow: cleanRaw });
+      Object.keys(copy).forEach(function(k) {
+        if (copy[k] === '' || copy[k] === null || copy[k] === undefined) delete copy[k];
+      });
+      return copy;
+    });
+
+    var payload = {
+      updatedAt: new Date().toLocaleString('ja-JP'),
+      sourceLabel: '外部 data.js (' + new Date().toLocaleDateString('ja-JP') + '更新・軽量版)',
+      headers: state.csvHeaders,
+      demoCandidates: compactCandidates
+    };
+    return 'window.BSTYLE_APP_DATA=' + JSON.stringify(payload) + ';' + LF;
+  }
+
+  window.exportDataJsFile = function() {
+    var content = buildDataJsContent();
+    var blob = new Blob([content], { type: 'application/javascript;charset=utf-8;' });
+    triggerDownload(blob, 'data.js');
+    closeModal('csvModal');
+    showPopup('data.js エクスポート完了！', '全 ' + state.rawCandidates.length + ' 件を軽量圧縮した data.js をダウンロードしました。');
+  };
+
+  window.saveGithubConfig = function() {
+    state.settings.ghRepo = document.getElementById('ghRepoInput').value.trim();
+    state.settings.ghBranch = document.getElementById('ghBranchInput').value.trim() || 'main';
+    state.settings.ghPath = document.getElementById('ghPathInput').value.trim() || 'data.js';
+    state.settings.ghToken = document.getElementById('ghTokenInput').value.trim();
+    localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(state.settings));
+    syncHistoryFromGithub(false);
+    showPopup('GitHub設定を保存しました', '設定を保存し、端末間の完了・除外履歴同期を有効化しました。');
+  };
+
+  window.pushDataJsToGithub = async function() {
+    state.settings.ghRepo = document.getElementById('ghRepoInput').value.trim();
+    state.settings.ghBranch = document.getElementById('ghBranchInput').value.trim() || 'main';
+    state.settings.ghPath = document.getElementById('ghPathInput').value.trim() || 'data.js';
+    state.settings.ghToken = document.getElementById('ghTokenInput').value.trim();
+    localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(state.settings));
+
+    var ghRepo = state.settings.ghRepo, ghBranch = state.settings.ghBranch, ghPath = state.settings.ghPath, ghToken = state.settings.ghToken;
+    if (!ghRepo || !ghToken) { alert('GitHub リポジトリ名と Personal Access Token を入力してください。'); return; }
+    var btn = document.getElementById('ghPushBtn');
+    var origText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = '⏳ 大容量データ送信中（1/4）...';
+
+    var headers = {
+      'Authorization': 'Bearer ' + ghToken,
+      'Accept': 'application/vnd.github+json',
+      'Content-Type': 'application/json'
+    };
+
+    try {
+      var baseApi = 'https://api.github.com/repos/' + ghRepo;
+      var refRes = await fetch(baseApi + '/git/ref/heads/' + encodeURIComponent(ghBranch), { headers: headers });
+      if (!refRes.ok) {
+        var errRef = await refRes.json().catch(function() { return {}; });
+        throw new Error('ブランチ取得エラー: ' + (errRef.message || refRes.status));
+      }
+      var refData = await refRes.json();
+      var latestCommitSha = refData.object.sha;
+
+      btn.textContent = '⏳ ツリー情報取得中（2/4）...';
+      var commitRes = await fetch(baseApi + '/git/commits/' + latestCommitSha, { headers: headers });
+      var commitData = await commitRes.json();
+      var baseTreeSha = commitData.tree.sha;
+
+      btn.textContent = '⏳ data.js アップロード中（3/4）...';
+      var contentStr = buildDataJsContent();
+      var base64Str = utf8ToBase64(contentStr);
+      var sizeKb = Math.round(base64Str.length * 0.75 / 1024);
+
+      var blobRes = await fetch(baseApi + '/git/blobs', {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify({ content: base64Str, encoding: 'base64' })
+      });
+      if (!blobRes.ok) {
+        var errBlob = await blobRes.json().catch(function() { return {}; });
+        throw new Error('Blob作成エラー: ' + (errBlob.message || blobRes.status));
+      }
+      var blobData = await blobRes.json();
+
+      btn.textContent = '⏳ コミット反映中（4/4）...';
+      var treeRes = await fetch(baseApi + '/git/trees', {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify({
+          base_tree: baseTreeSha,
+          tree: [{ path: ghPath, mode: '100644', type: 'blob', sha: blobData.sha }]
+        })
+      });
+      var treeData = await treeRes.json();
+
+      var newCommitRes = await fetch(baseApi + '/git/commits', {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify({
+          message: 'Update ' + ghPath + ' (' + state.rawCandidates.length + '件 / ' + sizeKb + 'KB)',
+          tree: treeData.sha,
+          parents: [latestCommitSha]
+        })
+      });
+      var newCommitData = await newCommitRes.json();
+
+      var patchRefRes = await fetch(baseApi + '/git/refs/heads/' + encodeURIComponent(ghBranch), {
+        method: 'PATCH',
+        headers: headers,
+        body: JSON.stringify({ sha: newCommitData.sha })
+      });
+      if (!patchRefRes.ok) {
+        var errPatch = await patchRefRes.json().catch(function() { return {}; });
+        throw new Error('ブランチ更新エラー: ' + (errPatch.message || patchRefRes.status));
+      }
+
+      closeModal('githubModal');
+      showPopup('🚀 GitHub自動反映が完了しました！', 'リポジトリ：' + ghRepo + ' (' + ghBranch + ')' + LF + '更新ファイル：' + ghPath + '（' + state.rawCandidates.length + '件 / 約' + sizeKb + 'KB）' + LF + '約30秒〜1分で公開ページに最新データが自動反映されます。');
+    } catch (err) {
+      alert('GitHubへの自動反映に失敗しました：' + err.message);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = origText;
+    }
+  };
+
+  window.saveAndLoadExternalDataUrl = function() {
+    var url = document.getElementById('externalDataUrlInput').value.trim();
+    state.settings.externalDataUrl = url;
+    localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(state.settings));
+    if (!url) return;
+    if (url.slice(-3) === '.js') {
+      var s = document.createElement('script');
+      s.src = url + (url.indexOf('?') !== -1 ? AMP : '?') + 't=' + Date.now();
+      s.onload = function() {
+        if (window.BSTYLE_APP_DATA && window.BSTYLE_APP_DATA.demoCandidates) {
+          state.csvHeaders = window.BSTYLE_APP_DATA.headers || [];
+          processCandidates(window.BSTYLE_APP_DATA.demoCandidates, '外部URL data.js 同期済');
+          closeModal('urlModal');
+          showPopup('外部データ読込完了', url + ' から最新データを読み込みました。');
+        }
+      };
+      s.onerror = function() { alert('外部JSファイルの読み込みに失敗しました。'); };
+      document.head.appendChild(s);
+    } else {
+      fetch(url).then(function(r) { return r.json(); }).then(function(data) {
+        var list = Array.isArray(data) ? data : (data.demoCandidates || data.candidates || []);
+        processCandidates(list, '外部JSON同期済');
+        closeModal('urlModal');
+        showPopup('外部JSON読込完了', list.length + '件を読み込みました。');
+      }).catch(function(e) { alert('外部JSONの読み込みに失敗しました：' + e.message); });
+    }
+  };
+
+  window.fetchJobMasterFromUrl = function() {
+    var url = document.getElementById('jobMasterUrlInput').value.trim();
+    state.settings.jobMasterUrl = url || SEARCH_ORDER_JOBS_URL;
+    localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(state.settings));
+    syncFromSearchOrderPublic(true);
+  };
+
+  window.openModal = function(id) {
+    if (id === 'exportModal') updateExportPreview();
+    if (id === 'excludedModal') renderExcludedModal();
+    if (id === 'mergeInfoModal') renderMergeInfoModal();
+    document.getElementById(id).classList.remove('hidden');
+  };
+
+  window.closeModal = function(id) {
+    document.getElementById(id).classList.add('hidden');
+  };
+
+  function showPopup(title, message) {
+    document.getElementById('popupTitle').textContent = title;
+    document.getElementById('popupMessage').textContent = message;
+    document.getElementById('popupModal').classList.remove('hidden');
+  }
+
+  function renderExcludedModal() {
+    var container = document.getElementById('excludedListContainer');
+    var keys = Object.keys(state.excludedMap);
+    if (keys.length === 0) {
+      container.innerHTML = '<p class="text-center text-gray-400 py-6">現在、永続除外リストに登録されている求職者はいません。</p>';
+      return;
+    }
+    container.innerHTML = keys.map(function(k) {
+      var item = state.excludedMap[k];
+      return '<div class="border border-gray-200 rounded-xl p-3 flex items-center justify-between gap-2 bg-gray-50"><div><p class="font-bold text-gray-900">' + escapeHtml(item.name) + '（TEL: ' + escapeHtml(item.phone) + '）</p><p class="text-[11px] text-gray-500">住所: ' + escapeHtml(item.address) + ' ／ 除外日時: ' + escapeHtml(item.timestamp) + '</p><p class="text-[11px] text-rose-600 font-medium">' + escapeHtml(item.reason) + '</p></div><button type="button" onclick="restoreExcludedCandidate(' + SQ + escapeHtml(k) + SQ + ')" class="px-3 py-1.5 rounded-lg bg-white border border-gray-300 hover:bg-gray-100 font-bold text-gray-700 whitespace-nowrap">除外解除</button></div>';
+    }).join('');
+  }
+
+  function renderMergeInfoModal() {
+    var body = document.getElementById('mergeInfoBody');
+    var logCount = Object.keys(state.actionLogs).length;
+    var excCount = Object.keys(state.excludedMap).length;
+    body.innerHTML = '<div class="bg-gray-50 rounded-xl p-3.5 border border-gray-200 space-y-1.5"><p>・元CSV総行数：<strong>' + state.rawCandidates.length + ' 件</strong></p><p>・重複名寄せ統合（同一人物合体）：<strong>' + state.mergedDupCount + ' 件</strong></p><p>・稼働中／職見待ち／内定待ち 電話番号一致の自動除外：<strong>' + state.autoExcludedCount + ' 件</strong></p><p>・チェックボックス永続除外（全端末共有）：<strong>' + excCount + ' 件</strong></p><p>・GitHub同期中の送信／クールダウン履歴：<strong>' + logCount + ' 件</strong></p><p>・searchOrder 連携済案件数：<strong>' + state.searchOrderJobs.length.toLocaleString() + ' 件</strong></p></div>';
+  }
+
+  window.openRawRowModal = function(personKey) {
+    var c = state.mergedCandidates.find(function(x) { return x.personKey === personKey; });
+    if (!c) return;
+    state.currentRawCandidate = c;
+    document.getElementById('rawRowModalTitle').textContent = c.name + ' 様の元CSV全列データ';
+    renderCurrentRawModal();
+    openModal('rawRowModal');
+  };
+
+  window.renderCurrentRawModal = function() {
+    var c = state.currentRawCandidate;
+    if (!c) return;
+    var hideEmpty = document.getElementById('rawHideEmpty').checked;
+    var raw = c.rawRow || {};
+    var entries = Object.entries(raw).filter(function(kv) { return !hideEmpty || String(kv[1] || '').trim() !== ''; });
+    document.getElementById('rawColCountText').textContent = '表示列数: ' + entries.length + ' / 全' + Object.keys(raw).length + '列';
+    document.getElementById('rawRowModalBody').innerHTML = entries.map(function(kv) {
+      return '<div class="py-2 flex flex-col sm:flex-row sm:items-baseline gap-1 sm:gap-3"><span class="sm:w-48 shrink-0 font-bold text-gray-600">' + escapeHtml(kv[0]) + '</span><span class="text-gray-900 break-all">' + escapeHtml(kv[1] || '-') + '</span></div>';
+    }).join('') || '<p class="text-center text-gray-400 py-6">表示できる列データがありません。</p>';
+  };
+
+  function escapeHtml(str) {
+    var s = String(str === undefined || str === null ? '' : str);
+    return s
+      .split(AMP).join(AMP + 'amp;')
+      .split('<').join(AMP + 'lt;')
+      .split('>').join(AMP + 'gt;')
+      .split(DQ).join(AMP + 'quot;')
+      .split(SQ).join(AMP + '#39;');
+  }
+
+  loadPersistentStorage();
+  loadInitialData();
+  setupDragAndDrop();
+  syncFromSearchOrderPublic(false);
+  syncHistoryFromGithub(false);
+})();
+</script>
+</body>
+</html>
