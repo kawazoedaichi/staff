@@ -23,9 +23,10 @@
     <div class="max-w-7xl mx-auto px-3 sm:px-6 pt-3 pb-2 flex flex-wrap items-center justify-between gap-2">
       <div class="flex items-center gap-2.5">
         <div class="w-8 h-8 rounded-lg bg-orange-500 text-zinc-950 font-black flex items-center justify-center text-lg shadow">B</div>
-        <div class="flex items-center gap-2">
+        <div class="flex flex-wrap items-center gap-2">
           <h1 class="font-bold text-base sm:text-lg tracking-tight">ビースタイル 追客・掘り起こし管理</h1>
           <span id="dataSourceBadge" class="text-[11px] px-2 py-0.5 rounded-full bg-zinc-800 text-orange-400 border border-zinc-700 font-medium">読込中...</span>
+          <span id="historySyncBadge" class="text-[11px] px-2 py-0.5 rounded-full bg-zinc-900 text-emerald-400 border border-emerald-700/50 font-medium">履歴同期確認中...</span>
         </div>
       </div>
 
@@ -40,7 +41,7 @@
         </a>
         <button type="button" onclick="openModal('githubModal')"
            class="px-2.5 py-1.5 rounded-md bg-zinc-900 hover:bg-zinc-800 text-emerald-400 border border-emerald-500/40 font-bold transition flex items-center gap-1">
-          <span>🚀 GitHub自動反映</span>
+          <span>🚀 GitHub同期設定</span>
         </button>
         <button type="button" onclick="openModal('exportModal')"
            class="px-2.5 py-1.5 rounded-md bg-zinc-800 hover:bg-zinc-700 text-white border border-zinc-600 font-bold transition">
@@ -57,7 +58,6 @@
       </div>
     </div>
 
-    <!-- 5タブナビゲーション（3日以内未FIX → 未FIX人材 → 激熱掘起 → 未来人材 → 通常掘起） -->
     <nav class="max-w-7xl mx-auto px-2 sm:px-6 flex overflow-x-auto scrollbar-hide gap-1 sm:gap-4 text-xs sm:text-sm pt-1">
       <button type="button" onclick="switchTab('within3days')" id="tab-within3days" class="tab-active py-2.5 px-2.5 whitespace-nowrap flex items-center gap-1.5 transition">
         <span>3日以内 未FIX人材</span>
@@ -90,7 +90,7 @@
       </button>
       <div id="guideBody" class="hidden px-4 pb-3 pt-1 border-t border-gray-100 text-xs text-gray-600 space-y-1.5 bg-orange-50/40">
         <p id="guideDesc"></p>
-        <p class="text-[11px] text-gray-500">※ CSVのB列（最終ステータス）を参照し、「3日以内 未FIX人材」「未FIX人材」はB列＝「FIX待ち」のみ抽出します。また、searchOrderの公開案件データ（jobs.json）および高精度座標辞書（coords_dict.json）を自動取得し、自宅住所から本当に5km以内（紹介は2km以内）の案件だけを直線距離計算して表示します。</p>
+        <p class="text-[11px] text-gray-500">※ searchOrder と同じく国土地理院API＋町丁目辞書で自宅番地から直線距離（派遣5km・紹介2km）を算出し、50件ずつの軽量段階表示で高速動作します。</p>
       </div>
     </div>
 
@@ -106,6 +106,9 @@
         </div>
 
         <div class="flex flex-wrap items-center gap-2 text-xs">
+          <button type="button" onclick="syncHistoryFromGithub(true)" class="px-2.5 py-1 rounded-md bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 font-bold transition">
+            🔄 履歴再同期
+          </button>
           <button type="button" onclick="openModal('excludedModal')" class="px-2.5 py-1 rounded-md bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold transition flex items-center gap-1">
             <span>除外済リスト</span>
             <span id="excludedCountBadge" class="px-1.5 py-0.2 bg-rose-600 text-white rounded-full text-[10px]">0</span>
@@ -116,24 +119,28 @@
         </div>
       </div>
 
-      <div class="grid grid-cols-1 sm:grid-cols-4 gap-2">
-        <select id="filterPref" onchange="renderList()" class="rounded-lg border border-gray-300 px-3 py-1.5 text-xs bg-white focus:outline-none focus:border-orange-500">
+      <div class="grid grid-cols-1 sm:grid-cols-5 gap-2">
+        <select id="filterPref" onchange="resetPageAndRender()" class="rounded-lg border border-gray-300 px-3 py-1.5 text-xs bg-white focus:outline-none focus:border-orange-500">
           <option value="">都道府県：すべて</option>
         </select>
-        <select id="filterStaff" onchange="renderList()" class="rounded-lg border border-gray-300 px-3 py-1.5 text-xs bg-white focus:outline-none focus:border-orange-500">
+        <select id="filterStaff" onchange="resetPageAndRender()" class="rounded-lg border border-gray-300 px-3 py-1.5 text-xs bg-white focus:outline-none focus:border-orange-500">
           <option value="">アテンド担当ユーザー：すべて</option>
         </select>
-        <select id="filterBranch" onchange="renderList()" class="rounded-lg border border-gray-300 px-3 py-1.5 text-xs bg-white focus:outline-none focus:border-orange-500">
+        <select id="filterBranch" onchange="resetPageAndRender()" class="rounded-lg border border-gray-300 px-3 py-1.5 text-xs bg-white focus:outline-none focus:border-orange-500">
           <option value="">担当支店：すべて</option>
         </select>
+        <label class="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-indigo-200 bg-indigo-50/70 text-xs font-bold text-indigo-900 cursor-pointer select-none">
+          <input type="checkbox" id="filterNightShift" onchange="resetPageAndRender()" class="accent-indigo-600 w-4 h-4 rounded" />
+          <span>🌙 夜勤求人を表示（OFF=日勤のみ）</span>
+        </label>
         <label class="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-orange-200 bg-orange-50/70 text-xs font-bold text-gray-800 cursor-pointer select-none">
-          <input type="checkbox" id="filterUnactedOnly" checked onchange="renderList()" class="accent-orange-500 w-4 h-4 rounded" />
+          <input type="checkbox" id="filterUnactedOnly" checked onchange="resetPageAndRender()" class="accent-orange-500 w-4 h-4 rounded" />
           <span>未対応のみ表示</span>
         </label>
       </div>
 
       <div class="flex flex-col sm:flex-row gap-2">
-        <input type="text" id="searchInput" oninput="renderList()" placeholder="氏名・フリガナ・電話番号・ID・エリア・資格で検索..."
+        <input type="text" id="searchInput" oninput="onSearchInput()" placeholder="氏名・フリガナ・電話番号・ID・エリア・資格で検索（入力時は対応済も横断ヒット）..."
                class="flex-1 rounded-lg border border-gray-300 px-3 py-1.5 text-xs focus:outline-none focus:border-orange-500" />
         <button type="button" onclick="quickExportCurrent()" class="px-4 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-orange-400 border border-zinc-700 text-xs font-bold whitespace-nowrap transition shadow-sm">
           表示中を即CSV出力
@@ -146,14 +153,21 @@
         <span class="font-bold text-gray-900" id="resultCountText">該当: 0件</span>
         <span class="text-gray-400">|</span>
         <span id="jobMasterSummary" class="font-semibold text-emerald-700">searchOrder案件同期中...</span>
+        <span id="gsiStatusSummary" class="text-sky-700 font-medium"></span>
         <span id="autoExcludedSummary" class="text-rose-600 font-medium"></span>
       </div>
       <div class="text-[11px] text-gray-500">
-        ※ 送信履歴・翌日リマインド・30日クールダウンはCSV再読込でも消えない独立ストレージに保存されます
+        ※ 完了・除外履歴は GitHub（history.json）に自動同期され、別端末でも共有されます
       </div>
     </div>
 
-    <div id="candidateList" class="space-y-3 pb-10"></div>
+    <div id="candidateList" class="space-y-3 pb-4"></div>
+
+    <div id="paginationBox" class="hidden pb-12 text-center">
+      <button type="button" onclick="loadMoreItems()" id="loadMoreBtn" class="px-6 py-3 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-orange-400 font-black text-xs shadow-md transition">
+        さらに次の50件を表示する
+      </button>
+    </div>
   </main>
 
   <div id="msgModal" class="hidden fixed inset-0 z-50 modal-backdrop flex items-center justify-center p-3">
@@ -166,13 +180,24 @@
         <button type="button" onclick="closeModal('msgModal')" class="text-gray-400 hover:text-white text-xl font-bold px-2">×</button>
       </div>
       <div class="p-4 sm:p-5 overflow-y-auto space-y-3 text-xs">
-        <div id="shuffleReasonBox" class="hidden bg-orange-50 border border-orange-200 rounded-xl p-3 flex flex-wrap items-center justify-between gap-2">
-          <div>
-            <span class="font-bold text-orange-800">自動差し込み理由：</span>
-            <span id="currentReasonText" class="font-bold text-gray-900"></span>
+        <div class="flex flex-wrap items-center justify-between gap-2 bg-gray-100 p-2.5 rounded-xl border border-gray-200">
+          <div class="inline-flex rounded-lg bg-white p-0.5 border border-gray-300">
+            <button type="button" onclick="setMsgMode('normal')" id="btnModeNormal" class="px-3 py-1 rounded-md text-xs font-black bg-zinc-900 text-orange-400 transition">📄 通常版（標準文面）</button>
+            <button type="button" onclick="setMsgMode('short')" id="btnModeShort" class="px-3 py-1 rounded-md text-xs font-bold text-gray-600 hover:text-gray-900 transition">📱 SMS短縮版（分割防止）</button>
           </div>
-          <button type="button" onclick="shuffleReason()" class="px-3 py-1 rounded-lg bg-orange-500 hover:bg-orange-600 text-zinc-950 font-black transition shadow-sm">
-            🔄 理由を再抽選
+          <label class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white border border-indigo-200 font-bold text-indigo-900 cursor-pointer">
+            <input type="checkbox" id="modalNightShiftCheck" onchange="onModalShiftToggle()" class="accent-indigo-600 w-3.5 h-3.5" />
+            <span>🌙 夜勤求人で作成</span>
+          </label>
+        </div>
+
+        <div id="shuffleReasonBox" class="hidden bg-orange-50 border border-orange-200 rounded-xl p-3 flex flex-wrap items-center justify-between gap-2">
+          <div class="flex-1 min-w-[200px]">
+            <span class="font-bold text-orange-800 block mb-0.5">選択中の先方連絡理由（4パターン）：</span>
+            <span id="currentReasonText" class="font-medium text-gray-900"></span>
+          </div>
+          <button type="button" onclick="shuffleReason()" class="px-3 py-1.5 rounded-lg bg-orange-500 hover:bg-orange-600 text-zinc-950 font-black transition shadow-sm whitespace-nowrap">
+            🔄 別パターンに切替
           </button>
         </div>
         <div id="remindNoticeBox" class="hidden bg-amber-50 border border-amber-300 rounded-xl p-3 text-amber-900 font-bold">
@@ -183,13 +208,14 @@
             <label class="font-bold text-gray-700">送信メッセージ文面（編集可能）</label>
             <span id="modalSalutationInfo" class="text-[11px] text-orange-600 font-bold"></span>
           </div>
-          <textarea id="modalMessageText" rows="11" class="w-full rounded-xl border border-gray-300 p-3 text-xs sm:text-sm leading-relaxed focus:outline-none focus:border-orange-500 font-sans"></textarea>
+          <textarea id="modalMessageText" rows="12" class="w-full rounded-xl border border-gray-300 p-3 text-xs sm:text-sm leading-relaxed focus:outline-none focus:border-orange-500 font-sans"></textarea>
         </div>
       </div>
       <div class="bg-gray-50 px-5 py-3.5 border-t border-gray-200 flex flex-wrap items-center justify-end gap-2">
-        <button type="button" onclick="closeModal('msgModal')" class="px-4 py-2 rounded-xl border border-gray-300 text-gray-700 text-xs font-bold hover:bg-gray-100">閉じる</button>
-        <button type="button" onclick="copyMessageOnly()" class="px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-bold">文面だけコピー</button>
-        <button type="button" onclick="copyAndRecordAction()" class="px-5 py-2 rounded-xl bg-orange-500 hover:bg-orange-600 text-zinc-950 text-xs font-black shadow">📋 コピーして送信記録をつける（完了）</button>
+        <button type="button" onclick="closeModal('msgModal')" class="px-3.5 py-2 rounded-xl border border-gray-300 text-gray-700 text-xs font-bold hover:bg-gray-100">閉じる</button>
+        <button type="button" onclick="copyMessageOnly()" class="px-3.5 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-bold">文面コピー</button>
+        <button type="button" onclick="copyAndRecordAction()" class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-zinc-950 text-xs font-black shadow-sm">📋 コピー＆完了記録</button>
+        <button type="button" onclick="launchSmsAndRecordModal()" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black shadow">📱 SMS起動＆完了記録</button>
       </div>
     </div>
   </div>
@@ -204,7 +230,7 @@
         <div class="bg-orange-50 border border-orange-200 rounded-xl p-3 flex items-center justify-between gap-2">
           <div>
             <p class="font-bold text-gray-900">1. Refoから全列CSVをダウンロード</p>
-            <p class="text-[11px] text-gray-600">B列（2列目）を「最終ステータス」として自動参照し、自宅座標を自動算出します</p>
+            <p class="text-[11px] text-gray-600">B列（2列目）を「最終ステータス」として自動参照し、不要な空列を自動軽量化して読み込みます</p>
           </div>
           <a href="https://refo.link/haken-oubo/applications" target="_blank" rel="noopener noreferrer"
              class="px-3 py-2 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-orange-400 font-bold whitespace-nowrap shadow-sm">
@@ -220,11 +246,11 @@
         <div class="bg-zinc-900 text-white rounded-xl p-3.5 space-y-2">
           <div class="flex items-center justify-between">
             <span class="font-bold text-orange-400">📦 チーム配布・軽量化用 data.js 書き出し</span>
-            <span class="text-[10px] text-zinc-400">軽量圧縮＋算出座標同梱</span>
+            <span class="text-[10px] text-zinc-400">超軽量圧縮済み</span>
           </div>
-          <p class="text-[11px] text-zinc-300">読み込んだ全列CSVを軽量圧縮した別ファイル（<code class="text-orange-300">data.js</code>）として保存します。</p>
+          <p class="text-[11px] text-zinc-300">読み込んだCSVから不要な空白列を省き、爆速読み込みできる <code class="text-orange-300">data.js</code> として書き出します。</p>
           <button type="button" onclick="exportDataJsFile()" class="w-full py-2 rounded-lg bg-orange-500 hover:bg-orange-600 text-zinc-950 font-black transition">
-            📦 読込済CSV(全列)から最新 data.js を書き出し
+            📦 軽量化済み data.js を書き出し
           </button>
         </div>
         <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-gray-100">
@@ -288,14 +314,6 @@
             </table>
           </div>
         </div>
-        <div class="bg-zinc-100 rounded-xl p-3 flex flex-wrap items-center justify-between gap-2">
-          <span class="text-[11px] text-gray-600 font-medium">別端末へ履歴を引き継ぐ場合：</span>
-          <div class="flex gap-2">
-            <button type="button" onclick="exportHistoryJson()" class="px-3 py-1.5 rounded-lg bg-white border border-gray-300 hover:bg-gray-50 font-bold text-gray-800">履歴JSON保存</button>
-            <button type="button" onclick="document.getElementById('historyJsonInput').click()" class="px-3 py-1.5 rounded-lg bg-white border border-gray-300 hover:bg-gray-50 font-bold text-gray-800">履歴JSON復元</button>
-            <input type="file" id="historyJsonInput" accept=".json" class="hidden" onchange="importHistoryJson(event)" />
-          </div>
-        </div>
       </div>
       <div class="bg-gray-50 px-5 py-3.5 border-t border-gray-200 flex items-center justify-end gap-2">
         <button type="button" onclick="closeModal('exportModal')" class="px-4 py-2 rounded-xl border border-gray-300 text-gray-700 text-xs font-bold">閉じる</button>
@@ -312,14 +330,14 @@
       </div>
       <div class="p-5 space-y-4 text-xs">
         <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-3 space-y-1.5">
-          <p class="font-bold text-emerald-900">✅ searchOrder 公開データとの自動連携（標準装備）</p>
-          <p class="text-[11px] text-emerald-800">起動時に自動で <code class="bg-white px-1 rounded">https://kawazoedaichi.github.io/searchOrder/jobs.json</code> と <code class="bg-white px-1 rounded">coords_dict.json</code> を取得し、求職者の自宅住所から直線距離を計算します。</p>
+          <p class="font-bold text-emerald-900">✅ searchOrder 公開データ＋国土地理院APIとの自動連携</p>
+          <p class="text-[11px] text-emerald-800">起動時に自動で searchOrder の案件・座標辞書を取得し、さらに画面表示中の求職者は国土地理院APIで番地ピンポイント座標に自動補正します。</p>
           <button type="button" onclick="syncFromSearchOrderPublic(true)" class="mt-1 px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold">🔄 今すぐ searchOrder 最新案件を再同期する</button>
         </div>
         <div>
           <label class="block font-bold text-gray-800 mb-1">① 外部求職者データURL（別サイトの data.js / JSON）</label>
           <div class="flex gap-2">
-            <input type="text" id="externalDataUrlInput" placeholder="https://kawazoedaichi.github.io/staff-data/data.js" class="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-xs" />
+            <input type="text" id="externalDataUrlInput" placeholder="https://kawazoedaichi.github.io/staff/data.js" class="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-xs" />
             <button type="button" onclick="saveAndLoadExternalDataUrl()" class="px-3.5 py-2 rounded-lg bg-zinc-900 text-orange-400 font-bold">読込・保存</button>
           </div>
         </div>
@@ -337,11 +355,11 @@
   <div id="githubModal" class="hidden fixed inset-0 z-50 modal-backdrop flex items-center justify-center p-3">
     <div class="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-gray-200 overflow-hidden">
       <div class="bg-zinc-950 text-white px-5 py-3.5 flex items-center justify-between">
-        <h2 class="font-bold text-base text-emerald-400">🚀 GitHubリポジトリへ自動反映（大容量対応Push）</h2>
+        <h2 class="font-bold text-base text-emerald-400">🚀 GitHub自動反映・端末間履歴共有設定</h2>
         <button type="button" onclick="closeModal('githubModal')" class="text-gray-400 hover:text-white text-xl font-bold px-2">×</button>
       </div>
       <div class="p-5 space-y-3 text-xs">
-        <p class="text-gray-600 leading-relaxed">大容量対応の Git Data API（Base64エンコード方式）を使用し、現在読み込んでいる全列CSV・座標データを軽量圧縮して GitHub 上の <strong><code>data.js</code></strong> へ直接自動アップロードします。</p>
+        <p class="text-gray-600 leading-relaxed">Token を設定しておくと、①CSV更新時の <strong><code>data.js</code></strong> 反映だけでなく、②日々の「完了」「除外」操作も <strong><code>history.json</code></strong> に自動保存され、別のパソコンやスマホからも完了済が即共有されます。</p>
         <div class="space-y-2 bg-gray-50 p-3.5 rounded-xl border border-gray-200">
           <div>
             <label class="block font-bold text-gray-700 mb-0.5">GitHub リポジトリ（オーナー/リポジトリ名）</label>
@@ -358,13 +376,13 @@
             </div>
           </div>
           <div>
-            <label class="block font-bold text-gray-700 mb-0.5">GitHub Personal Access Token（ブラウザ内にのみ保存）</label>
+            <label class="block font-bold text-gray-700 mb-0.5">GitHub Personal Access Token（完了・除外の自動同期にも使用）</label>
             <input type="password" id="ghTokenInput" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" class="w-full rounded-lg border border-gray-300 px-3 py-1.5 bg-white" />
           </div>
         </div>
-        <div class="flex items-center justify-between pt-2">
-          <button type="button" onclick="saveGithubConfig()" class="px-3.5 py-2 rounded-lg border border-gray-300 text-gray-700 font-bold hover:bg-gray-100">設定だけ保存</button>
-          <button type="button" onclick="pushDataJsToGithub()" id="ghPushBtn" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black shadow transition">🚀 GitHubの data.js を今すぐ自動更新する</button>
+        <div class="flex flex-wrap items-center justify-between gap-2 pt-2">
+          <button type="button" onclick="saveGithubConfig()" class="px-3.5 py-2 rounded-lg border border-gray-300 text-gray-700 font-bold hover:bg-gray-100">設定保存＆履歴同期</button>
+          <button type="button" onclick="pushDataJsToGithub()" id="ghPushBtn" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black shadow transition">🚀 GitHubの data.js を今すぐ自動更新</button>
         </div>
       </div>
     </div>
@@ -373,7 +391,7 @@
   <div id="excludedModal" class="hidden fixed inset-0 z-50 modal-backdrop flex items-center justify-center p-3">
     <div class="bg-white rounded-2xl max-w-2xl w-full shadow-2xl border border-gray-200 overflow-hidden flex flex-col max-h-[88vh]">
       <div class="bg-zinc-950 text-white px-5 py-3.5 flex items-center justify-between">
-        <h2 class="font-bold text-base">除外済リスト（タイムスタンプ永続保存）</h2>
+        <h2 class="font-bold text-base">除外済リスト（端末間共有・永続保存）</h2>
         <button type="button" onclick="closeModal('excludedModal')" class="text-gray-400 hover:text-white text-xl font-bold px-2">×</button>
       </div>
       <div class="p-4 overflow-y-auto space-y-2 text-xs" id="excludedListContainer"></div>
@@ -386,7 +404,7 @@
   <div id="mergeInfoModal" class="hidden fixed inset-0 z-50 modal-backdrop flex items-center justify-center p-3">
     <div class="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-gray-200 overflow-hidden">
       <div class="bg-zinc-950 text-white px-5 py-3.5 flex items-center justify-between">
-        <h2 class="font-bold text-base">名寄せ・重複除外・独立ストレージ内訳</h2>
+        <h2 class="font-bold text-base">名寄せ・重複除外・履歴同期内訳</h2>
         <button type="button" onclick="closeModal('mergeInfoModal')" class="text-gray-400 hover:text-white text-xl font-bold px-2">×</button>
       </div>
       <div id="mergeInfoBody" class="p-5 space-y-2.5 text-xs text-gray-700"></div>
@@ -435,12 +453,14 @@
 
   var SEARCH_ORDER_JOBS_URL = 'https://kawazoedaichi.github.io/searchOrder/jobs.json';
   var SEARCH_ORDER_DICT_URL = 'https://kawazoedaichi.github.io/searchOrder/coords_dict.json';
+  var GSI_SEARCH_URL = 'https://msearch.gsi.go.jp/address-search/AddressSearch?q=';
 
   var STORAGE_KEYS = {
-    ACTION_LOGS: 'bstyle_staff_action_logs_v4',
-    EXCLUDED_LIST: 'bstyle_staff_excluded_v4',
-    CANDIDATE_CACHE: 'bstyle_staff_candidates_v4',
-    SETTINGS: 'bstyle_staff_settings_v4'
+    ACTION_LOGS: 'bstyle_staff_action_logs_v5',
+    EXCLUDED_LIST: 'bstyle_staff_excluded_v5',
+    CANDIDATE_CACHE: 'bstyle_staff_candidates_v5',
+    GSI_CACHE: 'bstyle_staff_gsi_cache_v5',
+    SETTINGS: 'bstyle_staff_settings_v5'
   };
 
   var KANTO_BRANCHES = ['東京東', '本社', '埼玉', '神奈川'];
@@ -461,9 +481,19 @@
     "宮崎県":[31.9111,131.4239],"鹿児島県":[31.5602,130.5581],"沖縄県":[26.2124,127.6809]
   };
 
+  var SLIDE_REASONS_3DAYS = [
+    '先日お話しさせていただいた応募求人について、先ほど先方から連絡があり、急きょ他の方で募集枠が埋まってしまったとのことでした。',
+    '先日お話しさせていただいた応募求人について、先ほど先方から連絡があり、今回の募集枠が一時停止となってしまったとのことでした。',
+    '先日お話しさせていただいた応募求人について、先ほど先方から連絡があり、現在のシフト体制の都合で今回は見送りとなってしまったとのことでした。',
+    '先日お話しさせていただいた応募求人について、先ほど先方から連絡があり、タッチの差で選考が終了してしまったとのことでした。'
+  ];
+
+  var PAGE_SIZE = 50;
+
   var state = {
     currentTab: 'within3days',
     currentArea: 'kanto',
+    displayLimit: PAGE_SIZE,
     rawCandidates: [],
     mergedCandidates: [],
     activePhonesSet: new Set(),
@@ -475,14 +505,11 @@
     dictReady: false,
     searchOrderJobs: [],
     jobsReady: false,
-    slideReasons: [
-      '先方にて充足してしまった',
-      '他社で決定してしまった',
-      '直接雇用で埋まってしまった',
-      'エントリー選考外となってしまった'
-    ],
+    gsiCache: {},
+    gsiQueueRunning: false,
     actionLogs: {},
     excludedMap: {},
+    historyPushTimer: null,
     settings: {
       externalDataUrl: '',
       jobMasterUrl: SEARCH_ORDER_JOBS_URL,
@@ -492,6 +519,7 @@
       ghToken: ''
     },
     modalTarget: null,
+    modalMode: 'normal',
     currentReasonIdx: 0,
     currentRawCandidate: null
   };
@@ -506,7 +534,6 @@
     return btoa(bin);
   }
 
-  // IndexedDB（searchOrderの軽量キャッシュ）
   function idbGet(key) {
     return new Promise(function(resolve) {
       try {
@@ -538,7 +565,6 @@
     });
   }
 
-  // searchOrderと同じ町丁目正規化＆座標辞書検索
   function kanjiChomeToNum(str) {
     if (!str) return '';
     var digitMap = { '〇':'0', '一':'1', '二':'2', '三':'3', '四':'4', '五':'5', '六':'6', '七':'7', '八':'8', '九':'9' };
@@ -554,6 +580,15 @@
     return s;
   }
 
+  function cleanAddressForGsi(addr) {
+    if (!addr) return '';
+    var s = String(addr).normalize('NFKC').trim();
+    s = s.replace(/[\s　]+[^\s　]*(アパート|マンション|ハイツ|コーポ|メゾン|レジデンス|ビル|荘|館|棟|号室|号).*$/, '');
+    s = s.replace(/(\d+-\d+-\d+)[\s　]+.*$/, '$1');
+    s = s.replace(/(\d+-\d+)[\s　]+.*$/, '$1');
+    return s.trim();
+  }
+
   function extractPrefFromAddress(addr, prefHint) {
     if (prefHint && state.townCoordsDict[prefHint]) return prefHint;
     if (prefHint && PREF_COORDS[prefHint]) return prefHint;
@@ -566,6 +601,12 @@
   }
 
   function lookupCoordsFromDict(prefHint, address) {
+    var cacheKey = cleanAddressForGsi((prefHint || '') + (address || ''));
+    if (cacheKey && state.gsiCache[cacheKey]) {
+      var cached = state.gsiCache[cacheKey];
+      return { lat: cached.lat, lng: cached.lng, isCoarse: false, isGsi: true, matched: cached.title || cacheKey };
+    }
+
     var pref = extractPrefFromAddress(address, prefHint);
     if (!pref || !state.townCoordsDict[pref]) {
       if (pref && PREF_COORDS[pref]) {
@@ -647,6 +688,51 @@
     return null;
   }
 
+  // 表示中の求職者のみ国土地理院APIで番地ピンポイント座標に補正（searchOrderと完全一致させる）
+  async function refineVisibleCandidatesWithGsi(visibleList) {
+    if (state.gsiQueueRunning) return;
+    var targets = visibleList.filter(function(c) {
+      if (!c.address || c.isGsiCoord) return false;
+      var q = cleanAddressForGsi((c.pref && c.address.indexOf(c.pref) === -1 ? c.pref : '') + c.address);
+      return q.length >= 5 && !state.gsiCache[q];
+    }).slice(0, 15);
+
+    if (targets.length === 0) return;
+    state.gsiQueueRunning = true;
+    var updated = false;
+
+    for (var i = 0; i < targets.length; i++) {
+      var c = targets[i];
+      var q = cleanAddressForGsi((c.pref && c.address.indexOf(c.pref) === -1 ? c.pref : '') + c.address);
+      if (!q || state.gsiCache[q]) continue;
+      try {
+        var res = await fetch(GSI_SEARCH_URL + encodeURIComponent(q));
+        if (res.ok) {
+          var data = await res.json();
+          if (Array.isArray(data) && data.length > 0 && data[0].geometry && Array.isArray(data[0].geometry.coordinates)) {
+            var coords = data[0].geometry.coordinates;
+            var title = (data[0].properties && data[0].properties.title) || q;
+            state.gsiCache[q] = { lat: coords[1], lng: coords[0], title: title };
+            c.lat = coords[1];
+            c.lng = coords[0];
+            c.isGsiCoord = true;
+            c.coordMatched = title;
+            updated = true;
+          } else {
+            state.gsiCache[q] = { lat: c.lat, lng: c.lng, title: c.coordMatched || q, fallback: true };
+          }
+        }
+      } catch (e) {}
+      await new Promise(function(r) { setTimeout(r, 120); });
+    }
+
+    state.gsiQueueRunning = false;
+    if (updated) {
+      try { localStorage.setItem(STORAGE_KEYS.GSI_CACHE, JSON.stringify(state.gsiCache)); } catch (e) {}
+      renderList(true);
+    }
+  }
+
   function calcDistanceKm(lat1, lon1, lat2, lon2) {
     if (lat1 == null || lon1 == null || lat2 == null || lon2 == null) return null;
     var R = 6371;
@@ -683,13 +769,11 @@
     return String(dateStr || '-').slice(0, 10);
   }
 
-  // searchOrder の jobs.json と coords_dict.json を自動同期
   window.syncFromSearchOrderPublic = async function(showAlert) {
     var summaryEl = document.getElementById('jobMasterSummary');
     if (summaryEl) summaryEl.textContent = 'searchOrder 案件・座標辞書を同期中...';
 
     try {
-      // 1. キャッシュから即読込
       var cachedDict = await idbGet('coords_dict_v1');
       if (cachedDict && cachedDict.data) {
         state.townCoordsDict = cachedDict.data;
@@ -703,7 +787,6 @@
         renderList();
       }
 
-      // 2. リモートから最新を取得（Parallel）
       var jobsUrl = state.settings.jobMasterUrl || SEARCH_ORDER_JOBS_URL;
       var results = await Promise.all([
         fetch(SEARCH_ORDER_DICT_URL, { cache: 'no-cache' }).then(function(r) { return r.ok ? r.json() : null; }).catch(function() { return null; }),
@@ -720,7 +803,6 @@
       }
 
       if (Array.isArray(remoteJobs) && remoteJobs.length > 0) {
-        // 案件側にも座標補完
         var normalizedJobs = remoteJobs.map(function(j, idx) {
           var fullAddr = formatSearchOrderJobAddress(j);
           var lat = j.lat;
@@ -754,10 +836,9 @@
 
       if (showAlert) {
         closeModal('urlModal');
-        showPopup('searchOrder 同期完了！', 'searchOrder の最新案件 ' + state.searchOrderJobs.length.toLocaleString() + ' 件と高精度座標辞書を同期しました。' + LF + '求職者の自宅住所から直線距離（5km以内・2km以内）を再計算しました。');
+        showPopup('searchOrder 同期完了！', 'searchOrder の最新案件 ' + state.searchOrderJobs.length.toLocaleString() + ' 件と高精度座標辞書を同期しました。');
       }
     } catch (e) {
-      console.warn('searchOrder同期エラー:', e);
       if (summaryEl) summaryEl.textContent = '案件マスタ：同期待機（ネットワーク確認）';
     }
   };
@@ -771,13 +852,128 @@
         c.lng = found.lng;
         c.coordMatched = found.matched;
         c.isCoarseCoord = found.isCoarse;
+        if (found.isGsi) c.isGsiCoord = true;
       }
     });
+  }
+
+  // GitHub上の history.json を自動同期（端末間の完了・除外共有）
+  window.syncHistoryFromGithub = async function(showToast) {
+    var badge = document.getElementById('historySyncBadge');
+    var repo = state.settings.ghRepo || 'kawazoedaichi/staff';
+    var branch = state.settings.ghBranch || 'main';
+    if (badge) badge.textContent = '履歴同期中...';
+
+    try {
+      var rawUrl = 'https://raw.githubusercontent.com/' + repo + '/' + encodeURIComponent(branch) + '/history.json?t=' + Date.now();
+      var res = await fetch(rawUrl, { cache: 'no-store' });
+      if (res.ok) {
+        var remoteData = await res.json();
+        var mergedLogs = Object.assign({}, remoteData.actionLogs || {}, state.actionLogs);
+        // リモート側が新しい場合は上書きマージ
+        if (remoteData.actionLogs) {
+          Object.keys(remoteData.actionLogs).forEach(function(k) {
+            var rItem = remoteData.actionLogs[k];
+            var lItem = state.actionLogs[k];
+            if (!lItem || (rItem.lastSentAt || 0) >= (lItem.lastSentAt || 0)) {
+              mergedLogs[k] = rItem;
+            }
+          });
+        }
+        state.actionLogs = mergedLogs;
+        state.excludedMap = Object.assign({}, remoteData.excludedMap || {}, state.excludedMap);
+        try {
+          localStorage.setItem(STORAGE_KEYS.ACTION_LOGS, JSON.stringify(state.actionLogs));
+          localStorage.setItem(STORAGE_KEYS.EXCLUDED_LIST, JSON.stringify(state.excludedMap));
+        } catch (e) {}
+        if (badge) badge.textContent = '✅ 履歴同期済';
+        renderList();
+        if (showToast) showPopup('履歴同期完了', 'GitHub上の最新の完了・除外履歴と同期しました。');
+      } else {
+        if (badge) badge.textContent = state.settings.ghToken ? '履歴待機(未作成)' : 'ローカル履歴のみ';
+      }
+    } catch (e) {
+      if (badge) badge.textContent = 'ローカル履歴のみ';
+    }
+  };
+
+  function scheduleHistoryPushToGithub() {
+    if (!state.settings.ghToken || !state.settings.ghRepo) return;
+    if (state.historyPushTimer) clearTimeout(state.historyPushTimer);
+    state.historyPushTimer = setTimeout(function() {
+      pushHistoryJsonToGithub();
+    }, 1200);
+  }
+
+  async function pushHistoryJsonToGithub() {
+    var ghRepo = state.settings.ghRepo;
+    var ghBranch = state.settings.ghBranch || 'main';
+    var ghToken = state.settings.ghToken;
+    if (!ghRepo || !ghToken) return;
+
+    var badge = document.getElementById('historySyncBadge');
+    if (badge) badge.textContent = '⏳ 履歴共有中...';
+
+    var headers = {
+      'Authorization': 'Bearer ' + ghToken,
+      'Accept': 'application/vnd.github+json',
+      'Content-Type': 'application/json'
+    };
+    var apiUrl = 'https://api.github.com/repos/' + ghRepo + '/contents/history.json';
+
+    try {
+      var sha = null;
+      var getRes = await fetch(apiUrl + '?ref=' + encodeURIComponent(ghBranch) + '&t=' + Date.now(), { headers: headers });
+      if (getRes.ok) {
+        var existingFile = await getRes.json();
+        sha = existingFile.sha;
+        try {
+          var decoded = decodeURIComponent(escape(atob(existingFile.content.replace(/\n/g, ''))));
+          var remoteJson = JSON.parse(decoded);
+          if (remoteJson.actionLogs) {
+            Object.keys(remoteJson.actionLogs).forEach(function(k) {
+              if (!state.actionLogs[k]) state.actionLogs[k] = remoteJson.actionLogs[k];
+            });
+          }
+          if (remoteJson.excludedMap) {
+            Object.keys(remoteJson.excludedMap).forEach(function(k) {
+              if (!state.excludedMap[k]) state.excludedMap[k] = remoteJson.excludedMap[k];
+            });
+          }
+        } catch (e) {}
+      }
+
+      var payload = {
+        updatedAt: new Date().toISOString(),
+        actionLogs: state.actionLogs,
+        excludedMap: state.excludedMap
+      };
+      var bodyObj = {
+        message: 'Sync history.json (' + Object.keys(state.actionLogs).length + ' logs)',
+        content: utf8ToBase64(JSON.stringify(payload)),
+        branch: ghBranch
+      };
+      if (sha) bodyObj.sha = sha;
+
+      var putRes = await fetch(apiUrl, {
+        method: 'PUT',
+        headers: headers,
+        body: JSON.stringify(bodyObj)
+      });
+      if (putRes.ok) {
+        if (badge) badge.textContent = '✅ 端末間共有済';
+      } else {
+        if (badge) badge.textContent = '⚠️ 履歴Push失敗';
+      }
+    } catch (e) {
+      if (badge) badge.textContent = '⚠️ 履歴同期エラー';
+    }
   }
 
   function loadPersistentStorage() {
     try { var l = localStorage.getItem(STORAGE_KEYS.ACTION_LOGS); if (l) state.actionLogs = JSON.parse(l); } catch (e) {}
     try { var x = localStorage.getItem(STORAGE_KEYS.EXCLUDED_LIST); if (x) state.excludedMap = JSON.parse(x); } catch (e) {}
+    try { var g = localStorage.getItem(STORAGE_KEYS.GSI_CACHE); if (g) state.gsiCache = JSON.parse(g); } catch (e) {}
     try { var s = localStorage.getItem(STORAGE_KEYS.SETTINGS); if (s) state.settings = Object.assign({}, state.settings, JSON.parse(s)); } catch (e) {}
 
     var elExt = document.getElementById('externalDataUrlInput');
@@ -796,10 +992,12 @@
 
   function saveActionLogs() {
     try { localStorage.setItem(STORAGE_KEYS.ACTION_LOGS, JSON.stringify(state.actionLogs)); } catch (e) {}
+    scheduleHistoryPushToGithub();
   }
 
   function saveExcludedMap() {
     try { localStorage.setItem(STORAGE_KEYS.EXCLUDED_LIST, JSON.stringify(state.excludedMap)); } catch (e) {}
+    scheduleHistoryPushToGithub();
   }
 
   function loadInitialData() {
@@ -821,7 +1019,7 @@
     }
 
     var fallbackSamples = [
-      { id: '01M4R001', name: '鈴木 恵美', kana: 'スズキ エミ', phone: '09011112222', dob: '1985-04-12', age: 41, address: '東京都世田谷区三軒茶屋1-22', pref: '東京都', branch: '東京東', staff: '山上 健太', qualification: '介護福祉士', jobType: '介護', status: 'アテンド済', finalStatus: 'FIX待ち', applyDate: '2026-11-10 10:00', attendDate: '2026-11-11 16:00', contactDate: '2026-11-11 16:00', startDate: '', conditions: 'シフト:早番・日勤 / 週4日 / 希望時給:1750円' }
+      { id: '01M4R001', name: '鈴木 恵美', kana: 'スズキ エミ', phone: '09011112222', dob: '1985-04-12', age: 41, address: '東京都世田谷区三軒茶屋1-22', pref: '東京都', branch: '東京東', staff: '山上 健太', qualification: '介護福祉士', jobType: '介護', status: 'アテンド済', finalStatus: 'FIX待ち', applyDate: '2026-11-10 10:00', attendDate: '2026-11-13 16:00', contactDate: '2026-11-13 16:00', startDate: '', shiftPref: '', conditions: 'シフト:早番・日勤 / 週4日 / 希望時給:1750円' }
     ];
     state.csvHeaders = ['応募者ID', '最終ステータス', '氏名', 'フリガナ', '電話番号', '生年月日', '年齢', '住所', '都道府県', '担当支店', 'アテンド担当ユーザー', '保有資格', '職種', 'ステータス', '応募日', 'アテンド日', '接触日時', '就業開始希望日', '把握済条件'];
     processCandidates(fallbackSamples, 'デモデータ');
@@ -859,6 +1057,22 @@
     var db = normalizeText(c.dob);
     if (nk && db) return 'KD_' + nk + '_' + db;
     return 'ID_' + (c.id || Math.random().toString(36).slice(2));
+  }
+
+  // 元データのシフト列の値が「夜勤」かどうかを機械的に判定
+  function isNightShiftCandidate(c) {
+    var sp = String(c.shiftPref || '').trim();
+    if (sp === '夜勤' || sp.indexOf('夜勤') !== -1) return true;
+    if (c.rawRow) {
+      var keys = Object.keys(c.rawRow);
+      for (var i = 0; i < keys.length; i++) {
+        if (keys[i].indexOf('シフト') !== -1 || keys[i].indexOf('夜勤') !== -1) {
+          var v = String(c.rawRow[keys[i]] || '').trim();
+          if (v === '夜勤' || v.indexOf('夜勤専従') !== -1 || v === '夜勤のみ') return true;
+        }
+      }
+    }
+    return false;
   }
 
   function processCandidates(rawList, badgeLabel) {
@@ -930,6 +1144,7 @@
       }
       c.activeWarning = warnMatch ? '⚠️ 稼働・職見・内定待ちかも（' + warnMatch.statusLabel + 'と氏名/住所一致）' : '';
       c.assignedTab = classifyCandidateTab(c);
+      c.isNightDefault = isNightShiftCandidate(c);
 
       var coord = lookupCoordsFromDict(c.pref, c.address);
       if (coord) {
@@ -937,6 +1152,7 @@
         c.lng = coord.lng;
         c.coordMatched = coord.matched;
         c.isCoarseCoord = coord.isCoarse;
+        if (coord.isGsi) c.isGsiCoord = true;
       }
 
       finalMerged.push(c);
@@ -978,7 +1194,6 @@
     var applyD = parseDateSafe(c.applyDate);
     var startD = parseDateSafe(c.startDate);
 
-    // 本日から就業開始希望日までの日数（空欄・即日希望は null）
     var daysFromTodayToStart = null;
     if (startD) {
       var startDayOnly = new Date(startD.getFullYear(), startD.getMonth(), startD.getDate());
@@ -992,37 +1207,24 @@
     var isStartUnder30OrEmpty = (daysFromTodayToStart === null || daysFromTodayToStart <= 29);
     var isStart30OrMore = (daysFromTodayToStart !== null && daysFromTodayToStart >= 30);
 
-    // ① 3日以内 未FIX人材（最優先：B列＝FIX待ち ＋ 就業開始希望日が本日から29日以内 or 空欄・即日 ＋ アテンド・接触から12時間以上〜72時間以内）
     if (isFixWait && isStartUnder30OrEmpty && attendD) {
       var diffHours = (now.getTime() - attendD.getTime()) / (1000 * 60 * 60);
-      if (diffHours >= 12 && diffHours <= 72) {
-        return 'within3days';
-      }
-      // ② 未FIX人材（①に該当しない場合のみ判定：B列＝FIX待ち ＋ 就業開始希望日が本日から29日以内 or 空欄・即日 ＋ アテンド・接触から73時間以上〜10日以内）
-      if (diffHours >= 73 && diffHours <= 240) {
-        return 'unfixed';
-      }
+      if (diffHours >= 12 && diffHours <= 72) return 'within3days';
+      if (diffHours >= 73 && diffHours <= 240) return 'unfixed';
     }
 
-    // ③ 激熱掘起（①②に該当しない場合のみ判定：B列＝FIX待ち ＋ 就業開始希望日が本日から29日以内 or 空欄・即日 ＋ 応募日から2カ月（60日）以上経過）
     if (isFixWait && isStartUnder30OrEmpty && applyD) {
       var applyDaysForHot = (now.getTime() - applyD.getTime()) / (1000 * 60 * 60 * 24);
-      if (applyDaysForHot >= 60) {
-        return 'hot';
-      }
+      if (applyDaysForHot >= 60) return 'hot';
     }
 
-    // ④ 未来人材（①〜③に該当しない場合のみ判定：就業開始希望日が本日から30日以上先（FIX待ち含む）、またはB列・ステータスが未来）
     if (isStart30OrMore || finalSt.indexOf('未来') !== -1 || st.indexOf('未来') !== -1) {
       return 'future';
     }
 
-    // ⑤ 通常掘起（①〜④のいずれにも該当せず、B列＝FIX待ちの他日数枠を除外した上で、応募日から45日以上経過）
     if (!isFixWait && applyD) {
       var applyDays = (now.getTime() - applyD.getTime()) / (1000 * 60 * 60 * 24);
-      if (applyDays >= 45) {
-        return 'normal';
-      }
+      if (applyDays >= 45) return 'normal';
     }
 
     return 'excluded_other';
@@ -1054,14 +1256,26 @@
       .toLowerCase();
   }
 
-  // 求職者の自宅座標から searchOrder 全案件との直線距離を計算し、同一施設名・同一住所をスキップして5km以内（派遣BO）・2km以内（紹介）を抽出
-  function getMatchedJobs(c) {
+  // シフト判定：nightMode === true なら「夜勤」を含む求人のみ、false なら「早出・日勤・遅出」のいずれかを含む日勤求人
+  function matchShiftRule(jobShifts, nightMode) {
+    var arr = Array.isArray(jobShifts) ? jobShifts : [];
+    if (arr.length === 0) return true;
+    var hasNight = arr.indexOf('夜勤') !== -1;
+    var hasDay = arr.indexOf('早出') !== -1 || arr.indexOf('日勤') !== -1 || arr.indexOf('遅出') !== -1;
+    return nightMode ? hasNight : hasDay;
+  }
+
+  function getMatchedJobs(c, nightModeOverride) {
     if (!state.searchOrderJobs || state.searchOrderJobs.length === 0) {
       return { dispatch: [], direct: [], status: 'loading' };
     }
     if (c.lat == null || c.lng == null) {
       return { dispatch: [], direct: [], status: 'no_coord' };
     }
+
+    var globalNightEl = document.getElementById('filterNightShift');
+    var globalNight = globalNightEl ? globalNightEl.checked : false;
+    var nightMode = (nightModeOverride !== undefined) ? nightModeOverride : (globalNight || c.isNightDefault);
 
     var cType = String(c.jobType || '介護');
     var isNurse = cType.indexOf('看護') !== -1;
@@ -1075,6 +1289,8 @@
 
       var jNurse = String(j.jobType || '').indexOf('看護') !== -1;
       if (isNurse ? !jNurse : jNurse) continue;
+
+      if (!matchShiftRule(j.shifts, nightMode)) continue;
 
       var dKm = calcDistanceKm(c.lat, c.lng, j.lat, j.lng);
       if (dKm === null) continue;
@@ -1099,12 +1315,12 @@
           address: j.address,
           distKm: Number(dKm.toFixed(1)),
           boDate: formatBoDateShort(j.date, j.timestamp),
-          timestamp: j.timestamp || 0
+          timestamp: j.timestamp || 0,
+          shifts: (j.shifts || []).join('・')
         });
       }
     }
 
-    // BO取得日時が新しい順（同時なら近い順）にソート
     rawDispList.sort(function(a, b) {
       if ((b.timestamp || 0) !== (a.timestamp || 0)) return (b.timestamp || 0) - (a.timestamp || 0);
       return a.distKm - b.distKm;
@@ -1114,11 +1330,10 @@
       return a.distKm - b.distKm;
     });
 
-    // 派遣BOと紹介をまたいで、同一施設名・同一住所は重複選択せずスキップ
     var seenFacilityNames = new Set();
     var seenFacilityAddrs = new Set();
-
     var uniqueDispList = [];
+
     for (var dIdx = 0; dIdx < rawDispList.length; dIdx++) {
       var dj = rawDispList[dIdx];
       var nName = normalizeFacilityForDedup(dj.name);
@@ -1130,8 +1345,6 @@
     }
 
     var selectedDispatch = uniqueDispList.slice(0, 3);
-
-    // 実際に派遣BO候補（上位3件）として選ばれた施設のみを重複除外セットに登録し、紹介案件側と重複しないようにする
     var usedNamesForCross = new Set();
     var usedAddrsForCross = new Set();
     selectedDispatch.forEach(function(sd) {
@@ -1157,32 +1370,75 @@
       direct: uniqueDirList.slice(0, 2),
       totalDispCount: uniqueDispList.length,
       totalDirCount: uniqueDirList.length,
+      nightMode: nightMode,
       status: 'ok'
     };
   }
 
-  function buildMessageForCandidate(c, reasonOverride) {
+  function buildMessageForCandidate(c, reasonOverride, modeOverride, nightOverride) {
     var sal = extractSafeSalutation(c);
-    var jobs = getMatchedJobs(c);
+    var jobs = getMatchedJobs(c, nightOverride);
     var log = state.actionLogs[c.personKey];
     var tab = c.assignedTab;
+    var mode = modeOverride || 'normal';
+
+    if (mode === 'short') {
+      var shortLines = jobs.dispatch.slice(0, 2).map(function(j, idx) {
+        return '・' + j.name + '（約' + j.distKm + 'km）';
+      }).join(LF);
+      var shortDirect = jobs.direct.length > 0
+        ? LF + '【直接雇用】' + jobs.direct[0].name + '（約' + jobs.direct[0].distKm + 'km）'
+        : '';
+      var shortJobs = (shortLines || '・ご自宅近隣の新着求人を確保しております。') + shortDirect;
+
+      if (tab === 'within3days') {
+        return [
+          sal.text + ' お世話になっております。株式会社ビースタイルです。',
+          '先日お話しさせていただいた応募求人について、先ほど先方から連絡があり、枠が埋まってしまったとのことでした。力不足で大変申し訳ございません。',
+          '代わりに近隣の好条件求人を確保いたしました。',
+          shortJobs,
+          '気になる案件があればご返信ください！'
+        ].join(LF);
+      }
+      if (tab === 'future') {
+        return [
+          sal.text + ' お世話になっております。株式会社ビースタイルです。',
+          '以前伺っていたご就業時期が近づいてまいりましたので、最新の募集状況のご案内です！',
+          shortJobs,
+          '今週・来週で面談した場合の週何日か、以前応募時と変わっていないか（不明な場合は就業日数だけ返信お願いします）お知らせください！'
+        ].join(LF);
+      }
+      return [
+        sal.text + ' お世話になっております。株式会社ビースタイルです。',
+        'ご自宅周辺で以下の新着求人が出ております！',
+        shortJobs,
+        '詳細ご希望の際はぜひお気軽にご返信ください！'
+      ].join(LF);
+    }
 
     var jobLines = jobs.dispatch.map(function(j, idx) {
       return '【候補' + (idx + 1) + '】' + j.name + LF + '・住所：' + (j.address || '詳細はお問い合わせください') + '（ご自宅から約' + j.distKm + 'km）' + (j.shifts ? LF + '・シフト：' + j.shifts : '');
     }).join(LF + LF);
 
-    var directHook = jobs.direct.length > 0
-      ? LF + LF + '★また、ご自宅から約' + jobs.direct[0].distKm + 'km圏内に【直接雇用（正社員・パート）】の特別募集枠（' + jobs.direct[0].name + '／' + (jobs.direct[0].address || '') + '）も出ております！'
-      : '';
+    var directHook = '';
+    if (jobs.direct.length > 0) {
+      var d0 = jobs.direct[0];
+      directHook = LF + LF + [
+        '【直接雇用求人】' + d0.name,
+        '・住所：' + (d0.address || '詳細はお問い合わせください') + '（ご自宅から約' + d0.distKm + 'km）',
+        '・シフト：' + (d0.shifts || '日勤'),
+        '※担当者から是非とお声いただいております'
+      ].join(LF);
+    }
 
     var bodyJobs = (jobLines || '・ご自宅近隣エリアの好条件求人を複数確保しております。') + directHook;
 
     if (tab === 'within3days') {
-      var reason = reasonOverride || state.slideReasons[state.currentReasonIdx % state.slideReasons.length];
+      var reason = reasonOverride || SLIDE_REASONS_3DAYS[state.currentReasonIdx % SLIDE_REASONS_3DAYS.length];
       return [
         sal.text, '',
-        'お世話になっております。',
-        '先日お話しさせていただいた件につきまして、実は先ほど確認したところ、ご希望いただいていた求人が【' + reason + '】という状況になってしまいました。', '',
+        'お世話になっております。株式会社ビースタイルです。',
+        reason, '',
         '力不足で大変申し訳ございません。',
         '代わりにご自宅から通いやすい近隣エリアで、条件に合う新着求人をピックアップいたしました。', '',
         bodyJobs, '',
@@ -1193,18 +1449,19 @@
     if (tab === 'future') {
       return [
         sal.text, '',
-        'お世話になっております。',
-        'ご就業希望時期（' + (c.startDate || '近日中') + '）が近づいてまいりましたので、最新の募集状況のご案内です！', '',
+        'お世話になっております。株式会社ビースタイルです。',
+        '以前伺っていたご就業時期が近づいてまいりましたので、最新の募集状況のご案内です！', '',
         '現在、ご自宅周辺で以下の好条件案件が出ております。', '',
         bodyJobs, '',
-        'ご希望条件に変更がないか、また見学など進められそうか、ご都合のよいタイミングでお知らせいただけますでしょうか？'
+        '今週・来週で面談した場合、ご希望の就業日数は週何日くらいになりそうでしょうか？',
+        '以前応募時と条件が変わっていないかもあわせて教えていただけますと幸いです。（不明な場合は就業日数だけ返信お願いします）'
       ].join(LF);
     }
 
     if (tab === 'unfixed') {
       return [
         sal.text, '',
-        'お世話になっております。',
+        'お世話になっております。株式会社ビースタイルです。',
         '先日ご提案させていただきました件、その後ご状況はいかがでしょうか？', '',
         '現在もご自宅から5km圏内で以下の求人が募集中となっております。', '',
         bodyJobs, '',
@@ -1216,14 +1473,14 @@
       if (log && log.status === 'reminded') {
         return [
           sal.text, '',
-          '度々のご連絡失礼いたします。',
+          '度々のご連絡失礼いたします。株式会社ビースタイルです。',
           '昨日お送りさせていただきました近隣の募集案件ですが、枠が埋まりやすくなっているため念のためリマインドさせていただきました。', '',
           'お忙しいところ恐縮ですが、もし少しでもご興味があれば「詳細希望」とだけご返信ください！'
         ].join(LF);
       }
       return [
         sal.text, '',
-        'ご無沙汰しております！',
+        'ご無沙汰しております！株式会社ビースタイルです。',
         '以前お話しさせていただいたご希望条件にぴったりの新着案件が入りましたので、優先的にご連絡いたしました！', '',
         bodyJobs, '',
         '今すぐのご転職でなくても情報収集だけでも大歓迎ですので、ぜひお気軽にご返信ください！'
@@ -1232,13 +1489,49 @@
 
     return [
       sal.text, '',
-      'お世話になっております。',
+      'お世話になっております。株式会社ビースタイルです。',
       'その後、お仕事のご状況はいかがでしょうか？', '',
       '現在、お住まいのエリア周辺で新しい募集枠が複数出ておりますのでご案内いたします。', '',
       bodyJobs, '',
       '現在のシフト希望やご状況に合わせて改めてお探しすることも可能ですので、ぜひお気軽にお声がけください！'
     ].join(LF);
   }
+
+  function buildSmsUrl(phone, bodyText) {
+    var cleanPhone = normalizePhone(phone);
+    var isIos = /iPhone|iPad|iPod/i.test(navigator.userAgent || '');
+    var sep = isIos ? AMP : '?';
+    return 'sms:' + cleanPhone + sep + 'body=' + encodeURIComponent(bodyText);
+  }
+
+  window.launchDirectSms = function(personKey) {
+    var c = state.mergedCandidates.find(function(x) { return x.personKey === personKey; });
+    if (!c) return;
+    if (!c.phone) {
+      alert('この求職者には電話番号が登録されていません。');
+      return;
+    }
+    var rIdx = Math.floor(Math.random() * SLIDE_REASONS_3DAYS.length);
+    var msg = buildMessageForCandidate(c, SLIDE_REASONS_3DAYS[rIdx], 'normal');
+    if (navigator.clipboard) navigator.clipboard.writeText(msg).catch(function() {});
+    recordSentAction(personKey);
+    window.location.href = buildSmsUrl(c.phone, msg);
+  };
+
+  window.launchSmsAndRecordModal = function() {
+    if (!state.modalTarget) return;
+    var c = state.modalTarget;
+    var txt = document.getElementById('modalMessageText').value;
+    if (navigator.clipboard) navigator.clipboard.writeText(txt).catch(function() {});
+    var key = c.personKey;
+    closeModal('msgModal');
+    recordSentAction(key);
+    if (c.phone) {
+      window.location.href = buildSmsUrl(c.phone, txt);
+    } else {
+      showPopup('送信記録完了', '電話番号が未登録のためSMS起動はスキップし、文面コピーと完了記録を行いました。');
+    }
+  };
 
   function isKantoCandidate(c) {
     var branch = String(c.branch || '').trim();
@@ -1291,6 +1584,8 @@
     var branchVal = options.ignoreFilters ? '' : document.getElementById('filterBranch').value;
     var q = options.ignoreFilters ? '' : normalizeText(document.getElementById('searchInput').value).toLowerCase();
 
+    var isSearching = q.length > 0;
+
     return state.mergedCandidates.filter(function(c) {
       if (state.excludedMap[c.personKey]) return false;
       if (targetArea === 'kanto' && !isKantoCandidate(c)) return false;
@@ -1302,8 +1597,11 @@
       }
 
       var act = getActionState(c);
-      if (act.isHidden) return false;
-      if (unactedOnly && act.isActed) return false;
+      // 検索入力中は、対応済やクールダウン中の人も折り返し逆引きできるように表示する
+      if (!isSearching) {
+        if (act.isHidden) return false;
+        if (unactedOnly && act.isActed) return false;
+      }
 
       if (prefVal && c.pref !== prefVal) return false;
       if (staffVal && c.staff !== staffVal) return false;
@@ -1326,8 +1624,24 @@
     document.getElementById('excludedCountBadge').textContent = Object.keys(state.excludedMap).length;
   }
 
+  window.resetPageAndRender = function() {
+    state.displayLimit = PAGE_SIZE;
+    renderList();
+  };
+
+  window.onSearchInput = function() {
+    state.displayLimit = PAGE_SIZE;
+    renderList();
+  };
+
+  window.loadMoreItems = function() {
+    state.displayLimit += PAGE_SIZE;
+    renderList();
+  };
+
   window.switchTab = function(tabId) {
     state.currentTab = tabId;
+    state.displayLimit = PAGE_SIZE;
     ['within3days', 'unfixed', 'hot', 'future', 'normal'].forEach(function(t) {
       var btn = document.getElementById('tab-' + t);
       var badge = document.getElementById('badge-' + t);
@@ -1345,6 +1659,7 @@
 
   window.switchArea = function(areaId) {
     state.currentArea = areaId;
+    state.displayLimit = PAGE_SIZE;
     var kBtn = document.getElementById('area-kanto');
     var aBtn = document.getElementById('area-all');
     if (areaId === 'kanto') {
@@ -1362,15 +1677,15 @@
     var map = {
       within3days: {
         title: '【3日以内 未FIX人材】の抽出基準・アプローチ設計を見る',
-        desc: '①最優先判定：CSVのB列（最終ステータス）＝「FIX待ち」＋ 就業開始希望日が「本日から29日以内（または空欄・即日）」＋ アテンド・接触から12時間〜72時間以内の対象者のみを抽出します（該当者は②〜⑤をスキップ）。'
+        desc: '①最優先判定：CSVのB列（最終ステータス）＝「FIX待ち」＋ 就業開始希望日が「本日から29日以内（または空欄・即日）」＋ アテンド・接触から12時間〜72時間以内の対象者のみを抽出します。'
       },
       unfixed: {
         title: '【未FIX人材】の抽出基準・アプローチ設計を見る',
-        desc: '②判定：CSVのB列（最終ステータス）＝「FIX待ち」＋ 就業開始希望日が「本日から29日以内（または空欄・即日）」＋ アテンド・接触から73時間〜10日以内の対象者のみを抽出します（該当者は③〜⑤をスキップ）。'
+        desc: '②判定：CSVのB列（最終ステータス）＝「FIX待ち」＋ 就業開始希望日が「本日から29日以内（または空欄・即日）」＋ アテンド・接触から73時間〜10日以内の対象者のみを抽出します。'
       },
       hot: {
         title: '【激熱掘起】の抽出基準・アプローチ設計を見る',
-        desc: '③判定：CSVのB列（最終ステータス）＝「FIX待ち」＋ 就業開始希望日が「本日から29日以内（または空欄・即日）」＋ 応募日から2カ月（60日）以上経過した対象者を抽出します。初回送信の翌日にリマインド対象になります。'
+        desc: '③判定：CSVのB列（最終ステータス）＝「FIX待ち」＋ 就業開始希望日が「本日から29日以内（または空欄・即日）」＋ 応募日から2カ月（60日）以上経過した対象者を抽出します。'
       },
       future: {
         title: '【未来人材】の抽出基準・アプローチ設計を見る',
@@ -1378,7 +1693,7 @@
       },
       normal: {
         title: '【通常掘起】の抽出基準・アプローチ設計を見る',
-        desc: '⑤判定：①〜④に該当せず、応募から45日以上経過した掘り起こし対象層を抽出します。送信後は30日間自動でクールダウン（非表示）になります。'
+        desc: '⑤判定：①〜④に該当せず、応募から45日以上経過した掘り起こし対象層を抽出します。送信後は30日間自動でクールダウンになります。'
       }
     };
     var info = map[state.currentTab] || map.within3days;
@@ -1418,30 +1733,45 @@
     if (items.indexOf(prev) !== -1) sel.value = prev;
   }
 
-  window.renderList = function() {
+  window.renderList = function(skipGsi) {
     updateTabBadges();
-    var list = getFilteredCandidates();
-    document.getElementById('resultCountText').textContent = '該当: ' + list.length + '件';
+    var fullList = getFilteredCandidates();
+    var visibleList = fullList.slice(0, state.displayLimit);
+
+    document.getElementById('resultCountText').textContent = '該当: ' + fullList.length + '件（表示中: ' + visibleList.length + '件）';
     if (state.jobsReady) {
-      document.getElementById('jobMasterSummary').textContent = '✅ searchOrder連携済：全' + state.searchOrderJobs.length.toLocaleString() + '件から直線距離計算';
+      document.getElementById('jobMasterSummary').textContent = '✅ searchOrder連携済：全' + state.searchOrderJobs.length.toLocaleString() + '件';
     } else {
       document.getElementById('jobMasterSummary').textContent = '⏳ searchOrder案件データ取得中...';
     }
     document.getElementById('autoExcludedSummary').textContent = state.autoExcludedCount > 0 ? '（稼働/職見/内定待ち自動除外: ' + state.autoExcludedCount + '件）' : '';
 
+    var pageBox = document.getElementById('paginationBox');
+    var loadBtn = document.getElementById('loadMoreBtn');
+    if (fullList.length > visibleList.length) {
+      pageBox.classList.remove('hidden');
+      loadBtn.textContent = 'さらに次の' + Math.min(PAGE_SIZE, fullList.length - visibleList.length) + '件を表示する（残り ' + (fullList.length - visibleList.length) + '件）';
+    } else {
+      pageBox.classList.add('hidden');
+    }
+
     var container = document.getElementById('candidateList');
-    if (list.length === 0) {
+    if (visibleList.length === 0) {
       container.innerHTML = '<div class="bg-white rounded-2xl border border-gray-200 p-10 text-center text-gray-500 text-xs space-y-2"><p class="font-bold text-sm text-gray-700">該当する追客対象者はありません</p><p>エリア切替（関東 / 全エリア）や「未対応のみ表示」のチェックを外して確認できます。</p></div>';
       return;
     }
 
-    container.innerHTML = list.map(function(c, idx) {
+    container.innerHTML = visibleList.map(function(c, idx) {
       var sal = extractSafeSalutation(c);
       var act = getActionState(c);
       var jobs = getMatchedJobs(c);
       var condId = 'cond-box-' + idx;
       var bSt = getColBFinalStatus(c);
       var statusBadgeClass = act.isRemindReady ? 'bg-amber-100 text-amber-800 border-amber-300 animate-pulse' : (act.isActed ? 'bg-sky-50 text-sky-700 border-sky-200' : 'bg-rose-50 text-rose-700 border-rose-200');
+
+      var shiftBadge = jobs.nightMode
+        ? '<span class="px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200 font-bold">🌙 夜勤求人抽出</span>'
+        : '<span class="px-2 py-0.5 rounded bg-sky-50 text-sky-700 border border-sky-200 font-bold">☀️ 日勤求人抽出</span>';
 
       var directHtml = '';
       if (jobs.status === 'ok' && jobs.direct.length > 0) {
@@ -1456,12 +1786,12 @@
       if (jobs.status === 'loading') {
         dispHtml = '<div class="rounded-xl bg-gray-50 border border-gray-200 px-3 py-2.5 text-xs text-gray-500">⏳ searchOrder の案件データ・座標辞書を読み込み中...</div>';
       } else if (jobs.status === 'no_coord') {
-        dispHtml = '<div class="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 text-xs text-amber-800">⚠️ 求職者の住所情報から座標を特定できないため、5km圏内案件を算出できません（住所欄をご確認ください）</div>';
+        dispHtml = '<div class="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 text-xs text-amber-800">⚠️ 求職者の住所情報から座標を特定できないため、5km圏内案件を算出できません</div>';
       } else if (jobs.dispatch.length === 0) {
         dispHtml = '<div class="rounded-xl bg-gray-50 border border-gray-200 px-3 py-2 text-xs text-gray-600">📍 自宅（' + escapeHtml(c.coordMatched || c.address || '') + '）から直線5km以内の該当派遣BOは現在0件です</div>';
       } else {
         dispHtml = '<div class="rounded-xl bg-orange-50/60 border border-orange-200 px-3 py-2 text-xs space-y-1">' +
-          '<div class="flex items-center justify-between font-bold text-orange-800"><span>📍 自宅から直線5km以内の派遣・紹介予定派遣BO（BO取得日時が新しい順）</span><span>該当' + jobs.totalDispCount + '件中 上位' + jobs.dispatch.length + '件</span></div>' +
+          '<div class="flex items-center justify-between font-bold text-orange-800"><span>📍 自宅から直線5km以内の派遣・紹介予定派遣BO' + (c.isGsiCoord ? '（番地ピンポイント済）' : '') + '</span><span>該当' + jobs.totalDispCount + '件中 上位' + jobs.dispatch.length + '件</span></div>' +
           jobs.dispatch.map(function(j) {
             return '<div class="flex flex-wrap items-center justify-between gap-1 text-gray-800 border-t border-orange-100 pt-1"><div><span class="font-bold">' + escapeHtml(j.name) + '</span><span class="text-[11px] text-gray-600 ml-1.5">📍 ' + escapeHtml(j.address) + '</span></div><div class="text-[11px] whitespace-nowrap"><span class="font-black text-orange-700">約' + j.distKm + 'km</span><span class="text-gray-500 ml-1.5">BO:' + escapeHtml(j.boDate) + '</span></div></div>';
           }).join('') + '</div>';
@@ -1472,17 +1802,18 @@
         '<span class="font-black text-amber-900">' + escapeHtml(c.activeWarning) + '</span>' +
         '<label class="flex items-center gap-1.5 bg-white px-2.5 py-1 rounded-lg border border-amber-400 font-bold text-rose-700 cursor-pointer hover:bg-rose-50">' +
         '<input type="checkbox" onchange="excludeCandidateForever(' + SQ + escapeHtml(c.personKey) + SQ + ')" class="accent-rose-600 w-4 h-4" />' +
-        '<span>本人確定のため永続除外する（タイムスタンプ保存）</span></label></div>'
+        '<span>本人確定のため永続除外する（全端末共有）</span></label></div>'
       ) : '';
 
       return '<div class="bg-white rounded-2xl border ' + (c.activeWarning ? 'border-amber-400 ring-2 ring-amber-200' : 'border-gray-200') + ' p-4 shadow-sm hover:shadow-md transition space-y-3">' +
         '<div class="flex flex-wrap items-center justify-between gap-2">' +
           '<div class="flex flex-wrap items-center gap-1.5 text-[11px]">' +
             '<span class="px-2 py-0.5 rounded bg-zinc-100 text-zinc-700 font-bold">' + escapeHtml(c.jobType || '介護') + '</span>' +
+            shiftBadge +
             '<span class="px-2 py-0.5 rounded border font-bold ' + statusBadgeClass + '">' + escapeHtml(act.label) + '</span>' +
-            (bSt ? '<span class="px-2 py-0.5 rounded bg-orange-50 text-orange-700 border border-orange-200 font-bold">B列(最終ステータス): ' + escapeHtml(bSt) + '</span>' : '') +
+            (bSt ? '<span class="px-2 py-0.5 rounded bg-orange-50 text-orange-700 border border-orange-200 font-bold">B列: ' + escapeHtml(bSt) + '</span>' : '') +
             (typeof c.daysUntilStart === 'number' ? '<span class="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold">開始まであと' + c.daysUntilStart + '日</span>' : '') +
-            (c.mergedCount > 1 ? '<span class="px-2 py-0.5 rounded bg-purple-50 text-purple-700 border border-purple-200 font-bold">名寄せ統合: ' + c.mergedCount + '件</span>' : '') +
+            (c.mergedCount > 1 ? '<span class="px-2 py-0.5 rounded bg-purple-50 text-purple-700 border border-purple-200 font-bold">名寄せ: ' + c.mergedCount + '件</span>' : '') +
           '</div>' +
           '<div class="flex flex-wrap items-center gap-1.5 text-[11px]">' +
             '<button type="button" onclick="openRawRowModal(' + SQ + escapeHtml(c.personKey) + SQ + ')" class="px-2 py-1 rounded bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold">全列データ</button>' +
@@ -1494,7 +1825,7 @@
         '<div>' +
           '<div class="flex flex-wrap items-baseline gap-2">' +
             '<h3 class="text-base sm:text-lg font-black text-gray-900">' + escapeHtml(c.name || '氏名不明') + '</h3>' +
-            '<span class="text-[11px] px-2 py-0.5 rounded bg-orange-50 text-orange-700 border border-orange-200 font-bold">宛名: ' + escapeHtml(sal.text) + '（' + sal.mode + '）</span>' +
+            '<span class="text-[11px] px-2 py-0.5 rounded bg-orange-50 text-orange-700 border border-orange-200 font-bold">宛名: ' + escapeHtml(sal.text) + '</span>' +
             '<span class="text-xs text-gray-500">' + escapeHtml(c.kana || '') + (c.age ? '（' + c.age + '歳）' : '') + ' ／ ' + escapeHtml(c.address || '住所未登録') + '</span>' +
           '</div>' +
           '<div class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-600">' +
@@ -1513,12 +1844,17 @@
         '</div>' +
         '<div class="space-y-1.5">' + directHtml + dispHtml + '</div>' +
         '<div class="flex flex-wrap items-center gap-2 pt-1">' +
-          '<button type="button" onclick="openMessageModal(' + SQ + escapeHtml(c.personKey) + SQ + ')" class="flex-1 min-w-[160px] py-2.5 px-4 rounded-xl bg-zinc-800 hover:bg-zinc-900 text-white text-xs font-black transition shadow-sm">文面作成・確認</button>' +
-          '<button type="button" onclick="quickMarkDone(' + SQ + escapeHtml(c.personKey) + SQ + ')" class="flex-1 min-w-[180px] py-2.5 px-4 rounded-xl bg-white hover:bg-orange-50 text-gray-900 border border-gray-300 hover:border-orange-400 text-xs font-bold transition">送信記録をつける（完了）</button>' +
-          '<button type="button" onclick="undoActionLog(' + SQ + escapeHtml(c.personKey) + SQ + ')" class="py-2.5 px-3 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs font-bold transition">未対応に戻す</button>' +
+          '<button type="button" onclick="openMessageModal(' + SQ + escapeHtml(c.personKey) + SQ + ')" class="flex-1 min-w-[140px] py-2.5 px-3 rounded-xl bg-zinc-800 hover:bg-zinc-900 text-white text-xs font-black transition shadow-sm">文面作成・確認</button>' +
+          '<button type="button" onclick="launchDirectSms(' + SQ + escapeHtml(c.personKey) + SQ + ')" class="flex-1 min-w-[160px] py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black transition shadow-sm">📱 SMS起動＆完了記録</button>' +
+          '<button type="button" onclick="quickMarkDone(' + SQ + escapeHtml(c.personKey) + SQ + ')" class="flex-1 min-w-[140px] py-2.5 px-3 rounded-xl bg-white hover:bg-orange-50 text-gray-900 border border-gray-300 hover:border-orange-400 text-xs font-bold transition">送信記録をつける</button>' +
+          '<button type="button" onclick="undoActionLog(' + SQ + escapeHtml(c.personKey) + SQ + ')" class="py-2.5 px-3 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs font-bold transition">戻す</button>' +
         '</div>' +
       '</div>';
     }).join('');
+
+    if (!skipGsi) {
+      refineVisibleCandidatesWithGsi(visibleList);
+    }
   };
 
   window.toggleConditionBox = function(id, btn) {
@@ -1557,11 +1893,11 @@
       state.actionLogs[personKey] = { status: 'done', firstSentAt: (prev && prev.firstSentAt) || now, lastSentAt: now, tab: c.assignedTab };
     }
     saveActionLogs();
-    renderList();
+    renderList(true);
   }
 
   window.quickMarkDone = function(personKey) { recordSentAction(personKey); };
-  window.undoActionLog = function(personKey) { delete state.actionLogs[personKey]; saveActionLogs(); renderList(); };
+  window.undoActionLog = function(personKey) { delete state.actionLogs[personKey]; saveActionLogs(); renderList(true); };
 
   window.excludeCandidateForever = function(personKey) {
     var c = state.mergedCandidates.find(function(x) { return x.personKey === personKey; });
@@ -1575,24 +1911,31 @@
       timestamp: ts
     };
     saveExcludedMap();
-    renderList();
-    showPopup('永続除外として格納しました', c.name + ' 様を除外リストへ保存しました。' + LF + 'タイムスタンプ：' + ts + LF + '（CSVを再読み込みしても除外状態は維持されます）');
+    renderList(true);
+    showPopup('永続除外として格納しました', c.name + ' 様を除外リストへ保存し、全端末共有キューに登録しました。');
   };
 
   window.restoreExcludedCandidate = function(personKey) {
     delete state.excludedMap[personKey];
     saveExcludedMap();
     renderExcludedModal();
-    renderList();
+    renderList(true);
   };
 
   window.openMessageModal = function(personKey) {
     var c = state.mergedCandidates.find(function(x) { return x.personKey === personKey; });
     if (!c) return;
     state.modalTarget = c;
-    state.currentReasonIdx = Math.floor(Math.random() * state.slideReasons.length);
+    state.modalMode = 'normal';
+    state.currentReasonIdx = Math.floor(Math.random() * SLIDE_REASONS_3DAYS.length);
+
     var sal = extractSafeSalutation(c);
     var log = state.actionLogs[c.personKey];
+    var globalNight = document.getElementById('filterNightShift').checked;
+    var nightCheck = document.getElementById('modalNightShiftCheck');
+    if (nightCheck) nightCheck.checked = (globalNight || c.isNightDefault);
+
+    setMsgMode('normal', true);
 
     document.getElementById('modalCandidateName').textContent = c.name + '（' + (c.branch || '-') + '）';
     document.getElementById('modalSalutationInfo').textContent = '宛名判定：' + sal.text + '（' + sal.mode + '）';
@@ -1600,7 +1943,7 @@
     var shuffleBox = document.getElementById('shuffleReasonBox');
     if (c.assignedTab === 'within3days') {
       shuffleBox.classList.remove('hidden');
-      document.getElementById('currentReasonText').textContent = state.slideReasons[state.currentReasonIdx];
+      document.getElementById('currentReasonText').textContent = SLIDE_REASONS_3DAYS[state.currentReasonIdx];
     } else {
       shuffleBox.classList.add('hidden');
     }
@@ -1612,16 +1955,41 @@
       remindBox.classList.add('hidden');
     }
 
-    document.getElementById('modalMessageText').value = buildMessageForCandidate(c);
+    refreshModalTextarea();
     openModal('msgModal');
   };
 
+  window.setMsgMode = function(mode, skipRefresh) {
+    state.modalMode = mode;
+    var bNorm = document.getElementById('btnModeNormal');
+    var bShort = document.getElementById('btnModeShort');
+    if (mode === 'normal') {
+      bNorm.className = 'px-3 py-1 rounded-md text-xs font-black bg-zinc-900 text-orange-400 transition';
+      bShort.className = 'px-3 py-1 rounded-md text-xs font-bold text-gray-600 hover:text-gray-900 transition';
+    } else {
+      bShort.className = 'px-3 py-1 rounded-md text-xs font-black bg-zinc-900 text-orange-400 transition';
+      bNorm.className = 'px-3 py-1 rounded-md text-xs font-bold text-gray-600 hover:text-gray-900 transition';
+    }
+    if (!skipRefresh) refreshModalTextarea();
+  };
+
+  window.onModalShiftToggle = function() {
+    refreshModalTextarea();
+  };
+
+  function refreshModalTextarea() {
+    if (!state.modalTarget) return;
+    var reason = SLIDE_REASONS_3DAYS[state.currentReasonIdx];
+    var nightEl = document.getElementById('modalNightShiftCheck');
+    var nightVal = nightEl ? nightEl.checked : false;
+    document.getElementById('modalMessageText').value = buildMessageForCandidate(state.modalTarget, reason, state.modalMode, nightVal);
+  }
+
   window.shuffleReason = function() {
     if (!state.modalTarget) return;
-    state.currentReasonIdx = (state.currentReasonIdx + 1) % state.slideReasons.length;
-    var reason = state.slideReasons[state.currentReasonIdx];
-    document.getElementById('currentReasonText').textContent = reason;
-    document.getElementById('modalMessageText').value = buildMessageForCandidate(state.modalTarget, reason);
+    state.currentReasonIdx = (state.currentReasonIdx + 1) % SLIDE_REASONS_3DAYS.length;
+    document.getElementById('currentReasonText').textContent = SLIDE_REASONS_3DAYS[state.currentReasonIdx];
+    refreshModalTextarea();
   };
 
   window.copyMessageOnly = function() {
@@ -1637,7 +2005,7 @@
     var key = state.modalTarget.personKey;
     closeModal('msgModal');
     recordSentAction(key);
-    showPopup('コピー＆送信記録完了', '文面をコピーし、対応履歴を記録しました。');
+    showPopup('コピー＆送信記録完了', '文面をコピーし、対応履歴を記録しました（他端末にも自動共有されます）。');
   };
 
   function setupDragAndDrop() {
@@ -1716,6 +2084,7 @@
           attendDate: pick(['アテンド日', 'アテンド日時', '面談日']),
           contactDate: pick(['接触日時', '最終接触日', '連絡日']),
           startDate: pick(['就業開始希望日', '就業可能時期', '開始希望日']),
+          shiftPref: pick(['希望シフト', 'シフト', '夜勤']),
           conditions: pick(['把握済条件', '備考', 'メモ', '希望条件']),
           rawRow: rawRow
         };
@@ -1723,9 +2092,9 @@
 
       try { localStorage.setItem(STORAGE_KEYS.CANDIDATE_CACHE, JSON.stringify({ headers: headers, candidates: candidates })); } catch (e) {}
 
-      processCandidates(candidates, 'CSV読込済 (全' + headers.length + '列・B列参照)');
+      processCandidates(candidates, 'CSV読込済 (全' + headers.length + '列)');
       closeModal('csvModal');
-      showPopup('インポート完了！', 'ファイル名：' + file.name + LF + '全 ' + headers.length + ' 列・' + candidates.length + ' 件を読み込みました（B列＝最終ステータス参照）。' + LF + '（稼働・職見・内定待ち自動除外：' + state.autoExcludedCount + '件 ／ 名寄せ統合：' + state.mergedDupCount + '件）');
+      showPopup('インポート完了！', 'ファイル名：' + file.name + LF + '全 ' + headers.length + ' 列・' + candidates.length + ' 件を読み込みました。');
     };
     reader.readAsArrayBuffer(file);
   }
@@ -1761,7 +2130,7 @@
     if (!confirm('送信履歴・翌日リマインド・30日クールダウン履歴をリセットしますか？')) return;
     state.actionLogs = {};
     saveActionLogs();
-    renderList();
+    renderList(true);
     showPopup('履歴をリセットしました', 'すべての送信・クールダウン履歴を初期化しました。');
   };
 
@@ -1803,7 +2172,7 @@
   function downloadCsvFromList(list, includeRaw) {
     if (!list || list.length === 0) { alert('出力対象のデータが0件です。'); return; }
     var tabNames = { within3days: '3日以内未FIX', unfixed: '未FIX人材', hot: '激熱掘起', future: '未来人材', normal: '通常掘起' };
-    var baseHeaders = ['追客区分', '対応状況', '氏名', '宛名', '電話番号', '担当支店', 'アテンド担当', '職種', '保有資格', 'B列_最終ステータス', '就業開始希望日', '生成済み送信文面', '候補BO1_施設名', '候補BO1_住所', '候補BO1_距離km', '候補BO2_施設名', '候補BO2_住所', '候補BO2_距離km', '候補BO3_施設名', '候補BO3_住所', '候補BO3_距離km', '紹介特別フック_施設名', '紹介特別フック_住所', '紹介特別フック_距離km', '応募者ID'];
+    var baseHeaders = ['追客区分', '対応状況', '氏名', '宛名', '電話番号', '担当支店', 'アテンド担当', '職種', '保有資格', 'B列_最終ステータス', '就業開始希望日', '生成済み送信文面', '候補BO1_施設名', '候補BO1_住所', '候補BO1_距離km', '候補BO2_施設名', '候補BO2_住所', '候補BO2_距離km', '候補BO3_施設名', '候補BO3_住所', '候補BO3_距離km', '直接雇用求人_施設名', '直接雇用求人_住所', '直接雇用求人_距離km', '応募者ID'];
     var rawHeaders = includeRaw ? state.csvHeaders : [];
     var allHeaders = baseHeaders.concat(rawHeaders);
     var csvLines = [allHeaders.map(csvEscape).join(',')];
@@ -1875,10 +2244,9 @@
 
     var payload = {
       updatedAt: new Date().toLocaleString('ja-JP'),
-      sourceLabel: '外部 data.js (' + new Date().toLocaleDateString('ja-JP') + '更新・全' + state.csvHeaders.length + '列)',
+      sourceLabel: '外部 data.js (' + new Date().toLocaleDateString('ja-JP') + '更新・軽量版)',
       headers: state.csvHeaders,
-      demoCandidates: compactCandidates,
-      slideReasons: state.slideReasons
+      demoCandidates: compactCandidates
     };
     return 'window.BSTYLE_APP_DATA=' + JSON.stringify(payload) + ';' + LF;
   }
@@ -1888,7 +2256,7 @@
     var blob = new Blob([content], { type: 'application/javascript;charset=utf-8;' });
     triggerDownload(blob, 'data.js');
     closeModal('csvModal');
-    showPopup('data.js エクスポート完了！', '全 ' + state.rawCandidates.length + ' 件（全' + state.csvHeaders.length + '列）を軽量圧縮した data.js をダウンロードしました。');
+    showPopup('data.js エクスポート完了！', '全 ' + state.rawCandidates.length + ' 件を軽量圧縮した data.js をダウンロードしました。');
   };
 
   window.saveGithubConfig = function() {
@@ -1897,11 +2265,17 @@
     state.settings.ghPath = document.getElementById('ghPathInput').value.trim() || 'data.js';
     state.settings.ghToken = document.getElementById('ghTokenInput').value.trim();
     localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(state.settings));
-    showPopup('GitHub設定を保存しました', 'リポジトリ・トークン設定をお使いのブラウザに保存しました。');
+    syncHistoryFromGithub(false);
+    showPopup('GitHub設定を保存しました', '設定を保存し、端末間の完了・除外履歴同期を有効化しました。');
   };
 
   window.pushDataJsToGithub = async function() {
-    saveGithubConfig();
+    state.settings.ghRepo = document.getElementById('ghRepoInput').value.trim();
+    state.settings.ghBranch = document.getElementById('ghBranchInput').value.trim() || 'main';
+    state.settings.ghPath = document.getElementById('ghPathInput').value.trim() || 'data.js';
+    state.settings.ghToken = document.getElementById('ghTokenInput').value.trim();
+    localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(state.settings));
+
     var ghRepo = state.settings.ghRepo, ghBranch = state.settings.ghBranch, ghPath = state.settings.ghPath, ghToken = state.settings.ghToken;
     if (!ghRepo || !ghToken) { alert('GitHub リポジトリ名と Personal Access Token を入力してください。'); return; }
     var btn = document.getElementById('ghPushBtn');
@@ -1917,7 +2291,6 @@
 
     try {
       var baseApi = 'https://api.github.com/repos/' + ghRepo;
-
       var refRes = await fetch(baseApi + '/git/ref/heads/' + encodeURIComponent(ghBranch), { headers: headers });
       if (!refRes.ok) {
         var errRef = await refRes.json().catch(function() { return {}; });
@@ -2024,32 +2397,6 @@
     syncFromSearchOrderPublic(true);
   };
 
-  window.exportHistoryJson = function() {
-    var payload = { exportedAt: new Date().toISOString(), actionLogs: state.actionLogs, excludedMap: state.excludedMap };
-    var blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
-    triggerDownload(blob, 'bstyle_history_backup_' + new Date().toISOString().slice(0, 10) + '.json');
-    showPopup('履歴JSON保存完了', '送信済・30日クールダウン・永続除外リストをJSON保存しました。');
-  };
-
-  window.importHistoryJson = function(e) {
-    var file = e.target.files[0];
-    if (!file) return;
-    var reader = new FileReader();
-    reader.onload = function(evt) {
-      try {
-        var data = JSON.parse(evt.target.result);
-        if (data.actionLogs) state.actionLogs = Object.assign({}, state.actionLogs, data.actionLogs);
-        if (data.excludedMap) state.excludedMap = Object.assign({}, state.excludedMap, data.excludedMap);
-        saveActionLogs();
-        saveExcludedMap();
-        renderList();
-        showPopup('履歴JSON復元完了', '送信履歴・クールダウン・永続除外リストを復元しました。');
-      } catch (err) { alert('JSONファイルの読み込みに失敗しました。'); }
-    };
-    reader.readAsText(file);
-    e.target.value = '';
-  };
-
   window.openModal = function(id) {
     if (id === 'exportModal') updateExportPreview();
     if (id === 'excludedModal') renderExcludedModal();
@@ -2084,7 +2431,7 @@
     var body = document.getElementById('mergeInfoBody');
     var logCount = Object.keys(state.actionLogs).length;
     var excCount = Object.keys(state.excludedMap).length;
-    body.innerHTML = '<div class="bg-gray-50 rounded-xl p-3.5 border border-gray-200 space-y-1.5"><p>・元CSV総行数：<strong>' + state.rawCandidates.length + ' 件</strong>（全 ' + state.csvHeaders.length + ' 列保持）</p><p>・重複名寄せ統合（同一人物合体）：<strong>' + state.mergedDupCount + ' 件</strong></p><p>・稼働中／職見待ち／内定待ち 電話番号一致の自動除外：<strong>' + state.autoExcludedCount + ' 件</strong></p><p>・チェックボックス永続除外（タイムスタンプ保存済）：<strong>' + excCount + ' 件</strong></p><p>・独立ストレージ保存中の送信／クールダウン履歴：<strong>' + logCount + ' 件</strong></p><p>・searchOrder 連携済案件数：<strong>' + state.searchOrderJobs.length.toLocaleString() + ' 件</strong>（座標辞書：' + Object.keys(state.townCoordsDict).length + '都道府県）</p></div>';
+    body.innerHTML = '<div class="bg-gray-50 rounded-xl p-3.5 border border-gray-200 space-y-1.5"><p>・元CSV総行数：<strong>' + state.rawCandidates.length + ' 件</strong></p><p>・重複名寄せ統合（同一人物合体）：<strong>' + state.mergedDupCount + ' 件</strong></p><p>・稼働中／職見待ち／内定待ち 電話番号一致の自動除外：<strong>' + state.autoExcludedCount + ' 件</strong></p><p>・チェックボックス永続除外（全端末共有）：<strong>' + excCount + ' 件</strong></p><p>・GitHub同期中の送信／クールダウン履歴：<strong>' + logCount + ' 件</strong></p><p>・searchOrder 連携済案件数：<strong>' + state.searchOrderJobs.length.toLocaleString() + ' 件</strong></p></div>';
   }
 
   window.openRawRowModal = function(personKey) {
@@ -2122,6 +2469,7 @@
   loadInitialData();
   setupDragAndDrop();
   syncFromSearchOrderPublic(false);
+  syncHistoryFromGithub(false);
 })();
 </script>
 </body>
