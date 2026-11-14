@@ -446,6 +446,18 @@
     </div>
   </div>
 
+    <!-- 12秒間 即時取り消し＆短縮版再送トーストバー（連続送信の邪魔をしない画面下部スリムバー） -->
+  <div id="undoToastBar" class="hidden fixed bottom-3 left-1/2 -translate-x-1/2 z-40 w-[95%] max-w-lg bg-zinc-950/95 text-white border border-orange-500/70 rounded-xl px-3 py-2 shadow-2xl flex items-center justify-between gap-2 text-xs">
+    <div class="truncate">
+      <span id="undoToastText" class="font-bold text-emerald-400">✅ 記録済</span>
+      <span id="undoToastCountdown" class="text-[11px] text-zinc-400 ml-1">(12秒)</span>
+    </div>
+    <div class="flex items-center gap-1.5 shrink-0">
+      <button type="button" onclick="undoLastSentAction()" class="px-2.5 py-1 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-white border border-zinc-600 font-bold">↩ 戻す</button>
+      <button type="button" onclick="resendLastAsShortSms()" class="px-2.5 py-1 rounded-lg bg-orange-500 hover:bg-orange-600 text-zinc-950 font-black">📱 短縮版で再送</button>
+    </div>
+  </div>
+
   <div id="popupModal" class="hidden fixed inset-0 z-50 modal-backdrop flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl border-2 border-orange-500 p-6 text-center space-y-3">
       <div class="w-12 h-12 rounded-full bg-orange-100 text-orange-600 font-black text-2xl flex items-center justify-center mx-auto">✓</div>
@@ -536,7 +548,11 @@
     modalTarget: null,
     modalMode: 'normal',
     currentReasonIdx: 0,
-    currentRawCandidate: null
+    currentRawCandidate: null,
+    lastUndoKey: null,
+    lastUndoPrevLog: null,
+    undoToastTimer: null,
+    undoToastInterval: null
   };
 
   function utf8ToBase64(str) {
@@ -1076,19 +1092,28 @@
     return 'ID_' + (c.id || Math.random().toString(36).slice(2));
   }
 
-  // 元データのシフト列の値が「夜勤」かどうかを機械的に判定
+  // 元データの「勤務可能シフト(夜勤)」列に丸（○/◯/〇/●/1/可/希望/✓等）がついているかで機械的に判定
+  function isCircleOrTruthyMark(val) {
+    var s = String(val || '').normalize('NFKC').trim();
+    if (!s) return false;
+    if (/^[-－ー―×✕✖✗✘不可なし無0falseFALSE]+$/i.test(s)) return false;
+    return true;
+  }
+
   function isNightShiftCandidate(c) {
-    var sp = String(c.shiftPref || '').trim();
-    if (sp === '夜勤' || sp.indexOf('夜勤') !== -1) return true;
     if (c.rawRow) {
+      if (c.rawRow['勤務可能シフト(夜勤)'] !== undefined) {
+        return isCircleOrTruthyMark(c.rawRow['勤務可能シフト(夜勤)']);
+      }
       var keys = Object.keys(c.rawRow);
       for (var i = 0; i < keys.length; i++) {
-        if (keys[i].indexOf('シフト') !== -1 || keys[i].indexOf('夜勤') !== -1) {
-          var v = String(c.rawRow[keys[i]] || '').trim();
-          if (v === '夜勤' || v.indexOf('夜勤専従') !== -1 || v === '夜勤のみ') return true;
+        if (keys[i].indexOf('勤務可能シフト') !== -1 && keys[i].indexOf('夜勤') !== -1) {
+          return isCircleOrTruthyMark(c.rawRow[keys[i]]);
         }
       }
     }
+    var sp = String(c.shiftPref || '').trim();
+    if (sp === '夜勤' || sp.indexOf('夜勤') !== -1) return true;
     return false;
   }
 
@@ -1426,6 +1451,20 @@
     var tab = c.assignedTab;
     var mode = modeOverride || 'normal';
 
+    var replyFmStandard = [
+      '▼ご返信の際は以下をコピーしてご返信ください',
+      '・気になる求人（候補1〜3・直接雇用）：',
+      '・ご希望の勤務日数・シフト：',
+      '・お電話・見学の希望日時：'
+    ].join(LF);
+
+    var replyFmFuture = [
+      '▼ご返信の際は以下をコピーしてご返信ください',
+      '・ご希望の就業日数：週〇日',
+      '・以前応募時からの条件変更：なし ／ あり（　　　）',
+      '・気になる求人（あれば）：'
+    ].join(LF);
+
     if (mode === 'short') {
       var shortLines = jobs.dispatch.slice(0, 2).map(function(j, idx) {
         return '・' + j.name + '（約' + j.distKm + 'km）';
@@ -1443,7 +1482,7 @@
           '代わりに近隣の好条件求人を確保いたしました。',
           shortJobs,
           shortRateNote,
-          '気になる案件があればご返信ください！'
+          '※返信例：「候補1希望、週3日」など一言でOKです！'
         ].join(LF);
       }
       if (tab === 'unfixed') {
@@ -1452,7 +1491,7 @@
           '先日ご提案させていただきました件、その後ご状況はいかがでしょうか？',
           shortJobs,
           shortRateNote,
-          'ご状況だけでもぜひご返信ください！'
+          '※返信例：「候補1希望、週3日」「他で決まった」など一言でOKです！'
         ].join(LF);
       }
       if (tab === 'future') {
@@ -1461,7 +1500,8 @@
           '以前伺っていたご就業時期が近づいてまいりましたので、最新の募集状況のご案内です！',
           shortJobs,
           shortRateNote,
-          '今週・来週で面談した場合の週何日か、以前応募時と変わっていないか（不明な場合は就業日数だけ返信お願いします）お知らせください！'
+          '今週・来週で面談した場合の週何日か、以前応募時と変わっていないか（不明な場合は就業日数だけ返信お願いします）お知らせください！',
+          '※返信例：「週3日、条件変更なし」'
         ].join(LF);
       }
       return [
@@ -1469,7 +1509,7 @@
         'ご自宅周辺で以下の新着求人が出ております！',
         shortJobs,
         shortRateNote,
-        '詳細ご希望の際はぜひお気軽にご返信ください！'
+        '※返信例：「候補1希望、週3日」など一言でOKです！'
       ].join(LF);
     }
 
@@ -1502,7 +1542,8 @@
         '代わりにご自宅から通いやすい近隣エリアで、条件に合う新着求人をピックアップいたしました。', '',
         bodyJobs, '',
         rateNote, '',
-        'もし気になるものがございましたら、すぐ詳細をお送りしますのでお気軽にご返信ください！'
+        'もし気になるものがございましたら、すぐ詳細をお送りしますのでお気軽にご返信ください！', '',
+        replyFmStandard
       ].join(LF);
     }
 
@@ -1515,7 +1556,8 @@
         bodyJobs, '',
         rateNote, '',
         '今週・来週で面談した場合、ご希望の就業日数は週何日くらいになりそうでしょうか？',
-        '以前応募時と条件が変わっていないかもあわせて教えていただけますと幸いです。（不明な場合は就業日数だけ返信お願いします）'
+        '以前応募時と条件が変わっていないかもあわせて教えていただけますと幸いです。（不明な場合は就業日数だけ返信お願いします）', '',
+        replyFmFuture
       ].join(LF);
     }
 
@@ -1527,7 +1569,8 @@
         '現在もご自宅から5km圏内で以下の求人が募集中となっております。', '',
         bodyJobs, '',
         rateNote, '',
-        '「まずは条件だけ詳しく聞きたい」「他で決まった」など、一言だけでもご返信いただけますと幸いです！'
+        '「まずは条件だけ詳しく聞きたい」「他で決まった」など、一言だけでもご返信いただけますと幸いです！', '',
+        replyFmStandard
       ].join(LF);
     }
 
@@ -1537,7 +1580,8 @@
           sal.text, '',
           '度々のご連絡失礼いたします。株式会社ビースタイルです。',
           '昨日お送りさせていただきました近隣の募集案件ですが、枠が埋まりやすくなっているため念のためリマインドさせていただきました。', '',
-          'お忙しいところ恐縮ですが、もし少しでもご興味があれば「詳細希望」とだけご返信ください！'
+          'お忙しいところ恐縮ですが、もし少しでもご興味があれば以下よりお気軽にご返信ください！', '',
+          replyFmStandard
         ].join(LF);
       }
       return [
@@ -1546,7 +1590,8 @@
         '以前お話しさせていただいたご希望条件にぴったりの新着案件が入りましたので、優先的にご連絡いたしました！', '',
         bodyJobs, '',
         rateNote, '',
-        '今すぐのご転職でなくても情報収集だけでも大歓迎ですので、ぜひお気軽にご返信ください！'
+        '今すぐのご転職でなくても情報収集だけでも大歓迎ですので、ぜひお気軽にご返信ください！', '',
+        replyFmStandard
       ].join(LF);
     }
 
@@ -1557,7 +1602,8 @@
       '現在、お住まいのエリア周辺で新しい募集枠が複数出ておりますのでご案内いたします。', '',
       bodyJobs, '',
       rateNote, '',
-      '現在のシフト希望やご状況に合わせて改めてお探しすることも可能ですので、ぜひお気軽にお声がけください！'
+      '現在のシフト希望やご状況に合わせて改めてお探しすることも可能ですので、ぜひお気軽にお声がけください！', '',
+      replyFmStandard
     ].join(LF);
   }
 
@@ -1949,11 +1995,67 @@
     if (id && navigator.clipboard) navigator.clipboard.writeText(id).catch(function() {});
   };
 
+  function showUndoToastBar(c) {
+    var bar = document.getElementById('undoToastBar');
+    var txt = document.getElementById('undoToastText');
+    var cnt = document.getElementById('undoToastCountdown');
+    if (!bar || !txt || !cnt) return;
+
+    if (state.undoToastTimer) clearTimeout(state.undoToastTimer);
+    if (state.undoToastInterval) clearInterval(state.undoToastInterval);
+
+    var rem = 12;
+    txt.textContent = '✅ ' + (c.name || '対象者') + '様を記録済';
+    cnt.textContent = '(' + rem + '秒)';
+    bar.classList.remove('hidden');
+
+    state.undoToastInterval = setInterval(function() {
+      rem--;
+      if (rem > 0) {
+        cnt.textContent = '(' + rem + '秒)';
+      } else {
+        clearInterval(state.undoToastInterval);
+      }
+    }, 1000);
+
+    state.undoToastTimer = setTimeout(function() {
+      bar.classList.add('hidden');
+      if (state.undoToastInterval) clearInterval(state.undoToastInterval);
+    }, 12000);
+  }
+
+  window.undoLastSentAction = function() {
+    var key = state.lastUndoKey;
+    if (!key) return;
+    if (state.lastUndoPrevLog) {
+      state.actionLogs[key] = state.lastUndoPrevLog;
+    } else {
+      delete state.actionLogs[key];
+    }
+    saveActionLogs();
+    var bar = document.getElementById('undoToastBar');
+    if (bar) bar.classList.add('hidden');
+    if (state.undoToastTimer) clearTimeout(state.undoToastTimer);
+    if (state.undoToastInterval) clearInterval(state.undoToastInterval);
+    renderList(true);
+  };
+
+  window.resendLastAsShortSms = function() {
+    var key = state.lastUndoKey;
+    if (!key) return;
+    window.undoLastSentAction();
+    openMessageModal(key);
+    setMsgMode('short', false);
+  };
+
   function recordSentAction(personKey) {
     var c = state.mergedCandidates.find(function(x) { return x.personKey === personKey; });
     if (!c) return;
     var now = Date.now();
     var prev = state.actionLogs[personKey];
+    state.lastUndoKey = personKey;
+    state.lastUndoPrevLog = prev ? Object.assign({}, prev) : null;
+
     var thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
     var oneDayMs = 24 * 60 * 60 * 1000;
 
@@ -1970,6 +2072,7 @@
     }
     saveActionLogs();
     renderList(true);
+    showUndoToastBar(c);
   }
 
   window.quickMarkDone = function(personKey) { recordSentAction(personKey); };
@@ -2081,7 +2184,6 @@
     var key = state.modalTarget.personKey;
     closeModal('msgModal');
     recordSentAction(key);
-    showPopup('コピー＆送信記録完了', '文面をコピーし、対応履歴を記録しました（他端末にも自動共有されます）。');
   };
 
   function setupDragAndDrop() {
@@ -2160,7 +2262,7 @@
           attendDate: pick(['アテンド日', 'アテンド日時', '面談日']),
           contactDate: pick(['接触日時', '最終接触日', '連絡日']),
           startDate: pick(['就業開始希望日', '就業可能時期', '開始希望日']),
-          shiftPref: pick(['希望シフト', 'シフト', '夜勤']),
+          shiftPref: (rawRow['勤務可能シフト(夜勤)'] !== undefined ? rawRow['勤務可能シフト(夜勤)'] : pick(['勤務可能シフト(夜勤)', '希望シフト', 'シフト', '夜勤'])),
           conditions: pick(['把握済条件', '備考', 'メモ', '希望条件']),
           rawRow: rawRow
         };
