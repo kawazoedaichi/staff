@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ビースタイル 追客・掘り起こし管理</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="./data.js" onerror="window.BSTYLE_DATA_MISSING=true"></script>
+  <!-- data.js is dynamically loaded with cache-buster on startup -->
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap');
     body { font-family: 'Noto Sans JP', sans-serif; background-color: #f3f4f6; color: #111827; }
@@ -266,6 +266,10 @@
           <p class="text-gray-500">またはここにCSVファイルをドラッグ＆ドロップ（UTF-8 / Shift-JIS自動判定）</p>
           <input type="file" id="csvFileInput" accept=".csv" class="hidden" onchange="handleCsvFileSelect(event)" />
         </div>
+        <label class="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 font-bold cursor-pointer">
+          <input type="checkbox" id="autoPushOnCsvCheck" checked class="accent-emerald-600 w-4 h-4" />
+          <span>🚀 CSV読込と同時に自動で GitHub（data.js）へ反映してスマホと即同期する</span>
+        </label>
         <div class="bg-zinc-900 text-white rounded-xl p-3.5 space-y-2">
           <div class="flex items-center justify-between">
             <span class="font-bold text-orange-400">📦 チーム配布・軽量化用 data.js 書き出し</span>
@@ -1066,6 +1070,103 @@
     scheduleHistoryPushToGithub();
   }
 
+  function fetchFreshDataJsScript(targetUrl) {
+    return new Promise(function(resolve) {
+      var prevData = window.BSTYLE_APP_DATA;
+      var s = document.createElement('script');
+      var sep = targetUrl.indexOf('?') !== -1 ? AMP : '?';
+      s.src = targetUrl + sep + 't=' + Date.now() + '&r=' + Math.random().toString(36).slice(2);
+      s.onload = function() {
+        if (window.BSTYLE_APP_DATA && Array.isArray(window.BSTYLE_APP_DATA.demoCandidates) && window.BSTYLE_APP_DATA.demoCandidates.length > 0) {
+          resolve(window.BSTYLE_APP_DATA);
+        } else {
+          window.BSTYLE_APP_DATA = prevData;
+          resolve(null);
+        }
+      };
+      s.onerror = function() {
+        window.BSTYLE_APP_DATA = prevData;
+        resolve(null);
+      };
+      document.head.appendChild(s);
+    });
+  }
+
+  window.syncLatestDataJsFromServer = async function(quiet) {
+    var badge = document.getElementById('dataSourceBadge');
+    var mobBadge = document.getElementById('mobileDataBadge');
+    var repo = state.settings.ghRepo || 'kawazoedaichi/staff';
+    var branch = state.settings.ghBranch || 'main';
+    var ghPath = state.settings.ghPath || 'data.js';
+
+    // 1. Custom external URL if configured, otherwise try local ./data.js first, then raw.githubusercontent.com fallback
+    var urlsToTry = [];
+    if (state.settings.externalDataUrl) {
+      urlsToTry.push(state.settings.externalDataUrl);
+    }
+    urlsToTry.push('https://raw.githubusercontent.com/' + repo + '/' + encodeURIComponent(branch) + '/' + ghPath);
+    urlsToTry.push('./' + ghPath);
+
+    var remotePayload = null;
+    for (var i = 0; i < urlsToTry.length; i++) {
+      var u = urlsToTry[i];
+      try {
+        var r = await fetch(u + (u.indexOf('?') !== -1 ? AMP : '?') + 't=' + Date.now(), { cache: 'no-store' });
+        if (r.ok) {
+          var rawTxt = await r.text();
+          var cleaned = rawTxt.trim().replace(/^window\.BSTYLE_APP_DATA\s*=\s*/, '').replace(/;\s*$/, '');
+          var j = JSON.parse(cleaned);
+          var arr = Array.isArray(j) ? j : (j.demoCandidates || j.candidates || []);
+          if (arr.length > 0) {
+            remotePayload = {
+              updatedAt: j.updatedAt || '',
+              sourceLabel: j.sourceLabel || ('最新data.js同期済 (' + arr.length + '件)'),
+              headers: j.headers || Object.keys(arr[0].rawRow || {}),
+              demoCandidates: arr
+            };
+            break;
+          }
+        }
+      } catch (e) {
+        if (u.slice(-3) === '.js') {
+          var resData = await fetchFreshDataJsScript(u);
+          if (resData && Array.isArray(resData.demoCandidates) && resData.demoCandidates.length > 0) {
+            remotePayload = resData;
+            break;
+          }
+        }
+      }
+    }
+
+    if (remotePayload) {
+      var remoteSig = (remotePayload.updatedAt || '') + '_' + remotePayload.demoCandidates.length + '_' + (remotePayload.demoCandidates[0] && remotePayload.demoCandidates[0].id || '');
+      var currentSig = state.lastSyncedDataSig || '';
+      if (remoteSig !== currentSig) {
+        state.lastSyncedDataSig = remoteSig;
+        state.csvHeaders = remotePayload.headers || Object.keys(remotePayload.demoCandidates[0].rawRow || {});
+        var label = '🔄 自動同期済 (' + (remotePayload.updatedAt || new Date().toLocaleDateString('ja-JP')) + ' / ' + remotePayload.demoCandidates.length + '件)';
+        try {
+          localStorage.setItem(STORAGE_KEYS.CANDIDATE_CACHE, JSON.stringify({
+            updatedAt: remotePayload.updatedAt || '',
+            sig: remoteSig,
+            headers: state.csvHeaders,
+            candidates: remotePayload.demoCandidates
+          }));
+        } catch (e) {}
+        processCandidates(remotePayload.demoCandidates, label);
+      } else {
+        if (badge && badge.textContent.indexOf('確認中') !== -1) {
+          badge.textContent = '✅ 最新同期済 (' + state.rawCandidates.length + '件)';
+        }
+        if (mobBadge && mobBadge.textContent.indexOf('確認中') !== -1) {
+          mobBadge.textContent = 'データ：✅ 最新同期済 (' + state.rawCandidates.length + '件)';
+        }
+      }
+      return true;
+    }
+    return false;
+  };
+
   function loadInitialData() {
     var cachedCsv = null;
     try { cachedCsv = localStorage.getItem(STORAGE_KEYS.CANDIDATE_CACHE); } catch (e) {}
@@ -1073,22 +1174,20 @@
       try {
         var pc = JSON.parse(cachedCsv);
         state.csvHeaders = pc.headers || [];
-        processCandidates(pc.candidates || [], 'CSV読込済 (全' + state.csvHeaders.length + '列)');
+        state.lastSyncedDataSig = pc.sig || '';
+        processCandidates(pc.candidates || [], '読込済・最新確認中... (' + (pc.candidates || []).length + '件)');
+        // Immediately fetch fresh data.js from server ignoring stale browser cache!
+        syncLatestDataJsFromServer(true);
         return;
       } catch (e) {}
-    }
-
-    if (window.BSTYLE_APP_DATA && Array.isArray(window.BSTYLE_APP_DATA.demoCandidates) && window.BSTYLE_APP_DATA.demoCandidates.length > 0) {
-      state.csvHeaders = window.BSTYLE_APP_DATA.headers || Object.keys(window.BSTYLE_APP_DATA.demoCandidates[0].rawRow || {});
-      processCandidates(window.BSTYLE_APP_DATA.demoCandidates, window.BSTYLE_APP_DATA.sourceLabel || '外部 data.js 読込済');
-      return;
     }
 
     var fallbackSamples = [
       { id: '01M4R001', name: '鈴木 恵美', kana: 'スズキ エミ', phone: '09011112222', dob: '1985-04-12', age: 41, address: '東京都世田谷区三軒茶屋1-22', pref: '東京都', branch: '東京東', staff: '山上 健太', qualification: '介護福祉士', jobType: '介護', status: 'アテンド済', finalStatus: 'FIX待ち', applyDate: '2026-11-10 10:00', attendDate: '2026-11-13 16:00', contactDate: '2026-11-13 16:00', startDate: '', shiftPref: '', conditions: 'シフト:早番・日勤 / 週4日 / 希望時給:1750円' }
     ];
     state.csvHeaders = ['応募者ID', '最終ステータス', '氏名', 'フリガナ', '電話番号', '生年月日', '年齢', '住所', '都道府県', '担当支店', 'アテンド担当ユーザー', '保有資格', '職種', 'ステータス', '応募日', 'アテンド日', '接触日時', '就業開始希望日', '把握済条件'];
-    processCandidates(fallbackSamples, 'デモデータ');
+    processCandidates(fallbackSamples, '最新data.js取得中...');
+    syncLatestDataJsFromServer(true);
   }
 
   function normalizePhone(p) { return String(p || '').replace(/[^\d]/g, ''); }
@@ -2577,11 +2676,22 @@
         };
       });
 
-      try { localStorage.setItem(STORAGE_KEYS.CANDIDATE_CACHE, JSON.stringify({ headers: headers, candidates: candidates })); } catch (e) {}
+      var sigNow = new Date().toLocaleString('ja-JP') + '_' + candidates.length + '_' + (candidates[0] && candidates[0].id || '');
+      state.lastSyncedDataSig = sigNow;
+      try { localStorage.setItem(STORAGE_KEYS.CANDIDATE_CACHE, JSON.stringify({ sig: sigNow, headers: headers, candidates: candidates })); } catch (e) {}
 
       processCandidates(candidates, 'CSV読込済 (全' + headers.length + '列)');
       closeModal('csvModal');
-      showPopup('インポート完了！', 'ファイル名：' + file.name + LF + '全 ' + headers.length + ' 列・' + candidates.length + ' 件を読み込みました。');
+
+      var autoPushEl = document.getElementById('autoPushOnCsvCheck');
+      var shouldAutoPush = autoPushEl ? autoPushEl.checked : true;
+      if (shouldAutoPush && state.settings.ghToken && state.settings.ghRepo) {
+        pushDataJsToGithub(true, file.name, candidates.length);
+      } else if (shouldAutoPush && !state.settings.ghToken) {
+        showPopup('インポート完了！（GitHub未連携）', 'ファイル名：' + file.name + LF + '全 ' + headers.length + ' 列・' + candidates.length + ' 件を読み込みました。' + LF + '※スマホとも自動同期するには上部の「🚀 GitHub同期」からTokenを1度保存してください。');
+      } else {
+        showPopup('インポート完了！', 'ファイル名：' + file.name + LF + '全 ' + headers.length + ' 列・' + candidates.length + ' 件を読み込みました。');
+      }
     };
     reader.readAsArrayBuffer(file);
   }
@@ -2608,9 +2718,16 @@
 
   window.resetToDemoData = function() {
     localStorage.removeItem(STORAGE_KEYS.CANDIDATE_CACHE);
+    state.lastSyncedDataSig = '';
     closeModal('csvModal');
-    loadInitialData();
-    showPopup('デモデータに戻しました', '初期サンプルデータ表示に戻りました。');
+    syncLatestDataJsFromServer(false).then(function(ok) {
+      if (ok) {
+        showPopup('最新 data.js を再取得しました', 'ブラウザの古い記憶を消去し、GitHub上の最新データに同期しました。');
+      } else {
+        loadInitialData();
+        showPopup('キャッシュを消去しました', 'ローカルキャッシュを消去しました。');
+      }
+    });
   };
 
   window.clearActionHistory = function() {
@@ -2783,19 +2900,24 @@
     showPopup('GitHub設定を保存しました', '設定を保存し、端末間の完了・除外履歴同期を有効化しました。');
   };
 
-  window.pushDataJsToGithub = async function() {
-    state.settings.ghRepo = document.getElementById('ghRepoInput').value.trim();
-    state.settings.ghBranch = document.getElementById('ghBranchInput').value.trim() || 'main';
-    state.settings.ghPath = document.getElementById('ghPathInput').value.trim() || 'data.js';
-    state.settings.ghToken = document.getElementById('ghTokenInput').value.trim();
-    localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(state.settings));
+  window.pushDataJsToGithub = async function(isAutoFromCsv, csvFileName, rowCount) {
+    if (!isAutoFromCsv) {
+      state.settings.ghRepo = document.getElementById('ghRepoInput').value.trim();
+      state.settings.ghBranch = document.getElementById('ghBranchInput').value.trim() || 'main';
+      state.settings.ghPath = document.getElementById('ghPathInput').value.trim() || 'data.js';
+      state.settings.ghToken = document.getElementById('ghTokenInput').value.trim();
+      localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(state.settings));
+    }
 
     var ghRepo = state.settings.ghRepo, ghBranch = state.settings.ghBranch, ghPath = state.settings.ghPath, ghToken = state.settings.ghToken;
     if (!ghRepo || !ghToken) { alert('GitHub リポジトリ名と Personal Access Token を入力してください。'); return; }
     var btn = document.getElementById('ghPushBtn');
-    var origText = btn.textContent;
-    btn.disabled = true;
-    btn.textContent = '⏳ 大容量データ送信中（1/4）...';
+    var origText = btn ? btn.textContent : '';
+    var badge = document.getElementById('dataSourceBadge');
+    var mobBadge = document.getElementById('mobileDataBadge');
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ 大容量データ送信中（1/4）...'; }
+    if (badge) badge.textContent = '⏳ GitHub自動反映中...';
+    if (mobBadge) mobBadge.textContent = 'データ：⏳ GitHub自動反映中...';
 
     var headers = {
       'Authorization': 'Bearer ' + ghToken,
@@ -2866,13 +2988,17 @@
         throw new Error('ブランチ更新エラー: ' + (errPatch.message || patchRefRes.status));
       }
 
+      if (badge) badge.textContent = '🚀 GitHub反映完了 (' + state.rawCandidates.length + '件)';
+      if (mobBadge) mobBadge.textContent = 'データ：🚀 GitHub反映完了 (' + state.rawCandidates.length + '件)';
       closeModal('githubModal');
-      showPopup('🚀 GitHub自動反映が完了しました！', 'リポジトリ：' + ghRepo + ' (' + ghBranch + ')' + LF + '更新ファイル：' + ghPath + '（' + state.rawCandidates.length + '件 / 約' + sizeKb + 'KB）' + LF + '約30秒〜1分で公開ページに最新データが自動反映されます。');
+      var titleStr = isAutoFromCsv ? '🚀 CSV読込＆GitHub自動更新が完了！' : '🚀 GitHub自動反映が完了しました！';
+      var prefixStr = isAutoFromCsv ? ('読込ファイル：' + csvFileName + LF) : '';
+      showPopup(titleStr, prefixStr + 'リポジトリ：' + ghRepo + ' (' + ghBranch + ')' + LF + '更新ファイル：' + ghPath + '（' + state.rawCandidates.length + '件 / 約' + sizeKb + 'KB）' + LF + 'スマホ側でページを開く（または画面に戻る）と自動で最新データが反映されます。');
     } catch (err) {
+      if (badge) badge.textContent = '⚠️ GitHub反映失敗';
       alert('GitHubへの自動反映に失敗しました：' + err.message);
     } finally {
-      btn.disabled = false;
-      btn.textContent = origText;
+      if (btn) { btn.disabled = false; btn.textContent = origText; }
     }
   };
 
@@ -2984,6 +3110,13 @@
   setupDragAndDrop();
   syncFromSearchOrderPublic(false);
   syncHistoryFromGithub(false);
+
+  document.addEventListener('visibilitychange', function() {
+    if (document.visibilityState === 'visible') {
+      syncLatestDataJsFromServer(true);
+      syncHistoryFromGithub(false);
+    }
+  });
 })();
 </script>
 </body>
