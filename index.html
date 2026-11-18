@@ -1316,16 +1316,30 @@
     rawList.forEach(function(item) {
       var key = getPersonKey(item);
       if (!map.has(key)) {
-        map.set(key, Object.assign({}, item, { personKey: key, mergedIds: [item.id], mergedCount: 1 }));
+        map.set(key, Object.assign({}, item, {
+          personKey: key,
+          mergedIds: [item.id],
+          mergedCount: 1,
+          // 同一人物の複数レコードを統合しても、AY列の夜勤可フラグを引き継ぐ
+          isNightDefault: isNightShiftCandidate(item)
+        }));
       } else {
         dupCount++;
         var existing = map.get(key);
         existing.mergedCount += 1;
         if (item.id && existing.mergedIds.indexOf(item.id) === -1) existing.mergedIds.push(item.id);
+        var mergedNightDefault = !!existing.isNightDefault || isNightShiftCandidate(item);
         if (getProgressScore(item) > getProgressScore(existing)) {
           var keepIds = existing.mergedIds;
           var keepCount = existing.mergedCount;
-          map.set(key, Object.assign({}, item, { personKey: key, mergedIds: keepIds, mergedCount: keepCount }));
+          map.set(key, Object.assign({}, item, {
+            personKey: key,
+            mergedIds: keepIds,
+            mergedCount: keepCount,
+            isNightDefault: mergedNightDefault
+          }));
+        } else {
+          existing.isNightDefault = mergedNightDefault;
         }
       }
     });
@@ -1356,7 +1370,8 @@
       }
       c.activeWarning = warnMatch ? '⚠️ 稼働・職見・内定待ちかも（' + warnMatch.statusLabel + 'と氏名/住所一致）' : '';
       c.assignedTab = classifyCandidateTab(c);
-      c.isNightDefault = isNightShiftCandidate(c);
+      // 統合前レコードのAY列に夜勤可（○/〇/◯等）が1件でもあれば夜勤求人を標準表示
+      c.isNightDefault = !!c.isNightDefault || isNightShiftCandidate(c);
 
       var coord = lookupCoordsFromDict(c.pref, c.address);
       if (coord) {
@@ -1471,7 +1486,8 @@
   // シフト判定：nightMode === true なら「夜勤」を含む求人のみ、false なら「早出・日勤・遅出」のいずれかを含む日勤求人
   function matchShiftRule(jobShifts, nightMode) {
     var arr = Array.isArray(jobShifts) ? jobShifts : [];
-    if (arr.length === 0) return true;
+    // 夜勤対象者には、シフト未設定の求人も誤表示しない。
+    if (arr.length === 0) return nightMode ? false : true;
     var hasNight = arr.indexOf('夜勤') !== -1;
     var hasDay = arr.indexOf('早出') !== -1 || arr.indexOf('日勤') !== -1 || arr.indexOf('遅出') !== -1;
     return nightMode ? hasNight : hasDay;
@@ -1591,7 +1607,8 @@
 
     var globalNightEl = document.getElementById('filterNightShift');
     var globalNight = globalNightEl ? globalNightEl.checked : false;
-    var nightMode = (nightModeOverride !== undefined) ? nightModeOverride : (globalNight || c.isNightDefault);
+    // AY列が夜勤可の人は、画面操作や個別指定で日勤に切り替えられない。
+    var nightMode = !!c.isNightDefault || ((nightModeOverride !== undefined) ? !!nightModeOverride : globalNight);
 
     var roleCat = resolveCandidateRoleCategory(c);
     var isNurse = (roleCat === 'nurse');
@@ -2553,7 +2570,18 @@
     var sal = extractSafeSalutation(c);
     var globalNight = document.getElementById('filterNightShift').checked;
     var nightCheck = document.getElementById('modalNightShiftCheck');
-    if (nightCheck) nightCheck.checked = (globalNight || c.isNightDefault);
+    if (nightCheck) {
+      var nightLocked = !!c.isNightDefault;
+      nightCheck.checked = nightLocked || globalNight;
+      nightCheck.disabled = nightLocked;
+      nightCheck.title = nightLocked ? '元データAY列が〇のため、夜勤求人に固定されています' : '';
+      var nightLabel = nightCheck.closest('label');
+      if (nightLabel) {
+        nightLabel.classList.toggle('opacity-70', nightLocked);
+        var nightText = nightLabel.querySelector('span');
+        if (nightText) nightText.textContent = nightLocked ? '🌙 夜勤求人（AY列〇のため固定）' : '🌙 夜勤求人';
+      }
+    }
 
     setMsgMode(defaultMode, true);
 
@@ -2597,6 +2625,8 @@
   };
 
   window.onModalShiftToggle = function() {
+    var nightEl = document.getElementById('modalNightShiftCheck');
+    if (state.modalTarget && state.modalTarget.isNightDefault && nightEl) nightEl.checked = true;
     refreshModalTextarea();
   };
 
@@ -2604,7 +2634,8 @@
     if (!state.modalTarget) return;
     var reason = SLIDE_REASONS_3DAYS[state.currentReasonIdx];
     var nightEl = document.getElementById('modalNightShiftCheck');
-    var nightVal = nightEl ? nightEl.checked : false;
+    var nightVal = !!state.modalTarget.isNightDefault || (nightEl ? nightEl.checked : false);
+    if (nightEl && state.modalTarget.isNightDefault) nightEl.checked = true;
     document.getElementById('modalMessageText').value = buildMessageForCandidate(state.modalTarget, reason, state.modalMode, nightVal);
   }
 
