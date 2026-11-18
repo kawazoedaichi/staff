@@ -3,6 +3,25 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <script>
+    (function () {
+      try {
+        var url = new URL(window.location.href), hasVersion = url.searchParams.has('_v');
+        var key = 'bstyle_html_refresh_guard', last = Number(sessionStorage.getItem(key) || 0), now = Date.now();
+        if (hasVersion) {
+          url.searchParams.delete('_v');
+          history.replaceState(null, '', url.pathname + url.search + url.hash);
+        } else if (!last || now - last > 30000) {
+          sessionStorage.setItem(key, String(now));
+          url.searchParams.set('_v', String(now));
+          window.location.replace(url.toString());
+        }
+      } catch (e) {}
+    })();
+  </script>
   <title>ビースタイル 追客・掘り起こし管理</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- data.js is dynamically loaded with cache-buster on startup -->
@@ -933,10 +952,32 @@
     if (badge) badge.textContent = '履歴同期中...';
 
     try {
-      var rawUrl = 'https://raw.githubusercontent.com/' + repo + '/' + encodeURIComponent(branch) + '/history.json?t=' + Date.now();
-      var res = await fetch(rawUrl, { cache: 'no-store' });
-      if (res.ok) {
-        var remoteData = await res.json();
+      var res = null;
+      var remoteData = null;
+      if (state.settings.ghToken) {
+        var apiUrl = 'https://api.github.com/repos/' + repo + '/contents/history.json?ref=' + encodeURIComponent(branch) + '&t=' + Date.now();
+        var apiRes = await fetch(apiUrl, {
+          cache: 'no-store',
+          headers: {
+            'Authorization': 'Bearer ' + state.settings.ghToken,
+            'Accept': 'application/vnd.github+json',
+            'Cache-Control': 'no-cache'
+          }
+        });
+        if (apiRes.ok) {
+          var fileData = await apiRes.json();
+          var encoded = String(fileData.content || '').replace(/\\n/g, '');
+          var decoded = decodeURIComponent(escape(atob(encoded)));
+          remoteData = JSON.parse(decoded);
+          res = { ok: true };
+        }
+      }
+      if (!res) {
+        var rawUrl = 'https://raw.githubusercontent.com/' + repo + '/' + encodeURIComponent(branch) + '/history.json?t=' + Date.now() + '&r=' + Math.random().toString(36).slice(2);
+        res = await fetch(rawUrl, { cache: 'no-store' });
+        if (res.ok) remoteData = await res.json();
+      }
+      if (res && res.ok) {
         var mergedLogs = Object.assign({}, remoteData.actionLogs || {}, state.actionLogs);
         // リモート側が新しい場合は上書きマージ
         if (remoteData.actionLogs) {
@@ -1099,19 +1140,18 @@
     var branch = state.settings.ghBranch || 'main';
     var ghPath = state.settings.ghPath || 'data.js';
 
-    // 1. Custom external URL if configured, otherwise try local ./data.js first, then raw.githubusercontent.com fallback
+    // 同一オリジンのGitHub Pagesを最優先し、CDNキャッシュ遅延を回避する。
     var urlsToTry = [];
-    if (state.settings.externalDataUrl) {
-      urlsToTry.push(state.settings.externalDataUrl);
-    }
-    urlsToTry.push('https://raw.githubusercontent.com/' + repo + '/' + encodeURIComponent(branch) + '/' + ghPath);
+    if (state.settings.externalDataUrl) urlsToTry.push(state.settings.externalDataUrl);
     urlsToTry.push('./' + ghPath);
+    urlsToTry.push('https://raw.githubusercontent.com/' + repo + '/' + encodeURIComponent(branch) + '/' + ghPath);
 
     var remotePayload = null;
     for (var i = 0; i < urlsToTry.length; i++) {
       var u = urlsToTry[i];
       try {
-        var r = await fetch(u + (u.indexOf('?') !== -1 ? AMP : '?') + 't=' + Date.now(), { cache: 'no-store' });
+        var cacheBust = 't=' + Date.now() + '&r=' + Math.random().toString(36).slice(2);
+        var r = await fetch(u + (u.indexOf('?') !== -1 ? AMP : '?') + cacheBust, { cache: 'no-store' });
         if (r.ok) {
           var rawTxt = await r.text();
           var cleaned = rawTxt.trim().replace(/^window\.BSTYLE_APP_DATA\s*=\s*/, '').replace(/;\s*$/, '');
@@ -1139,20 +1179,17 @@
     }
 
     if (remotePayload) {
-      var remoteSig = (remotePayload.updatedAt || '') + '_' + remotePayload.demoCandidates.length + '_' + (remotePayload.demoCandidates[0] && remotePayload.demoCandidates[0].id || '');
+      var remoteList = remotePayload.demoCandidates;
+      var remoteSig = [remotePayload.updatedAt || '', remoteList.length, remoteList[0] && remoteList[0].id || '', remoteList[remoteList.length - 1] && remoteList[remoteList.length - 1].id || ''].join('_');
       var currentSig = state.lastSyncedDataSig || '';
       if (remoteSig !== currentSig) {
         state.lastSyncedDataSig = remoteSig;
         state.csvHeaders = remotePayload.headers || Object.keys(remotePayload.demoCandidates[0].rawRow || {});
         var label = '🔄 自動同期済 (' + (remotePayload.updatedAt || new Date().toLocaleDateString('ja-JP')) + ' / ' + remotePayload.demoCandidates.length + '件)';
-        try {
-          localStorage.setItem(STORAGE_KEYS.CANDIDATE_CACHE, JSON.stringify({
-            updatedAt: remotePayload.updatedAt || '',
-            sig: remoteSig,
-            headers: state.csvHeaders,
-            candidates: remotePayload.demoCandidates
-          }));
-        } catch (e) {}
+        await idbSet(STORAGE_KEYS.CANDIDATE_CACHE, {
+          updatedAt: remotePayload.updatedAt || '', sig: remoteSig,
+          headers: state.csvHeaders, candidates: remotePayload.demoCandidates
+        });
         processCandidates(remotePayload.demoCandidates, label);
       } else {
         if (badge && badge.textContent.indexOf('確認中') !== -1) {
@@ -1167,19 +1204,18 @@
     return false;
   };
 
-  function loadInitialData() {
-    var cachedCsv = null;
-    try { cachedCsv = localStorage.getItem(STORAGE_KEYS.CANDIDATE_CACHE); } catch (e) {}
-    if (cachedCsv) {
-      try {
-        var pc = JSON.parse(cachedCsv);
-        state.csvHeaders = pc.headers || [];
-        state.lastSyncedDataSig = pc.sig || '';
-        processCandidates(pc.candidates || [], '読込済・最新確認中... (' + (pc.candidates || []).length + '件)');
-        // Immediately fetch fresh data.js from server ignoring stale browser cache!
-        syncLatestDataJsFromServer(true);
-        return;
-      } catch (e) {}
+  async function loadInitialData() {
+    // 旧localStorageキャッシュを削除して容量を解放する。
+    try { localStorage.removeItem(STORAGE_KEYS.CANDIDATE_CACHE); } catch (e) {}
+    // 起動時はサーバーを先に確認。通信失敗時のみIndexedDBを使用する。
+    var synced = await syncLatestDataJsFromServer(true);
+    if (synced) return;
+    var cached = await idbGet(STORAGE_KEYS.CANDIDATE_CACHE);
+    if (cached && Array.isArray(cached.candidates) && cached.candidates.length) {
+      state.csvHeaders = cached.headers || [];
+      state.lastSyncedDataSig = cached.sig || '';
+      processCandidates(cached.candidates, 'オフライン・前回保存データ (' + cached.candidates.length + '件)');
+      return;
     }
 
     var fallbackSamples = [
@@ -2678,7 +2714,7 @@
 
       var sigNow = new Date().toLocaleString('ja-JP') + '_' + candidates.length + '_' + (candidates[0] && candidates[0].id || '');
       state.lastSyncedDataSig = sigNow;
-      try { localStorage.setItem(STORAGE_KEYS.CANDIDATE_CACHE, JSON.stringify({ sig: sigNow, headers: headers, candidates: candidates })); } catch (e) {}
+      idbSet(STORAGE_KEYS.CANDIDATE_CACHE, { sig: sigNow, headers: headers, candidates: candidates });
 
       processCandidates(candidates, 'CSV読込済 (全' + headers.length + '列)');
       closeModal('csvModal');
@@ -2717,7 +2753,8 @@
   }
 
   window.resetToDemoData = function() {
-    localStorage.removeItem(STORAGE_KEYS.CANDIDATE_CACHE);
+    idbSet(STORAGE_KEYS.CANDIDATE_CACHE, null);
+    try { localStorage.removeItem(STORAGE_KEYS.CANDIDATE_CACHE); } catch (e) {}
     state.lastSyncedDataSig = '';
     closeModal('csvModal');
     syncLatestDataJsFromServer(false).then(function(ok) {
@@ -3117,6 +3154,14 @@
       syncHistoryFromGithub(false);
     }
   });
+
+  // タブを開いたままでも2分30秒ごとにバックグラウンド同期する。
+  setInterval(function() {
+    if (document.visibilityState === 'visible') {
+      syncLatestDataJsFromServer(true);
+      syncHistoryFromGithub(false);
+    }
+  }, 150000);
 })();
 </script>
 </body>
