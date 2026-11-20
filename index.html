@@ -105,9 +105,9 @@
         <span>未来人材</span>
         <span id="badge-future" class="px-1.5 py-0.2 text-[10px] rounded-full bg-zinc-800 text-zinc-300 font-bold">0</span>
       </button>
-      <button type="button" onclick="switchTab('normal')" id="tab-normal" class="tab-inactive py-2 px-2 whitespace-nowrap flex items-center gap-1 transition">
-        <span>通常掘起</span>
-        <span id="badge-normal" class="px-1.5 py-0.2 text-[10px] rounded-full bg-zinc-800 text-zinc-300 font-bold">0</span>
+      <button type="button" onclick="switchTab('contactWait')" id="tab-contactWait" class="tab-inactive py-2 px-2 whitespace-nowrap flex items-center gap-1 transition">
+        <span>接触待ち</span>
+        <span id="badge-contactWait" class="px-1.5 py-0.2 text-[10px] rounded-full bg-zinc-800 text-zinc-300 font-bold">0</span>
       </button>
     </nav>
   </header>
@@ -144,10 +144,6 @@
           <select id="filterBranch" onchange="resetPageAndRender()" class="rounded-lg border border-gray-300 px-3 py-1.5 text-xs bg-white focus:outline-none focus:border-orange-500">
             <option value="">担当支店：すべて</option>
           </select>
-          <label class="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-indigo-200 bg-indigo-50/70 text-xs font-bold text-indigo-900 cursor-pointer select-none">
-            <input type="checkbox" id="filterNightShift" onchange="resetPageAndRender()" class="accent-indigo-600 w-4 h-4 rounded" />
-            <span>🌙 夜勤求人（OFF=日勤）</span>
-          </label>
           <label class="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-orange-200 bg-orange-50/70 text-xs font-bold text-gray-800 cursor-pointer select-none">
             <input type="checkbox" id="filterUnactedOnly" checked onchange="resetPageAndRender()" class="accent-orange-500 w-4 h-4 rounded" />
             <span>未対応のみ表示</span>
@@ -167,7 +163,7 @@
               名寄せ内訳
             </button>
             <button type="button" onclick="toggleGuide()" class="px-2.5 py-1 rounded-md bg-orange-50 hover:bg-orange-100 text-orange-700 border border-orange-200 font-bold transition">
-              抽出基準を見る
+              表示ルールを見る
             </button>
           </div>
           <button type="button" onclick="quickExportCurrent()" class="px-3 py-1 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-orange-400 border border-zinc-700 text-xs font-bold whitespace-nowrap transition">
@@ -238,9 +234,6 @@
           <button type="button" onclick="shuffleReason()" class="px-3 py-1.5 rounded-lg bg-orange-500 hover:bg-orange-600 text-zinc-950 font-black transition shadow-sm whitespace-nowrap">
             🔄 別パターンに切替
           </button>
-        </div>
-        <div id="remindNoticeBox" class="hidden bg-amber-50 border border-amber-300 rounded-xl p-3 text-amber-900 font-bold">
-          🔔 激熱掘起：初回送信の翌日リマインド対象です。送信すると30日間（1ヶ月）自動で非表示（クールダウン）になります。
         </div>
         <div>
           <div class="flex items-center justify-between mb-1">
@@ -1412,6 +1405,22 @@
     return isNaN(d.getTime()) ? null : d;
   }
 
+  function getRawColumnValue(c, excelColumn) {
+    if (!c || !c.rawRow || !state.csvHeaders) return '';
+    var index = excelColumn.charCodeAt(0) - 65;
+    if (excelColumn.length === 2) index = (excelColumn.charCodeAt(0) - 64) * 26 + (excelColumn.charCodeAt(1) - 65);
+    var header = state.csvHeaders[index];
+    return header ? String(c.rawRow[header] == null ? '' : c.rawRow[header]).trim() : '';
+  }
+
+  function isContactWaitRecord(c) {
+    if (!c || !c.rawRow || !state.csvHeaders || state.csvHeaders.length <= 24) return false;
+    var t = getRawColumnValue(c, 'T');
+    var w = getRawColumnValue(c, 'W');
+    var x = getRawColumnValue(c, 'X');
+    return !t || t === 'NG（不通）' || (t === 'OK' && w === 'NG' && x !== '応募除外');
+  }
+
   function classifyCandidateTab(c) {
     var now = new Date();
     var todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -1430,6 +1439,8 @@
       }
     }
 
+    if (isContactWaitRecord(c)) return 'contactWait';
+
     var isFixWait = (finalSt.indexOf('FIX待ち') !== -1);
     var isStartUnder30OrEmpty = (daysFromTodayToStart === null || daysFromTodayToStart <= 29);
     var isStart30OrMore = (daysFromTodayToStart !== null && daysFromTodayToStart >= 30);
@@ -1447,11 +1458,6 @@
 
     if (isStart30OrMore || finalSt.indexOf('未来') !== -1 || st.indexOf('未来') !== -1) {
       return 'future';
-    }
-
-    if (!isFixWait && applyD) {
-      var applyDays = (now.getTime() - applyD.getTime()) / (1000 * 60 * 60 * 24);
-      if (applyDays >= 45) return 'normal';
     }
 
     return 'excluded_other';
@@ -1779,20 +1785,17 @@
     var withinOneWeek = isApplyWithinOneWeek(c);
 
     // ①、②、④（リマインドも）、⑤ 共通の返信FM
+    // 全タブ共通の返信FM
     var replyFmStandard = [
       '▼ご返信の際は以下をコピーしてご返信ください',
       '・気になる求人番号：',
       '・ご希望の勤務日数・シフト：',
-      '・電話NGの時間帯：'
+      '・電話NGの時間帯：',
+      '・勤務開始月：'
     ].join(LF);
 
-    // ③ 未来人材の返信FM
-    var replyFmFuture = [
-      '▼ご返信の際は以下をコピーしてご返信ください',
-      '・最短勤務可能日：〇月',
-      '・ご希望の就業日数：週〇日',
-      '・気になる求人番号：'
-    ].join(LF);
+    // 未来人材も同じ返信FMを使用
+    var replyFmFuture = replyFmStandard;
 
     var shortLines = jobs.dispatch.slice(0, 2).map(function(j, idx) {
       return '・候補' + (idx + 1) + '：' + j.name + '（約' + j.distKm + 'km）';
@@ -1803,14 +1806,33 @@
     var shortJobs = (shortLines || '・ご自宅近隣の新着求人を確保しております。') + shortDirect;
     var shortRateNote = getHourlyRateNote(c);
 
-    // ④ 激熱掘起の2通目（翌日リマインド）は常に短縮版で送る（「先日お送りさせていただきました」に変更）
-    if (tab === 'hot' && log && log.status === 'reminded') {
+    if (tab === 'contactWait') {
+      var contactJobLines = jobs.dispatch.slice(0, 2).map(function(j, idx) {
+        var cat = (j.facilityCat && j.facilityCat !== 'その他') ? '【' + j.facilityCat + '】' : '';
+        return '【候補' + (idx + 1) + '】' + cat + j.name + LF + '・住所：' + (j.address || '詳細はお問い合わせください') + '（ご自宅から約' + j.distKm + 'km）' + LF + '・シフト：' + (j.shifts || '日勤など');
+      }).join(LF + LF);
+      var contactDirect = '';
+      if (jobs.direct.length) {
+        var dj = jobs.direct[0];
+        contactDirect = LF + LF + '【直接雇用求人】' + (dj.facilityCat && dj.facilityCat !== 'その他' ? '【' + dj.facilityCat + '】' : '') + dj.name + LF + '・住所：' + (dj.address || '詳細はお問い合わせください') + '（ご自宅から約' + dj.distKm + 'km）' + LF + '・シフト：' + (dj.shifts || '日勤など');
+      }
       return [
-        sal.text + ' 以前ご応募いただきました、株式会社ビースタイルです。',
-        '先日お送りさせていただきました募集案件ですが、枠が埋まりやすくなっているため念のためご連絡いたしました。',
-        shortJobs,
-        shortRateNote,
-        replyFmStandard
+        'お世話になっております。',
+        '以前応募いただきました、株式会社ビースタイルです。',
+        '',
+        contactJobLines || '現在ご案内できる求人を確認しております。',
+        contactDirect,
+        '',
+        '【時給情報】',
+        getHourlyRateNote(c),
+        '',
+        'もし気になるものがございましたら、すぐ詳細をお送りしますのでお気軽にご返信ください！',
+        '',
+        '【返信項目】',
+        '・気になる求人番号：',
+        '・ご希望の勤務日数・シフト：',
+        '・電話NGの時間帯：',
+        '・勤務開始月：'
       ].join(LF);
     }
 
@@ -1820,7 +1842,7 @@
           ? '先日、応募いただきました求人ですが充足してしまったと報告ありました。近場で求人が中々無く、少し距離のあるエリアにはなってしまいますがご検討可能でしょうか？'
           : '以前伺っていた希望条件ですが、近場で求人が中々無く、少し距離のあるエリアにはなってしまいますがご検討可能でしょうか？';
         return [
-          sal.text + ' お世話になります。株式会社ビースタイルです。',
+          'お世話になります。株式会社ビースタイルです。',
           farIntroShort,
           shortJobs,
           shortRateNote,
@@ -1830,7 +1852,7 @@
 
       if (tab === 'within3days') {
         return [
-          sal.text + ' お世話になっております。株式会社ビースタイルです。',
+          'お世話になっております。', '', '株式会社ビースタイルです。',
           '先日お話しさせていただいた応募求人について、先ほど先方から連絡があり、枠が埋まってしまったとのことでした。力不足で大変申し訳ございません。',
           '代わりに近隣の好条件求人を確保いたしました。',
           shortJobs,
@@ -1840,7 +1862,7 @@
       }
       if (tab === 'unfixed') {
         return [
-          sal.text + ' お世話になっております。株式会社ビースタイルです。',
+          'お世話になっております。', '', '株式会社ビースタイルです。',
           '先日ご提案させていただきました件、その後ご状況はいかがでしょうか？',
           shortJobs,
           shortRateNote,
@@ -1849,7 +1871,7 @@
       }
       if (tab === 'future') {
         return [
-          sal.text + ' お世話になっております。株式会社ビースタイルです。',
+          'お世話になっております。', '', '株式会社ビースタイルです。',
           '以前伺っていたご就業時期が近づいてまいりましたので、最新の募集状況のご案内です！',
           shortJobs,
           shortRateNote,
@@ -1860,7 +1882,7 @@
       }
       if (tab === 'hot') {
         return [
-          sal.text + ' 以前ご応募いただきました、株式会社ビースタイルです。',
+          '以前ご応募いただきました、株式会社ビースタイルです。',
           'ご希望条件に合う新着案件が入りましたので優先的にご連絡いたしました！',
           shortJobs,
           shortRateNote,
@@ -1868,11 +1890,8 @@
         ].join(LF);
       }
       return [
-        sal.text + ' 以前ご応募いただきました、株式会社ビースタイルです。',
-        'その後お仕事のご状況はいかがでしょうか？新しい募集枠が出ておりますのでご案内いたします！',
-        shortJobs,
-        shortRateNote,
-        replyFmStandard
+        'お世話になっております。', '', '株式会社ビースタイルです。',
+        shortJobs, shortRateNote, replyFmStandard
       ].join(LF);
     }
 
@@ -1889,7 +1908,6 @@
         '【直接雇用求人】' + dCatLabel + d0.name,
         '・住所：' + (d0.address || '詳細はお問い合わせください') + '（ご自宅から約' + d0.distKm + 'km）',
         '・シフト：' + (d0.shifts || '日勤'),
-        '※担当者から是非とお声いただいております'
       ].join(LF);
     }
 
@@ -1908,7 +1926,6 @@
           ];
 
       return [
-        sal.text, '',
         'お世話になります。',
         '株式会社ビースタイルです。', ''
       ].concat(farLeadLines).concat([
@@ -1924,8 +1941,7 @@
     if (tab === 'within3days') {
       var reason = reasonOverride || SLIDE_REASONS_3DAYS[state.currentReasonIdx % SLIDE_REASONS_3DAYS.length];
       return [
-        sal.text, '',
-        'お世話になっております。株式会社ビースタイルです。',
+        'お世話になっております。', '', '株式会社ビースタイルです。',
         reason, '',
         '力不足で大変申し訳ございません。',
         '代わりにご自宅から通いやすい近隣エリアで、条件に合う新着求人をピックアップいたしました。', '',
@@ -1939,8 +1955,7 @@
     // ③ 未来人材
     if (tab === 'future') {
       return [
-        sal.text, '',
-        'お世話になっております。株式会社ビースタイルです。',
+        'お世話になっております。', '', '株式会社ビースタイルです。',
         '以前伺っていたご就業時期が近づいてまいりましたので、最新の募集状況のご案内です！', '',
         '現在、ご自宅周辺で以下の好条件案件が出ております。', '',
         bodyJobs, '',
@@ -1954,8 +1969,7 @@
     // ② 未FIX人材
     if (tab === 'unfixed') {
       return [
-        sal.text, '',
-        'お世話になっております。株式会社ビースタイルです。',
+        'お世話になっております。', '', '株式会社ビースタイルです。',
         '先日ご提案させていただきました件、その後ご状況はいかがでしょうか？', '',
         '現在もご自宅から近隣エリアで以下の求人が募集中となっております。', '',
         bodyJobs, '',
@@ -1968,7 +1982,6 @@
     // ④ 激熱掘起（1通目）
     if (tab === 'hot') {
       return [
-        sal.text, '',
         '以前ご応募いただきました、株式会社ビースタイルです。',
         '以前お話しさせていただいたご希望条件にぴったりの新着案件が入りましたので、優先的にご連絡いたしました！', '',
         bodyJobs, '',
@@ -1978,16 +1991,9 @@
       ].join(LF);
     }
 
-    // ⑤ 通常掘起
     return [
-      sal.text, '',
-      '以前ご応募いただきました、株式会社ビースタイルです。',
-      'その後、お仕事のご状況はいかがでしょうか？', '',
-      '現在、ご希望に合いそうな新しい募集枠が出ておりますのでご案内いたします。', '',
-      bodyJobs, '',
-      rateNote, '',
-      '現在のシフト希望やご状況に合わせて改めてお探しすることも可能ですので、ぜひお気軽にお声がけください！', '',
-      replyFmStandard
+      'お世話になっております。', '', '株式会社ビースタイルです。',
+      shortJobs, shortRateNote, replyFmStandard
     ].join(LF);
   }
 
@@ -2047,17 +2053,12 @@
       return { isHidden: true, isActed: true, label: '30日クールダウン中（残' + remDays + '日）' };
     }
 
-    if (c.assignedTab === 'hot' && log.status === 'wait_remind') {
-      if (now >= (log.remindReadyAt || 0)) {
-        log.status = 'reminded';
-        saveActionLogs();
-        return { isHidden: false, isActed: false, isRemindReady: true, label: '🔔 翌日リマインド対象' };
-      }
-      return { isHidden: false, isActed: true, label: '初回送信済（翌日リマインド待機）' };
-    }
-
-    if (log.status === 'reminded') {
-      return { isHidden: false, isActed: false, isRemindReady: true, label: '🔔 翌日リマインド対象' };
+    if (log.status === 'wait_remind' || log.status === 'reminded') {
+      var legacySentAt = log.lastSentAt || log.firstSentAt || now;
+      log.status = 'cooldown';
+      log.cooldownUntil = log.cooldownUntil || (legacySentAt + 30 * 24 * 60 * 60 * 1000);
+      saveActionLogs();
+      if (now < log.cooldownUntil) return { isHidden: true, isActed: true, label: '30日クールダウン中' };
     }
 
     if (log.status === 'done') {
@@ -2087,7 +2088,16 @@
       if (targetTab) {
         if (c.assignedTab !== targetTab) return false;
       } else {
-        if (['within3days', 'unfixed', 'hot', 'future', 'normal'].indexOf(c.assignedTab) === -1) return false;
+        if (['within3days', 'unfixed', 'hot', 'future', 'contactWait'].indexOf(c.assignedTab) === -1) return false;
+      }
+      if (targetTab === 'contactWait') {
+        var age = Number(c.age);
+        if (!c.phone || !normalizePhone(c.phone)) return false;
+        if (!Number.isFinite(age) || age > 65) return false;
+        var roleText = String(c.jobType || '') + ' ' + String(c.qualification || '');
+        if (!/(介護|看護|正看|准看|ヘルパー|初任者|実務者|福祉士|ケアマネ)/.test(roleText)) return false;
+        var wValue = getRawColumnValue(c, 'W');
+        if (wValue.indexOf('適応条件') !== -1) return false;
       }
 
       var act = getActionState(c);
@@ -2109,7 +2119,7 @@
   }
 
   function updateTabBadges() {
-    var tabs = ['within3days', 'unfixed', 'hot', 'future', 'normal'];
+    var tabs = ['within3days', 'unfixed', 'hot', 'future', 'contactWait'];
     tabs.forEach(function(t) {
       var list = getFilteredCandidates({ tab: t, unactedOnly: true, ignoreFilters: true });
       var badge = document.getElementById('badge-' + t);
@@ -2154,7 +2164,7 @@
   window.switchTab = function(tabId) {
     state.currentTab = tabId;
     state.displayLimit = PAGE_SIZE;
-    ['within3days', 'unfixed', 'hot', 'future', 'normal'].forEach(function(t) {
+    ['within3days', 'unfixed', 'hot', 'future', 'contactWait'].forEach(function(t) {
       var btn = document.getElementById('tab-' + t);
       var badge = document.getElementById('badge-' + t);
       if (t === tabId) {
@@ -2188,24 +2198,24 @@
   function updateGuideText() {
     var map = {
       within3days: {
-        title: '【3日以内 未FIX人材】の抽出基準・アプローチ設計を見る',
+        title: '【3日以内 未FIX】の表示ルールを見る',
         desc: '①最優先判定：CSVのB列（最終ステータス）＝「FIX待ち」＋ 就業開始希望日が「本日から29日以内（または空欄・即日）」＋ アテンド・接触から12時間〜72時間以内の対象者のみを抽出します。'
       },
       unfixed: {
-        title: '【未FIX人材】の抽出基準・アプローチ設計を見る',
+        title: '【未FIX人材】の表示ルールを見る',
         desc: '②判定：CSVのB列（最終ステータス）＝「FIX待ち」＋ 就業開始希望日が「本日から29日以内（または空欄・即日）」＋ アテンド・接触から73時間〜10日以内の対象者のみを抽出します。'
       },
       hot: {
-        title: '【激熱掘起】の抽出基準・アプローチ設計を見る',
+        title: '【激熱掘起】の表示ルールを見る',
         desc: '③判定：CSVのB列（最終ステータス）＝「FIX待ち」＋ 就業開始希望日が「本日から29日以内（または空欄・即日）」＋ 応募日から2カ月（60日）以上経過した対象者を抽出します。'
       },
       future: {
-        title: '【未来人材】の抽出基準・アプローチ設計を見る',
+        title: '【未来人材】の表示ルールを見る',
         desc: '④判定：就業開始希望日が本日から30日以上先の対象者（FIX待ち含む）、またはB列・ステータスが未来人材の対象者を抽出します。'
       },
-      normal: {
-        title: '【通常掘起】の抽出基準・アプローチ設計を見る',
-        desc: '⑤判定：①〜④に該当せず、応募から45日以上経過した掘り起こし対象層を抽出します。送信後は30日間自動でクールダウンになります。'
+      contactWait: {
+        title: '【接触待ち】の表示ルール',
+        desc: '電話番号が登録され、接触状況・条件確認が未完了の方を表示します。年齢65歳以下、職種は介護・看護を初期対象とします。'
       }
     };
     var info = map[state.currentTab] || map.within3days;
@@ -2469,19 +2479,7 @@
     state.lastUndoPrevLog = prev ? Object.assign({}, prev) : null;
 
     var thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
-    var oneDayMs = 24 * 60 * 60 * 1000;
-
-    if (c.assignedTab === 'hot') {
-      if (prev && (prev.status === 'reminded' || prev.status === 'wait_remind')) {
-        state.actionLogs[personKey] = { status: 'cooldown', firstSentAt: prev.firstSentAt || now, lastSentAt: now, cooldownUntil: now + thirtyDaysMs, tab: c.assignedTab };
-      } else {
-        state.actionLogs[personKey] = { status: 'wait_remind', firstSentAt: now, lastSentAt: now, remindReadyAt: now + oneDayMs, tab: c.assignedTab };
-      }
-    } else if (c.assignedTab === 'normal') {
-      state.actionLogs[personKey] = { status: 'cooldown', firstSentAt: now, lastSentAt: now, cooldownUntil: now + thirtyDaysMs, tab: c.assignedTab };
-    } else {
-      state.actionLogs[personKey] = { status: 'done', firstSentAt: (prev && prev.firstSentAt) || now, lastSentAt: now, tab: c.assignedTab };
-    }
+    state.actionLogs[personKey] = { status: 'cooldown', firstSentAt: (prev && prev.firstSentAt) || now, lastSentAt: now, cooldownUntil: now + thirtyDaysMs, tab: c.assignedTab };
     saveActionLogs();
     renderList(true);
     showUndoToastBar(c);
@@ -2562,13 +2560,14 @@
     var c = state.mergedCandidates.find(function(x) { return x.personKey === personKey; });
     if (!c) return;
     var log = state.actionLogs[c.personKey];
-    var defaultMode = (c.assignedTab === 'hot' && log && log.status === 'reminded') ? 'short' : 'normal';
+    var defaultMode = 'normal';
     state.modalTarget = c;
     state.modalMode = defaultMode;
     state.currentReasonIdx = Math.floor(Math.random() * SLIDE_REASONS_3DAYS.length);
 
     var sal = extractSafeSalutation(c);
-    var globalNight = document.getElementById('filterNightShift').checked;
+    var globalNightEl = document.getElementById('filterNightShift');
+    var globalNight = globalNightEl ? globalNightEl.checked : false;
     var nightCheck = document.getElementById('modalNightShiftCheck');
     if (nightCheck) {
       var nightLocked = !!c.isNightDefault;
@@ -2585,11 +2584,11 @@
 
     setMsgMode(defaultMode, true);
 
-    var tabLabelMap = { within3days: '3日以内未FIX', unfixed: '未FIX人材', hot: '激熱掘起', future: '未来人材', normal: '通常掘起' };
+    var tabLabelMap = { within3days: '3日以内未FIX', unfixed: '未FIX人材', hot: '激熱掘起', future: '未来人材', contactWait: '接触待ち' };
     var tabBadgeEl = document.getElementById('modalTabBadge');
     if (tabBadgeEl) tabBadgeEl.textContent = tabLabelMap[c.assignedTab] || '追客';
     document.getElementById('modalCandidateName').textContent = c.name + '（' + (c.branch || '-') + '）';
-    document.getElementById('modalSalutationInfo').textContent = '宛名判定：' + sal.text + '（' + sal.mode + '）';
+    document.getElementById('modalSalutationInfo').textContent = '';
 
     var shuffleBox = document.getElementById('shuffleReasonBox');
     if (c.assignedTab === 'within3days') {
@@ -2599,12 +2598,6 @@
       shuffleBox.classList.add('hidden');
     }
 
-    var remindBox = document.getElementById('remindNoticeBox');
-    if (c.assignedTab === 'hot' && log && log.status === 'reminded') {
-      remindBox.classList.remove('hidden');
-    } else {
-      remindBox.classList.add('hidden');
-    }
 
     refreshModalTextarea();
     openModal('msgModal');
@@ -2799,7 +2792,7 @@
   };
 
   window.clearActionHistory = function() {
-    if (!confirm('送信履歴・翌日リマインド・30日クールダウン履歴をリセットしますか？')) return;
+    if (!confirm('送信履歴・30日クールダウン履歴をリセットしますか？')) return;
     state.actionLogs = {};
     saveActionLogs();
     renderList(true);
@@ -2820,7 +2813,7 @@
     var list = getExportTargetList();
     document.getElementById('exportTargetCountBadge').textContent = '対象: ' + list.length + '件';
     var tbody = document.getElementById('exportPreviewBody');
-    var tabNames = { within3days: '3日以内未FIX', unfixed: '未FIX人材', hot: '激熱掘起', future: '未来人材', normal: '通常掘起' };
+    var tabNames = { within3days: '3日以内未FIX', unfixed: '未FIX人材', hot: '激熱掘起', future: '未来人材', contactWait: '接触待ち' };
     tbody.innerHTML = list.slice(0, 3).map(function(c) {
       var sal = extractSafeSalutation(c);
       var act = getActionState(c);
@@ -2853,7 +2846,7 @@
 
   function downloadCsvFromList(list, includeRaw, smsSlimOnly, customLabel) {
     if (!list || list.length === 0) { alert('出力対象のデータが0件です。'); return; }
-    var tabNames = { within3days: '3日以内未FIX', unfixed: '未FIX人材', hot: '激熱掘起', future: '未来人材', normal: '通常掘起' };
+    var tabNames = { within3days: '3日以内未FIX', unfixed: '未FIX人材', hot: '激熱掘起', future: '未来人材', contactWait: '接触待ち' };
     var dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
     var areaLabel = state.currentArea === 'kanto' ? '関東' : '全エリア';
     var tabLabel = customLabel || tabNames[state.currentTab] || '追客';
