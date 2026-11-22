@@ -2820,13 +2820,28 @@
 
 
   // 他社応募データは自社応募データと完全に分離して保存する。
+  // 保存先はIndexedDB（localStorageは容量上限が小さく全社分が入らないため、2026-11-22に移行）。
   var EXTERNAL_APPLICATIONS_KEY = 'bstyle_external_applications_v1';
-  try {
-    var savedExternalApps = JSON.parse(localStorage.getItem(EXTERNAL_APPLICATIONS_KEY) || '[]');
-    if (Array.isArray(savedExternalApps)) state.externalApplications = savedExternalApps;
-  } catch (e) { state.externalApplications = []; }
   var externalStatusAtStart = document.getElementById('externalCsvStatus');
-  if (externalStatusAtStart && state.externalApplications.length) externalStatusAtStart.textContent = '他社応募データ：保存済み ' + state.externalApplications.length + '件';
+  function applyExternalApplications(apps) {
+    state.externalApplications = Array.isArray(apps) ? apps : [];
+    if (externalStatusAtStart && state.externalApplications.length) externalStatusAtStart.textContent = '他社応募データ：保存済み ' + state.externalApplications.length + '件';
+    if (state.mergedCandidates && state.mergedCandidates.length) {
+      state.mergedCandidates.forEach(function(c) { c.assignedTab = classifyCandidateTab(c); });
+      updateTabBadges(); renderList();
+    }
+  }
+  idbGet(EXTERNAL_APPLICATIONS_KEY).then(function(savedExternalApps) {
+    if (Array.isArray(savedExternalApps) && savedExternalApps.length) { applyExternalApplications(savedExternalApps); return; }
+    // 旧localStorage保存分が残っていればIndexedDBへ移行する
+    try {
+      var legacyExternalApps = JSON.parse(localStorage.getItem(EXTERNAL_APPLICATIONS_KEY) || '[]');
+      if (Array.isArray(legacyExternalApps) && legacyExternalApps.length) {
+        applyExternalApplications(legacyExternalApps);
+        idbSet(EXTERNAL_APPLICATIONS_KEY, legacyExternalApps).then(function(migratedOk) { if (migratedOk) { try { localStorage.removeItem(EXTERNAL_APPLICATIONS_KEY); } catch (e) {} } });
+      }
+    } catch (e) {}
+  });
 
   function externalHeaderIndex(headers, patterns) {
     for (var i = 0; i < headers.length; i++) {
@@ -2876,10 +2891,16 @@
         });
         state.externalApplications = merged;
         state.mergedCandidates.forEach(function(c) { c.assignedTab = classifyCandidateTab(c); });
-        localStorage.setItem(EXTERNAL_APPLICATIONS_KEY, JSON.stringify(merged));
-        if (statusEl) statusEl.textContent = '他社応募データ：' + imported.length + '件追加（保存合計 ' + merged.length + '件）';
         updateTabBadges(); renderList();
-        showPopup('他社応募CSVを読み込みました', imported.length + '件を照合データとして追加しました。自社応募一覧には追加していません。');
+        idbSet(EXTERNAL_APPLICATIONS_KEY, merged).then(function(savedOk) {
+          if (!savedOk) {
+            if (statusEl) statusEl.textContent = '他社応募データの保存に失敗しました';
+            alert('他社応募データの保存に失敗しました。再度お試しください。');
+            return;
+          }
+          if (statusEl) statusEl.textContent = '他社応募データ：' + imported.length + '件追加（保存合計 ' + merged.length + '件）';
+          showPopup('他社応募CSVを読み込みました', imported.length + '件を照合データとして追加しました。自社応募一覧には追加していません。');
+        });
       } catch (err) {
         if (statusEl) statusEl.textContent = '読込エラー：' + err.message;
         alert('他社応募CSVを読み込めませんでした。\n' + err.message);
@@ -2893,6 +2914,7 @@
   window.clearExternalApplications = function() {
     if (!confirm('保存している他社応募データをすべて削除しますか？')) return;
     state.externalApplications = [];
+    idbSet(EXTERNAL_APPLICATIONS_KEY, null);
     try { localStorage.removeItem(EXTERNAL_APPLICATIONS_KEY); } catch (e) {}
     var statusEl = document.getElementById('externalCsvStatus');
     if (statusEl) statusEl.textContent = '他社応募データ：未読込';
