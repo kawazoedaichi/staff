@@ -1112,6 +1112,199 @@
     scheduleHistoryPushToGithub();
   }
 
+  // ===== 軽量化データ形式 v2 (2026-11-22 本格版) =====
+  // 本体データを data-manifest.json + data-chunk-N.json (軽量レコード) に分割し、
+  // 最初のチャンクだけで先行表示する。残りは裏で順次読み込み、件数・タブ・一覧を逐次更新する。
+  // rawRow の大半と conditions は data-detail-N.json に分離し、本体読込後に裏で読み込んで
+  // チャンク内の位置対応で候補者レコードへマージする。
+  // 一覧・絞り込み・分類・メッセージ生成に必要な rawRow 列だけは軽量レコード側に残す。
+  //   根拠: getColBFinalStatus (B列/最終ステータス), isContactWaitRecord (T/U/W/X列),
+  //         isNightShiftCandidate (勤務可能シフト(夜勤)), extractSafeSalutation (姓),
+  //         getFilteredCandidates の W列チェック。conditions は詳細表示専用なので詳細側。
+  var V2_CHUNK_SIZE = 1500;
+  var V2_SLIM_RAW_COLUMNS = ['ステータス', '最終ステータス', '接触ステータス', '接触NG理由', '誘致ステータス', '誘致NG理由', '姓'];
+  var v2State = {
+    active: false, loading: false, allChunksLoaded: false,
+    detailsLoaded: false, detailsPromise: null,
+    base: '', manifest: null, recordsRef: null, lastLabel: '',
+    loaded: 0, total: 0
+  };
+  window.__v2State = v2State;
+
+  function v2SlimKeySet(headers) {
+    var set = {};
+    V2_SLIM_RAW_COLUMNS.forEach(function(n) { set[n] = true; });
+    if (Array.isArray(headers)) {
+      [1, 19, 20, 22, 23].forEach(function(idx) { if (headers[idx]) set[headers[idx]] = true; });
+      headers.forEach(function(h) {
+        if (h && h.indexOf('勤務可能シフト') !== -1 && h.indexOf('夜勤') !== -1) set[h] = true;
+      });
+    }
+    return set;
+  }
+
+  // 1レコードを軽量分と詳細分に分ける純関数 (生成と検証で共用)。
+  // 空値の除去ルールは従来の buildDataJsContent と同一。
+  function splitCandidateRecord(c, headers) {
+    var slim = v2SlimKeySet(headers);
+    var lightRaw = {}, restRaw = {}, hasRest = false;
+    var raw = (c && c.rawRow) || {};
+    Object.keys(raw).forEach(function(k) {
+      var v = raw[k];
+      if (v === '' || v === null || v === undefined) return;
+      if (slim[k]) lightRaw[k] = v; else { restRaw[k] = v; hasRest = true; }
+    });
+    var light = {};
+    Object.keys(c || {}).forEach(function(k) {
+      if (k === 'rawRow' || k === 'conditions') return;
+      var v = c[k];
+      if (v === '' || v === null || v === undefined) return;
+      light[k] = v;
+    });
+    light.rawRow = lightRaw;
+    var det = null;
+    if (hasRest || (c && c.conditions)) det = { r: restRaw, c: (c && c.conditions) || '' };
+    return { light: light, detail: det };
+  }
+
+  // 詳細1件分をレコードへマージする。rawRow は同一オブジェクトへ書き込むため、
+  // processCandidates が作る統合済みコピー (参照共有) にもそのまま反映される。
+  function mergeDetailIntoRecord(rec, det) {
+    if (!rec || !det) return;
+    if (det.r) {
+      if (!rec.rawRow) rec.rawRow = {};
+      Object.keys(det.r).forEach(function(k) { rec.rawRow[k] = det.r[k]; });
+    }
+    if (det.c) rec.conditions = det.c;
+  }
+
+  // 現在の state.rawCandidates から新形式ファイル一式を生成する。
+  function buildChunkedFileList() {
+    var headers = state.csvHeaders || [];
+    var now = new Date();
+    var updatedAt = now.toLocaleString('ja-JP');
+    var sourceLabel = '外部 data.js (' + now.toLocaleDateString('ja-JP') + '更新・軽量版)';
+    var lights = [], details = [];
+    (state.rawCandidates || []).forEach(function(c) {
+      var sp = splitCandidateRecord(c, headers);
+      lights.push(sp.light); details.push(sp.detail);
+    });
+    var files = [], chunkNames = [], detailNames = [];
+    for (var i = 0; i < lights.length; i += V2_CHUNK_SIZE) {
+      var n = chunkNames.length + 1;
+      var cf = 'data-chunk-' + n + '.json', df = 'data-detail-' + n + '.json';
+      chunkNames.push(cf); detailNames.push(df);
+      files.push({ path: cf, content: JSON.stringify({ records: lights.slice(i, i + V2_CHUNK_SIZE) }) });
+      files.push({ path: df, content: JSON.stringify({ records: details.slice(i, i + V2_CHUNK_SIZE) }) });
+    }
+    var manifest = {
+      format: 2, updatedAt: updatedAt, sourceLabel: sourceLabel, headers: headers,
+      total: lights.length, chunkSize: V2_CHUNK_SIZE, chunks: chunkNames, details: detailNames,
+      firstId: lights.length ? (lights[0].id || '') : '', lastId: lights.length ? (lights[lights.length - 1].id || '') : ''
+    };
+    files.unshift({ path: 'data-manifest.json', content: JSON.stringify(manifest) });
+    return files;
+  }
+
+  function v2FetchJson(url) {
+    var sep = url.indexOf('?') !== -1 ? AMP : '?';
+    return fetch(url + sep + 't=' + Date.now() + '&r=' + Math.random().toString(36).slice(2), { cache: 'no-store' })
+      .then(function(r) { if (!r.ok) throw new Error('http ' + r.status); return r.json(); });
+  }
+  function v2Sleep(ms) { return new Promise(function(res) { setTimeout(res, ms); }); }
+
+  // 新形式ローダー: manifest → チャンク逐次読込 (逐次 processCandidates で先行表示)。
+  // manifest が無い/壊れている場合は false を返し、呼び出し側が従来形式へフォールバックする。
+  async function loadChunkedDataFromServer(quiet) {
+    if (v2State.loading) return true;
+    var repo = state.settings.ghRepo || (location.pathname.indexOf('kikari-staff') !== -1 ? 'kawazoedaichi/kikari-staff' : 'kawazoedaichi/staff');
+    var branch = state.settings.ghBranch || 'main';
+    var bases = ['./', 'https://raw.githubusercontent.com/' + repo + '/' + encodeURIComponent(branch) + '/'];
+    var manifest = null, base = '';
+    for (var bi = 0; bi < bases.length; bi++) {
+      try { manifest = await v2FetchJson(bases[bi] + 'data-manifest.json'); base = bases[bi]; break; }
+      catch (e) { manifest = null; }
+    }
+    if (!manifest || manifest.format !== 2 || !Array.isArray(manifest.chunks) || !manifest.chunks.length) return false;
+    var sig = [manifest.updatedAt || '', manifest.total || 0, manifest.firstId || '', manifest.lastId || ''].join('_');
+    if (v2State.active && v2State.allChunksLoaded && sig === state.lastSyncedDataSig) return true;
+    v2State.loading = true;
+    v2State.active = true;
+    v2State.detailsLoaded = false;
+    v2State.detailsPromise = null;
+    v2State.base = base;
+    v2State.manifest = manifest;
+    v2State.total = manifest.total || 0;
+    v2State.loaded = 0;
+    state.csvHeaders = manifest.headers || [];
+    var all = [];
+    v2State.recordsRef = all;
+    try {
+      for (var ci = 0; ci < manifest.chunks.length; ci++) {
+        var cj = await v2FetchJson(base + manifest.chunks[ci]);
+        if (!cj || !Array.isArray(cj.records)) { v2State.loading = false; return false; }
+        for (var ri = 0; ri < cj.records.length; ri++) all.push(cj.records[ri]);
+        v2State.loaded = all.length;
+        var isLast = ci === manifest.chunks.length - 1;
+        var label = isLast
+          ? ('✅ 最新同期済 (' + (manifest.updatedAt || '') + ' / ' + all.length + '件)')
+          : ('🔄 読込中 ' + all.length.toLocaleString() + '/' + (manifest.total || all.length).toLocaleString() + '件');
+        v2State.lastLabel = label;
+        processCandidates(all, label);
+        if (!isLast) await v2Sleep(30);
+      }
+    } catch (e) {
+      v2State.loading = false;
+      return false;
+    }
+    state.lastSyncedDataSig = sig;
+    v2State.allChunksLoaded = true;
+    v2State.loading = false;
+    idbSet(STORAGE_KEYS.CANDIDATE_CACHE, {
+      format: 2, updatedAt: manifest.updatedAt || '', sig: sig,
+      headers: state.csvHeaders, candidates: all, manifest: manifest, base: base
+    });
+    startDetailLoad();
+    return true;
+  }
+
+  // 詳細ファイル (rawRow 残り + conditions) を裏で順次読み込み、位置対応でマージする。
+  function startDetailLoad() {
+    if (!v2State.active || v2State.detailsLoaded) return v2State.detailsPromise;
+    if (v2State.detailsPromise) return v2State.detailsPromise;
+    var manifest = v2State.manifest, base = v2State.base, ref = v2State.recordsRef;
+    if (!manifest || !Array.isArray(manifest.details) || !ref) { v2State.detailsLoaded = true; return Promise.resolve(); }
+    v2State.detailsPromise = (async function() {
+      for (var di = 0; di < manifest.details.length; di++) {
+        if (state.rawCandidates !== ref) return; // データが差し替わったら中断
+        try {
+          var dj = await v2FetchJson(base + manifest.details[di]);
+          if (dj && Array.isArray(dj.records)) {
+            var offset = di * (manifest.chunkSize || V2_CHUNK_SIZE);
+            dj.records.forEach(function(det, i) { mergeDetailIntoRecord(ref[offset + i], det); });
+          }
+        } catch (e) { /* 取れない詳細チャンクは軽量表示のまま続行 */ }
+        await v2Sleep(30);
+      }
+      if (state.rawCandidates !== ref) return;
+      v2State.detailsLoaded = true;
+      processCandidates(ref, v2State.lastLabel || ('✅ 最新同期済 (' + ref.length + '件)'));
+    })();
+    return v2State.detailsPromise;
+  }
+
+  function ensureDetailsLoaded() {
+    if (!v2State.active || v2State.detailsLoaded) return Promise.resolve();
+    return startDetailLoad() || Promise.resolve();
+  }
+
+  // データ同期の入口: 新形式を優先し、無ければ従来形式 (単一 data.js) へフォールバックする。
+  window.syncLatestDataJsFromServer = async function(quiet) {
+    var ok = await loadChunkedDataFromServer(quiet);
+    if (ok) return true;
+    return syncLegacyDataJsFromServer(quiet);
+  };
+
   function fetchFreshDataJsScript(targetUrl) {
     return new Promise(function(resolve) {
       var prevData = window.BSTYLE_APP_DATA;
@@ -1134,7 +1327,7 @@
     });
   }
 
-  window.syncLatestDataJsFromServer = async function(quiet) {
+  async function syncLegacyDataJsFromServer(quiet) {
     var badge = document.getElementById('dataSourceBadge');
     var mobBadge = document.getElementById('mobileDataBadge');
     var repo = state.settings.ghRepo || 'kawazoedaichi/staff';
@@ -1192,6 +1385,7 @@
           headers: state.csvHeaders, candidates: remotePayload.demoCandidates
         });
         processCandidates(remotePayload.demoCandidates, label);
+        if (window.__v2State) { window.__v2State.active = false; window.__v2State.detailsLoaded = true; }
       } else {
         if (badge && badge.textContent.indexOf('確認中') !== -1) {
           badge.textContent = '✅ 最新同期済 (' + state.rawCandidates.length + '件)';
@@ -1216,6 +1410,13 @@
       state.csvHeaders = cached.headers || [];
       state.lastSyncedDataSig = cached.sig || '';
       processCandidates(cached.candidates, 'オフライン・前回保存データ (' + cached.candidates.length + '件)');
+      if (cached.format === 2 && cached.manifest && window.__v2State) {
+        window.__v2State.active = true;
+        window.__v2State.manifest = cached.manifest;
+        window.__v2State.base = cached.base || './';
+        window.__v2State.recordsRef = cached.candidates;
+        startDetailLoad();
+      } else if (window.__v2State) { window.__v2State.detailsLoaded = true; }
       return;
     }
 
@@ -1392,6 +1593,10 @@
     populateFilterOptions();
     updateTabBadges();
     renderList();
+    if (!window.__externalInitStarted) {
+      window.__externalInitStarted = true;
+      setTimeout(function() { if (window.__startExternalInit) window.__startExternalInit(); }, 50);
+    }
   }
 
   function getProgressScore(c) {
@@ -2803,6 +3008,7 @@
       idbSet(STORAGE_KEYS.CANDIDATE_CACHE, { sig: sigNow, headers: headers, candidates: candidates });
 
       processCandidates(candidates, 'CSV読込済 (全' + headers.length + '列)');
+      if (window.__v2State) { window.__v2State.active = false; window.__v2State.detailsLoaded = true; }
       closeModal('csvModal');
 
       var autoPushEl = document.getElementById('autoPushOnCsvCheck');
@@ -2909,7 +3115,9 @@
       updateTabBadges(); renderList();
     }
   }
+  window.__startExternalInit = function() {
   idbGet(EXTERNAL_APPLICATIONS_KEY).then(function(savedExternalApps) {
+    if (state.externalApplications && state.externalApplications.length) { syncExternalApplicationsFromGithub(); return; }
     var savedRecords = null;
     if (savedExternalApps && !Array.isArray(savedExternalApps) && Array.isArray(savedExternalApps.records)) { savedRecords = savedExternalApps.records; externalGeneratedAt = savedExternalApps.generatedAt || null; }
     else if (Array.isArray(savedExternalApps)) { savedRecords = savedExternalApps; }
@@ -2924,6 +3132,7 @@
     } catch (e) {}
     syncExternalApplicationsFromGithub();
   });
+  };
 
   function externalHeaderIndex(headers, patterns) {
     for (var i = 0; i < headers.length; i++) {
@@ -3110,6 +3319,11 @@
 
   function downloadCsvFromList(list, includeRaw, smsSlimOnly, customLabel) {
     if (!list || list.length === 0) { alert('出力対象のデータが0件です。'); return; }
+    if (includeRaw && window.__v2State && window.__v2State.active && !window.__v2State.detailsLoaded) {
+      showPopup('詳細データを読み込み中です', '元CSV全列データの読み込みが完了したら、自動で出力を開始します。');
+      ensureDetailsLoaded().then(function() { downloadCsvFromList(list, includeRaw, smsSlimOnly, customLabel); });
+      return;
+    }
     var tabNames = { contactWait7: '7日以内応募・未接触', within3days: '3日以内・未FIX', unfixed: '未FIX人材', externalHot: '激アツ再アプローチ', contactWaitLong: '未接触人材', hot: '掘り起こし' };
     var dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
     var areaLabel = state.currentArea === 'kanto' ? '関東' : '全エリア';
@@ -3208,11 +3422,15 @@
   }
 
   window.exportDataJsFile = function() {
-    var content = buildDataJsContent();
-    var blob = new Blob([content], { type: 'application/javascript;charset=utf-8;' });
-    triggerDownload(blob, 'data.js');
+    var files = [{ path: 'data.js', content: buildDataJsContent() }].concat(buildChunkedFileList());
+    files.forEach(function(f, idx) {
+      setTimeout(function() {
+        var type = f.path.slice(-5) === '.json' ? 'application/json;charset=utf-8;' : 'application/javascript;charset=utf-8;';
+        triggerDownload(new Blob([f.content], { type: type }), f.path);
+      }, idx * 400);
+    });
     closeModal('csvModal');
-    showPopup('data.js エクスポート完了！', '全 ' + state.rawCandidates.length + ' 件を軽量圧縮した data.js をダウンロードしました。');
+    showPopup('データ書き出し完了！', '全 ' + state.rawCandidates.length + ' 件を data.js（互換用）＋分割ファイル ' + (files.length - 1) + ' 点で書き出しました。' + LF + '配置先は data.js と同じフォルダに、全ファイルをそのまま置いてください。');
   };
 
   window.saveGithubConfig = function() {
@@ -3265,21 +3483,28 @@
       var commitData = await commitRes.json();
       var baseTreeSha = commitData.tree.sha;
 
-      btn.textContent = '⏳ data.js アップロード中（3/4）...';
-      var contentStr = buildDataJsContent();
-      var base64Str = utf8ToBase64(contentStr);
-      var sizeKb = Math.round(base64Str.length * 0.75 / 1024);
-
-      var blobRes = await fetch(baseApi + '/git/blobs', {
-        method: 'POST',
-        headers: headers,
-        body: JSON.stringify({ content: base64Str, encoding: 'base64' })
-      });
-      if (!blobRes.ok) {
-        var errBlob = await blobRes.json().catch(function() { return {}; });
-        throw new Error('Blob作成エラー: ' + (errBlob.message || blobRes.status));
+      btn.textContent = '⏳ データファイル アップロード中（3/4）...';
+      var filesToPush = [{ path: ghPath, content: buildDataJsContent() }].concat(buildChunkedFileList());
+      var totalBytes = 0;
+      var treeEntries = [];
+      for (var fi = 0; fi < filesToPush.length; fi++) {
+        var fContent = filesToPush[fi].content;
+        totalBytes += fContent.length;
+        var fB64 = utf8ToBase64(fContent);
+        var fBlobRes = await fetch(baseApi + '/git/blobs', {
+          method: 'POST',
+          headers: headers,
+          body: JSON.stringify({ content: fB64, encoding: 'base64' })
+        });
+        if (!fBlobRes.ok) {
+          var fErr = await fBlobRes.json().catch(function() { return {}; });
+          throw new Error('Blob作成エラー (' + filesToPush[fi].path + '): ' + (fErr.message || fBlobRes.status));
+        }
+        var fBlobData = await fBlobRes.json();
+        treeEntries.push({ path: filesToPush[fi].path, mode: '100644', type: 'blob', sha: fBlobData.sha });
+        if (btn) btn.textContent = '⏳ データファイル アップロード中（3/4・' + (fi + 1) + '/' + filesToPush.length + 'ファイル）...';
       }
-      var blobData = await blobRes.json();
+      var sizeKb = Math.round(totalBytes / 1024);
 
       btn.textContent = '⏳ コミット反映中（4/4）...';
       var treeRes = await fetch(baseApi + '/git/trees', {
@@ -3287,7 +3512,7 @@
         headers: headers,
         body: JSON.stringify({
           base_tree: baseTreeSha,
-          tree: [{ path: ghPath, mode: '100644', type: 'blob', sha: blobData.sha }]
+          tree: treeEntries
         })
       });
       var treeData = await treeRes.json();
@@ -3406,6 +3631,9 @@
     document.getElementById('rawRowModalTitle').textContent = c.name + ' 様の元CSV全列データ';
     renderCurrentRawModal();
     openModal('rawRowModal');
+    if (window.__v2State && window.__v2State.active && !window.__v2State.detailsLoaded) {
+      ensureDetailsLoaded().then(function() { if (state.currentRawCandidate === c) renderCurrentRawModal(); });
+    }
   };
 
   window.renderCurrentRawModal = function() {
