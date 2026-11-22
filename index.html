@@ -1280,7 +1280,16 @@
           ? ('✅ 最新同期済 (' + (manifest.updatedAt || '') + ' / ' + all.length + '件)')
           : ('🔄 読込中 ' + all.length.toLocaleString() + '/' + (manifest.total || all.length).toLocaleString() + '件');
         v2State.lastLabel = label;
-        processCandidates(all, label);
+        if (ci === 0 || isLast) {
+          processCandidates(all, label);
+        } else {
+          // 途中チャンクでは全件再処理 (統合・分類・描画) をせず、件数表示だけ更新する。
+          // 全件処理は先頭チャンク (先行表示) と最終チャンクの2回だけ (2026-11-23 高速化)。
+          var loadBadge = document.getElementById('dataSourceBadge');
+          if (loadBadge) loadBadge.textContent = label;
+          var loadMobBadge = document.getElementById('mobileDataBadge');
+          if (loadMobBadge) loadMobBadge.textContent = 'データ：' + label;
+        }
         if (!isLast) await v2Sleep(30);
       }
     } catch (e) {
@@ -3377,16 +3386,42 @@
     updateTabBadges(); renderList();
   };
 
+  // 他社応募データの電話番号インデックス (2026-11-23 高速化)。
+  // 従来 hasRecentExternalApplication は他社全件 (12万件超) を毎回線形スキャンし、
+  // 起動時処理の大半を占めていた。state.externalApplications は代入でのみ
+  // 更新されるため、配列参照 (または日付) が変わったときだけ再構築する。
+  // インデックス値 = その電話番号の応募のうち経過日数0以上の最小値。
+  // 元の判定「経過日数が 0〜7 の応募が1件でもある」と等価 (未来日付の
+  // 負の日数を最小値計算から除くことで、負値に埋もれて取りこぼさない)。
+  var externalPhoneIndex = null;
+  var externalPhoneIndexSrc = null;
+  var externalPhoneIndexDay = '';
+  function getExternalPhoneIndex() {
+    var apps = state.externalApplications || [];
+    var today = new Date().toDateString();
+    if (externalPhoneIndexSrc === apps && externalPhoneIndexDay === today) return externalPhoneIndex;
+    var idx = new Map();
+    for (var i = 0; i < apps.length; i++) {
+      var rec = apps[i];
+      if (!rec) continue;
+      var ph = normalizePhone(rec.phone);
+      if (ph.length < 9) continue;
+      var days = getApplyAgeDays({ applyDate: rec.applyDate });
+      if (days === null || days < 0) continue;
+      var prev = idx.get(ph);
+      if (prev === undefined || days < prev) idx.set(ph, days);
+    }
+    externalPhoneIndex = idx;
+    externalPhoneIndexSrc = apps;
+    externalPhoneIndexDay = today;
+    return idx;
+  }
+
   function hasRecentExternalApplication(candidate) {
     var phone = normalizePhone(candidate && candidate.phone);
     if (phone.length < 9) return false;
-    var apps = state.externalApplications || [];
-    for (var i = 0; i < apps.length; i++) {
-      if (normalizePhone(apps[i].phone) !== phone) continue;
-      var days = getApplyAgeDays({ applyDate: apps[i].applyDate });
-      if (days !== null && days >= 0 && days <= 7) return true;
-    }
-    return false;
+    var days = getExternalPhoneIndex().get(phone);
+    return days !== undefined && days <= 7;
   }
 
 
