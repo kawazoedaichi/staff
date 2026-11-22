@@ -276,10 +276,10 @@
         </div>
 
         <div class="mt-3 rounded-xl border border-orange-200 bg-orange-50 p-3 space-y-2">
-          <div class="font-black text-sm text-orange-900">他社FMデータ（激アツ再アプローチ判定用）</div>
-          <p class="text-[11px] text-orange-900">他社のFM CSVを読み込み、電話番号で自社応募者と照合します。他社のアテンドOK実績と自社の状況を比較して判定します。他社だけの応募者は自社一覧に追加しません。</p>
+          <div class="font-black text-sm text-orange-900">他社応募CSV（激アツ再アプローチ判定用）</div>
+          <p class="text-[11px] text-orange-900">他社の応募者は自社応募一覧には追加しません。電話番号で自社応募者と照合し、他社応募日が直近7日以内の方だけを判定に使用します。</p>
           <label class="flex items-center justify-center gap-2 rounded-lg border-2 border-dashed border-orange-300 bg-white p-3 cursor-pointer text-xs font-bold text-orange-900">
-            他社FM CSVを追加・更新する
+            他社応募CSVを追加・更新する
             <input type="file" id="externalCsvFileInput" accept=".csv,text/csv" class="hidden" onchange="handleExternalCsvFileSelect(event)" />
           </label>
           <div id="externalCsvStatus" class="text-[11px] text-gray-700">他社応募データ：未読込</div>
@@ -1449,14 +1449,9 @@
     var applyAge = getApplyAgeDays(c);
     var isFixWait = finalSt.indexOf('FIX待ち') !== -1;
 
-    // 激アツ再アプローチ：
-    // 自社が未接触（7日以内・8日目以降の両タブ共通）なら、他社のアテンドOK実績は古くても対象。
-    // 自社がアテンドNGなら、他社のアテンドOK実績が自社のアテンド日より後の場合のみ対象。
-    if (isOwnAttendNg(c)) {
-      if (hasExternalAttendOk(c, true)) return 'externalHot';
-    } else if (isUncontacted && hasExternalAttendOk(c, false)) {
-      return 'externalHot';
-    }
+    // 他社で直近7日以内に応募し、自社側がFIX待ちまたは未接触の人だけを最優先抽出。
+    // 他社CSV単独の人は自社候補データに追加されないため、ここには入らない。
+    if ((isFixWait || isUncontacted) && hasRecentExternalApplication(c)) return 'externalHot';
 
     if (isUncontacted) {
       if (applyAge !== null && applyAge >= 0 && applyAge <= 7) return 'contactWait7';
@@ -2276,7 +2271,7 @@
       contactWait7: { title: '【7日以内応募・未接触】の表示ルール', desc: '自社応募があり、接触ステータスが未接触対象で、応募日から7日以内の方を表示します。' },
       within3days: { title: '【3日以内・未FIX】の表示ルール', desc: '最終ステータスがFIX待ち、就業開始希望日が29日以内または空欄で、アテンド・接触から12〜72時間の方を表示します。' },
       unfixed: { title: '【未FIX人材】の表示ルール', desc: '最終ステータスがFIX待ち、就業開始希望日が29日以内または空欄で、アテンド・接触から73〜240時間の方を表示します。' },
-      externalHot: { title: '【激アツ再アプローチ】の表示ルール', desc: '電話番号で自社・他社FMを照合。自社が未接触（7日以内・8日目以降）の場合は、他社に過去のアテンドOK実績があれば対象。自社がアテンドNGの場合は、他社のアテンドOK日が自社のアテンドNG日より後なら対象。他社だけの人は表示しません。' },
+      externalHot: { title: '【激アツ再アプローチ】の表示ルール', desc: '自社応募が存在し、自社側がFIX待ちまたは未接触で、他社応募CSVにも電話番号が一致する直近7日以内の応募がある方だけを表示します。他社応募だけの方は自社一覧に追加しません。' },
       contactWaitLong: { title: '【未接触人材】の表示ルール', desc: '自社応募があり、接触ステータスが未接触対象で、応募日から8日目以降の方を表示します。' },
       hot: { title: '【掘り起こし】の表示ルール', desc: '従来の「激熱掘起」タブで使用していた抽出条件を引き継ぎ、FIX待ちかつ応募から60日以上経過した方を表示します。' }
     };
@@ -2736,6 +2731,11 @@
   };
 
   function readCsvFile(file) {
+    // 自社FM CSVはファイル名で識別（部分一致。日付・時刻などの後続文字列は許可）
+    if (!file || String(file.name || '').indexOf('ビースタイルスマートキャリア') === -1) {
+      alert('このファイルはビースタイル版の自社FM CSVではない可能性があります。\nファイル名に「ビースタイルスマートキャリア」が含まれているか確認してください。\n取り込みを中止しました。');
+      return;
+    }
     var reader = new FileReader();
     reader.onload = function(evt) {
       var buf = evt.target.result;
@@ -2745,31 +2745,6 @@
       if (rows.length < 2) { alert('CSVデータが正しく読み込めませんでした。'); return; }
 
       var headers = rows[0].map(function(h) { return String(h || '').trim(); });
-
-      // 自社FM取込時のみ、CSV内の会社名を確認して他社データの誤取込を防止する。
-      var ownCompanyColumn = externalHeaderIndex(headers, [/会社名/, /企業名/, /法人名/, /所属会社/, /運営会社/, /応募企業/, /company/]);
-      if (ownCompanyColumn < 0) {
-        alert('自社FMデータとして取り込めません。\nCSV内に会社名を確認できる列がありません。会社名の列があるFM CSVを選択してください。');
-        return;
-      }
-      var foundCompanyNames = [];
-      for (var companyRowIndex = 1; companyRowIndex < rows.length; companyRowIndex++) {
-        var companyValue = String(rows[companyRowIndex][ownCompanyColumn] || '').trim();
-        if (companyValue && foundCompanyNames.indexOf(companyValue) === -1) foundCompanyNames.push(companyValue);
-      }
-      var normalizeCompanyName = function(value) {
-        return String(value || '').normalize('NFKC').toUpperCase().replace(/[\s　・.,，。株式会社（）()]/g, '');
-      };
-      var expectedCompanyToken = 'ビースタイル'.toUpperCase();
-      var wrongCompanyNames = foundCompanyNames.filter(function(value) {
-        return normalizeCompanyName(value).indexOf(expectedCompanyToken) === -1;
-      });
-      if (!foundCompanyNames.length || wrongCompanyNames.length) {
-        var detectedNames = foundCompanyNames.length ? foundCompanyNames.join('、') : '会社名を確認できません';
-        alert('【自社FMデータの会社名確認】\nこのCSVは株式会社ビースタイルのデータではない可能性があります。\n\nCSV内の会社名：' + detectedNames + '\n\n誤取込防止のため、読み込みを中止しました。正しい自社FM CSVを選択してください。');
-        return;
-      }
-
       state.csvHeaders = headers;
 
       var candidates = rows.slice(1).filter(function(r) {
@@ -2881,27 +2856,18 @@
         if (rows.length < 2) throw new Error('データ行がありません');
         var headers = rows[0].map(function(v) { return String(v || '').trim(); });
         var phoneIdx = externalHeaderIndex(headers, [/電話番号/, /^tel$/, /携帯電話/, /mobile/, /phone/, /電話$/]);
-        var dateIdx = externalHeaderIndex(headers, [/^応募日$/, /応募日時/, /応募年月日/]);
-        var attendStatusIdx = externalHeaderIndex(headers, [/^アテンドステータス$/, /アテンド.*ステータス/]);
-        var attendDateIdx = externalHeaderIndex(headers, [/^アテンド日$/, /アテンド日時/, /面談日/]);
-        var statusIdx = externalHeaderIndex(headers, [/^ステータス$/, /^最終ステータス$/]);
+        var dateIdx = externalHeaderIndex(headers, [/応募日時/, /^応募日$/, /応募年月日/, /申込日/, /エントリー日/, /applicationdate/, /appliedat/, /^date$/]);
         var companyIdx = externalHeaderIndex(headers, [/会社名/, /企業名/, /応募元/, /媒体名/, /company/, /source/]);
-        if (phoneIdx < 0 || attendStatusIdx < 0 || attendDateIdx < 0) {
-          throw new Error('FM CSVの「電話番号」「アテンドステータス」「アテンド日」列が必要です。FMから出力したCSVを選択してください。');
-        }
+        if (phoneIdx < 0 || dateIdx < 0) throw new Error('電話番号・応募日（応募日時）の列が見つかりません。共通CSVの見出しを確認してください。');
         var imported = [];
         for (var r = 1; r < rows.length; r++) {
           var cells = rows[r];
           var phone = normalizePhone(cells[phoneIdx] || '');
-          var appliedAt = dateIdx >= 0 ? String(cells[dateIdx] || '').trim() : '';
-          var attendStatus = String(cells[attendStatusIdx] || '').trim().toUpperCase();
-          var attendDate = String(cells[attendDateIdx] || '').trim();
-          var overallStatus = statusIdx >= 0 ? String(cells[statusIdx] || '').trim() : '';
-          if (phone.length < 9 || attendStatus !== 'OK' || !parseDateSafe(attendDate)) continue;
-          imported.push({ phone: phone, applyDate: appliedAt, attendStatus: attendStatus, attendDate: attendDate, status: overallStatus,
-            company: companyIdx >= 0 ? String(cells[companyIdx] || '').trim() : '', sourceFile: file.name });
+          var appliedAt = String(cells[dateIdx] || '').trim();
+          if (phone.length < 9 || !parseDateSafe(appliedAt)) continue;
+          imported.push({ phone: phone, applyDate: appliedAt, company: companyIdx >= 0 ? String(cells[companyIdx] || '').trim() : '', sourceFile: file.name });
         }
-        if (!imported.length) throw new Error('アテンドOKかつアテンド日がある有効なデータがありません。');
+        if (!imported.length) throw new Error('有効な応募データがありません。電話番号と応募日を確認してください。');
         var merged = Array.isArray(state.externalApplications) ? state.externalApplications.slice() : [];
         var seen = new Set(merged.map(function(x) { return x.phone + '|' + String(x.applyDate) + '|' + String(x.company || ''); }));
         imported.forEach(function(x) {
@@ -2933,34 +2899,14 @@
     updateTabBadges(); renderList();
   };
 
-  function getOwnAttendStatus(candidate) {
-    if (!candidate || !candidate.rawRow) return '';
-    var keys = Object.keys(candidate.rawRow);
-    var key = keys.find(function(k) {
-      var n = String(k).normalize('NFKC').replace(/[\s　]/g, '');
-      return n === 'アテンドステータス';
-    });
-    return key ? String(candidate.rawRow[key] || '').trim().toUpperCase() : '';
-  }
-
-  function isOwnAttendNg(candidate) {
-    return getOwnAttendStatus(candidate) === 'NG';
-  }
-
-  function hasExternalAttendOk(candidate, mustBeLaterThanOwn) {
+  function hasRecentExternalApplication(candidate) {
     var phone = normalizePhone(candidate && candidate.phone);
     if (phone.length < 9) return false;
-    var ownAttend = parseDateSafe(candidate && (candidate.attendDate || candidate.contactDate));
-    var ownApply = parseDateSafe(candidate && candidate.applyDate);
-    var ownReference = ownAttend || ownApply;
     var apps = state.externalApplications || [];
     for (var i = 0; i < apps.length; i++) {
       if (normalizePhone(apps[i].phone) !== phone) continue;
-      if (String(apps[i].attendStatus || '').toUpperCase() !== 'OK') continue;
-      var externalAttend = parseDateSafe(apps[i].attendDate);
-      if (!externalAttend) continue;
-      if (!mustBeLaterThanOwn) return true;
-      if (ownReference && externalAttend.getTime() > ownReference.getTime()) return true;
+      var days = getApplyAgeDays({ applyDate: apps[i].applyDate });
+      if (days !== null && days >= 0 && days <= 7) return true;
     }
     return false;
   }
