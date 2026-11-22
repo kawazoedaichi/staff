@@ -495,6 +495,7 @@
         </label>
         <span id="rawColCountText" class="text-gray-500"></span>
       </div>
+      <div id="rawDetailStatus" class="hidden"></div>
       <div id="rawRowModalBody" class="p-4 overflow-y-auto divide-y divide-gray-100 text-xs"></div>
     </div>
   </div>
@@ -1115,8 +1116,9 @@
   // ===== 軽量化データ形式 v2 (2026-11-22 本格版) =====
   // 本体データを data-manifest.json + data-chunk-N.json (軽量レコード) に分割し、
   // 最初のチャンクだけで先行表示する。残りは裏で順次読み込み、件数・タブ・一覧を逐次更新する。
-  // rawRow の大半と conditions は data-detail-N.json に分離し、本体読込後に裏で読み込んで
-  // チャンク内の位置対応で候補者レコードへマージする。
+  // rawRow の大半と conditions は data-detail-N.json に分離し、起動時には読み込まない。
+  // 候補者の詳細 (全列モーダル / 把握済条件) を開いたときに、その人の属するチャンクの
+  // 詳細ファイルだけを遅延ロードし、チャンク内の位置対応で候補者レコードへマージする。
   // 一覧・絞り込み・分類・メッセージ生成に必要な rawRow 列だけは軽量レコード側に残す。
   //   根拠: getColBFinalStatus (B列/最終ステータス), isContactWaitRecord (T/U/W/X列),
   //         isNightShiftCandidate (勤務可能シフト(夜勤)), extractSafeSalutation (姓),
@@ -1126,6 +1128,7 @@
   var v2State = {
     active: false, loading: false, allChunksLoaded: false,
     detailsLoaded: false, detailsPromise: null,
+    detailChunks: {}, detailChunkPromises: {}, indexByRawRow: null, indexRef: null, indexLen: 0,
     base: '', manifest: null, recordsRef: null, lastLabel: '',
     loaded: 0, total: 0
   };
@@ -1232,6 +1235,11 @@
     v2State.active = true;
     v2State.detailsLoaded = false;
     v2State.detailsPromise = null;
+    v2State.detailChunks = {};
+    v2State.detailChunkPromises = {};
+    v2State.indexByRawRow = null;
+    v2State.indexRef = null;
+    v2State.indexLen = 0;
     v2State.base = base;
     v2State.manifest = manifest;
     v2State.total = manifest.total || 0;
@@ -1264,38 +1272,132 @@
       format: 2, updatedAt: manifest.updatedAt || '', sig: sig,
       headers: state.csvHeaders, candidates: all, manifest: manifest, base: base
     });
-    startDetailLoad();
+    // 詳細ファイルはここでは読まない (詳細を開いた人のチャンクだけ遅延ロードする)。
     return true;
   }
 
-  // 詳細ファイル (rawRow 残り + conditions) を裏で順次読み込み、位置対応でマージする。
-  function startDetailLoad() {
-    if (!v2State.active || v2State.detailsLoaded) return v2State.detailsPromise;
-    if (v2State.detailsPromise) return v2State.detailsPromise;
-    var manifest = v2State.manifest, base = v2State.base, ref = v2State.recordsRef;
-    if (!manifest || !Array.isArray(manifest.details) || !ref) { v2State.detailsLoaded = true; return Promise.resolve(); }
-    v2State.detailsPromise = (async function() {
-      for (var di = 0; di < manifest.details.length; di++) {
-        if (state.rawCandidates !== ref) return; // データが差し替わったら中断
-        try {
-          var dj = await v2FetchJson(base + manifest.details[di]);
-          if (dj && Array.isArray(dj.records)) {
-            var offset = di * (manifest.chunkSize || V2_CHUNK_SIZE);
-            dj.records.forEach(function(det, i) { mergeDetailIntoRecord(ref[offset + i], det); });
-          }
-        } catch (e) { /* 取れない詳細チャンクは軽量表示のまま続行 */ }
-        await v2Sleep(30);
-      }
-      if (state.rawCandidates !== ref) return;
-      v2State.detailsLoaded = true;
-      processCandidates(ref, v2State.lastLabel || ('✅ 最新同期済 (' + ref.length + '件)'));
-    })();
-    return v2State.detailsPromise;
+  // ===== 詳細ファイルの遅延ロード (2026-11-23 変更) =====
+  // 起動時・バックグラウンドでは data-detail-N.json を一切読み込まない。
+  // 候補者の詳細 (全列モーダル / 把握済条件) を開いたときに、その人が属する
+  // チャンクの詳細ファイルだけを取得し、チャンク内の位置対応でマージする。
+  // 読み込んだチャンクはメモリ上に保持し、同じチャンクの2人目以降は即時表示する。
+
+  // recordsRef 内の位置 → チャンク番号。
+  function v2ChunkIndexOfPos(pos) {
+    var size = (v2State.manifest && v2State.manifest.chunkSize) || V2_CHUNK_SIZE;
+    return Math.floor(pos / size);
   }
 
+  // 候補者 (統合済みコピー) が recordsRef の何番目に対応するかを、rawRow の
+  // 参照同一性で引く。統合コピーは勝ちレコードの浅いコピーで rawRow を共有する。
+  function v2RecordPosOfCandidate(c) {
+    var ref = v2State.recordsRef;
+    if (!c || !ref || !c.rawRow) return -1;
+    if (!v2State.indexByRawRow || v2State.indexRef !== ref || v2State.indexLen !== ref.length) {
+      var m = new Map();
+      for (var i = 0; i < ref.length; i++) { if (ref[i] && ref[i].rawRow) m.set(ref[i].rawRow, i); }
+      v2State.indexByRawRow = m;
+      v2State.indexRef = ref;
+      v2State.indexLen = ref.length;
+    }
+    var pos = v2State.indexByRawRow.get(c.rawRow);
+    return (typeof pos === 'number') ? pos : -1;
+  }
+
+  // 詳細マージ後、統合済みコピーへ conditions を伝播させる。rawRow は参照共有で
+  // 自動反映されるが、conditions は文字列のコピーなので明示的に写す必要がある。
+  function syncMergedConditionsForChunk(di) {
+    var ref = v2State.recordsRef, manifest = v2State.manifest;
+    if (!ref || !manifest || !Array.isArray(state.mergedCandidates)) return;
+    var size = manifest.chunkSize || V2_CHUNK_SIZE;
+    var start = di * size, end = Math.min(ref.length, start + size);
+    var byRawRow = new Map();
+    state.mergedCandidates.forEach(function(mc) { if (mc && mc.rawRow) byRawRow.set(mc.rawRow, mc); });
+    for (var i = start; i < end; i++) {
+      var rec = ref[i];
+      if (!rec || !rec.rawRow || !rec.conditions) continue;
+      var mc = byRawRow.get(rec.rawRow);
+      if (mc) mc.conditions = rec.conditions;
+    }
+  }
+
+  function updateDetailsLoadedFlag() {
+    var manifest = v2State.manifest;
+    if (!manifest || !Array.isArray(manifest.details)) { v2State.detailsLoaded = true; return; }
+    for (var i = 0; i < manifest.details.length; i++) {
+      if (v2State.detailChunks[i] !== 'loaded') return;
+    }
+    v2State.detailsLoaded = true;
+  }
+
+  // 詳細1チャンク分だけを取得して位置対応でマージする。戻り値: Promise<boolean>。
+  function loadDetailChunk(di) {
+    if (v2State.detailChunks[di] === 'loaded') return Promise.resolve(true);
+    if (v2State.detailChunkPromises[di]) return v2State.detailChunkPromises[di];
+    var manifest = v2State.manifest, base = v2State.base, ref = v2State.recordsRef;
+    if (!manifest || !Array.isArray(manifest.details) || !manifest.details[di] || !ref) {
+      v2State.detailChunks[di] = 'loaded';
+      updateDetailsLoadedFlag();
+      return Promise.resolve(true);
+    }
+    var p = (async function() {
+      try {
+        var dj = await v2FetchJson(base + manifest.details[di]);
+        if (state.rawCandidates !== ref || v2State.recordsRef !== ref) return false; // データが差し替わったら中断
+        if (dj && Array.isArray(dj.records)) {
+          var offset = di * (manifest.chunkSize || V2_CHUNK_SIZE);
+          dj.records.forEach(function(det, i) { mergeDetailIntoRecord(ref[offset + i], det); });
+        }
+        v2State.detailChunks[di] = 'loaded';
+        syncMergedConditionsForChunk(di);
+        updateDetailsLoadedFlag();
+        return true;
+      } catch (e) {
+        v2State.detailChunks[di] = 'failed'; // 次に詳細を開いたときに再試行される
+        return false;
+      } finally {
+        delete v2State.detailChunkPromises[di];
+      }
+    })();
+    v2State.detailChunkPromises[di] = p;
+    return p;
+  }
+
+  // 候補者1人分の詳細 (所属チャンク) だけを遅延ロードする。
+  function ensureDetailForCandidate(c) {
+    if (!v2State.active || v2State.detailsLoaded) return Promise.resolve(true);
+    var pos = v2RecordPosOfCandidate(c);
+    if (pos < 0) return Promise.resolve(true); // 対応が取れない場合は軽量表示で続行
+    return loadDetailChunk(v2ChunkIndexOfPos(pos));
+  }
+
+  // 候補者単位の詳細状態: 'ready' | 'loading' | 'failed' | 'pending'
+  function detailStateForCandidate(c) {
+    if (!v2State.active || v2State.detailsLoaded) return 'ready';
+    var pos = v2RecordPosOfCandidate(c);
+    if (pos < 0) return 'ready';
+    var di = v2ChunkIndexOfPos(pos);
+    if (v2State.detailChunks[di] === 'loaded') return 'ready';
+    if (v2State.detailChunkPromises[di]) return 'loading';
+    if (v2State.detailChunks[di] === 'failed') return 'failed';
+    return 'pending';
+  }
+
+  // 全チャンクの詳細をまとめて読み込む。全列付きCSV出力など、利用者が明示的に
+  // 全列を必要とした操作でのみ使う (起動時・裏読み込みでは呼ばない)。
   function ensureDetailsLoaded() {
     if (!v2State.active || v2State.detailsLoaded) return Promise.resolve();
-    return startDetailLoad() || Promise.resolve();
+    if (v2State.detailsPromise) return v2State.detailsPromise;
+    var manifest = v2State.manifest;
+    if (!manifest || !Array.isArray(manifest.details)) { v2State.detailsLoaded = true; return Promise.resolve(); }
+    v2State.detailsPromise = (async function() {
+      for (var di = 0; di < manifest.details.length; di++) {
+        if (!v2State.active) break;
+        await loadDetailChunk(di);
+      }
+      v2State.detailsPromise = null;
+    })();
+    return v2State.detailsPromise;
   }
 
   // データ同期の入口: 新形式を優先し、無ければ従来形式 (単一 data.js) へフォールバックする。
@@ -1415,7 +1517,7 @@
         window.__v2State.manifest = cached.manifest;
         window.__v2State.base = cached.base || './';
         window.__v2State.recordsRef = cached.candidates;
-        startDetailLoad();
+        // 詳細は開いた人のチャンクだけ遅延ロードする (ここでは読まない)。
       } else if (window.__v2State) { window.__v2State.detailsLoaded = true; }
       return;
     }
@@ -2633,7 +2735,7 @@
           '</div>' +
         '</div>' +
         '<div class="border border-gray-200 rounded-xl bg-gray-50/70 overflow-hidden">' +
-          '<button type="button" onclick="toggleConditionBox(' + SQ + condId + SQ + ', this)" class="w-full px-3 py-2 flex items-center justify-between text-left text-xs font-bold text-gray-700 hover:bg-gray-100 transition">' +
+          '<button type="button" onclick="toggleCandidateConditions(' + SQ + condId + SQ + ', this, ' + SQ + escapeHtml(c.personKey) + SQ + ')" class="w-full px-3 py-2 flex items-center justify-between text-left text-xs font-bold text-gray-700 hover:bg-gray-100 transition">' +
             '<span>📋 把握済条件・詳細メモを見る（デフォルト非表示）</span><span class="text-gray-400">開く ▼</span>' +
           '</button>' +
           '<div id="' + condId + '" class="hidden px-3 pb-3 pt-1.5 border-t border-gray-200 text-xs text-gray-700 leading-relaxed whitespace-pre-wrap bg-white">' + escapeHtml(c.conditions || '把握済条件の記載なし') + '</div>' +
@@ -2665,6 +2767,43 @@
       el.classList.add('hidden');
       arrow.textContent = '開く ▼';
     }
+  };
+
+  // 把握済条件ボックス: 開いたときにその人のチャンクの詳細だけを遅延ロードし、
+  // 完了後にボックスの中身を差し替える。軽量表示自体は常時可能。
+  window.toggleCandidateConditions = function(id, btn, personKey) {
+    toggleConditionBox(id, btn);
+    var el = document.getElementById(id);
+    if (!el || el.classList.contains('hidden')) return; // 閉じただけのときは何もしない
+    var c = state.mergedCandidates.find(function(x) { return x.personKey === personKey; });
+    if (!c) return;
+    if (detailStateForCandidate(c) === 'ready') {
+      el.textContent = c.conditions || '把握済条件の記載なし';
+      return;
+    }
+    el.textContent = '⏳ 詳細を読み込み中…';
+    ensureDetailForCandidate(c).then(function(ok) {
+      var el2 = document.getElementById(id);
+      if (!el2) return;
+      if (ok) {
+        el2.textContent = c.conditions || '把握済条件の記載なし';
+      } else {
+        el2.innerHTML = '⚠️ 詳細の読み込みに失敗しました。<button type="button" class="underline font-bold text-sky-700 ml-1" onclick="retryCandidateConditions(' + SQ + id + SQ + ', ' + SQ + personKey + SQ + ')">再試行</button>';
+      }
+    });
+  };
+
+  window.retryCandidateConditions = function(id, personKey) {
+    var el = document.getElementById(id);
+    var c = state.mergedCandidates.find(function(x) { return x.personKey === personKey; });
+    if (!el || !c) return;
+    el.textContent = '⏳ 詳細を読み込み中…';
+    ensureDetailForCandidate(c).then(function(ok) {
+      var el2 = document.getElementById(id);
+      if (!el2) return;
+      if (ok) el2.textContent = c.conditions || '把握済条件の記載なし';
+      else el2.textContent = '⚠️ 詳細の読み込みに失敗しました。通信環境を確認して、もう一度開き直してください。';
+    });
   };
 
   window.copyIdToast = function(id) {
@@ -3629,16 +3768,39 @@
     if (!c) return;
     state.currentRawCandidate = c;
     document.getElementById('rawRowModalTitle').textContent = c.name + ' 様の元CSV全列データ';
+    var st = detailStateForCandidate(c);
+    if (st === 'pending' || st === 'failed') {
+      // 軽量データで即時表示しつつ、その人のチャンクの詳細だけを遅延ロードする。
+      ensureDetailForCandidate(c).then(function() { if (state.currentRawCandidate === c) renderCurrentRawModal(); });
+    }
     renderCurrentRawModal();
     openModal('rawRowModal');
-    if (window.__v2State && window.__v2State.active && !window.__v2State.detailsLoaded) {
-      ensureDetailsLoaded().then(function() { if (state.currentRawCandidate === c) renderCurrentRawModal(); });
-    }
+  };
+
+  window.retryRawDetail = function() {
+    var c = state.currentRawCandidate;
+    if (!c) return;
+    ensureDetailForCandidate(c).then(function() { if (state.currentRawCandidate === c) renderCurrentRawModal(); });
+    renderCurrentRawModal();
   };
 
   window.renderCurrentRawModal = function() {
     var c = state.currentRawCandidate;
     if (!c) return;
+    var statusEl = document.getElementById('rawDetailStatus');
+    if (statusEl) {
+      var dst = detailStateForCandidate(c);
+      if (dst === 'loading' || dst === 'pending') {
+        statusEl.className = 'px-5 py-2 text-xs font-bold border-b border-sky-200 bg-sky-50 text-sky-800';
+        statusEl.textContent = '⏳ 詳細データを読み込み中…（現在は軽量データのみ表示しています。全列は読み込み完了後に表示されます）';
+      } else if (dst === 'failed') {
+        statusEl.className = 'px-5 py-2 text-xs font-bold border-b border-rose-200 bg-rose-50 text-rose-800';
+        statusEl.innerHTML = '⚠️ 詳細データの読み込みに失敗しました（軽量データのみ表示中）。<button type="button" onclick="retryRawDetail()" class="underline font-black ml-1">再試行</button>';
+      } else {
+        statusEl.className = 'hidden';
+        statusEl.textContent = '';
+      }
+    }
     var hideEmpty = document.getElementById('rawHideEmpty').checked;
     var raw = c.rawRow || {};
     var entries = Object.entries(raw).filter(function(kv) { return !hideEmpty || String(kv[1] || '').trim() !== ''; });
