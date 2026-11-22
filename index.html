@@ -109,6 +109,14 @@
         <span>接触待ち</span>
         <span id="badge-contactWait" class="px-1.5 py-0.2 text-[10px] rounded-full bg-zinc-800 text-zinc-300 font-bold">0</span>
       </button>
+      <button type="button" onclick="switchTab('contactWait7')" id="tab-contactWait7" class="tab-inactive py-2 px-2 whitespace-nowrap flex items-center gap-1 transition">
+        <span>接触待ち（7日以内）</span>
+        <span id="badge-contactWait7" class="px-1.5 py-0.2 text-[10px] rounded-full bg-zinc-800 text-zinc-300 font-bold">0</span>
+      </button>
+      <button type="button" onclick="switchTab('contactWait45')" id="tab-contactWait45" class="tab-inactive py-2 px-2 whitespace-nowrap flex items-center gap-1 transition">
+        <span>接触待ち（45日以上）</span>
+        <span id="badge-contactWait45" class="px-1.5 py-0.2 text-[10px] rounded-full bg-zinc-800 text-zinc-300 font-bold">0</span>
+      </button>
     </nav>
   </header>
 
@@ -144,6 +152,16 @@
           <select id="filterBranch" onchange="resetPageAndRender()" class="rounded-lg border border-gray-300 px-3 py-1.5 text-xs bg-white focus:outline-none focus:border-orange-500">
             <option value="">担当支店：すべて</option>
           </select>
+          <div class="flex flex-wrap items-center gap-x-3 gap-y-1 px-2 py-1.5 rounded-lg border border-gray-300 bg-white text-xs">
+            <span class="font-bold text-gray-700">職種：</span>
+            <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" id="filterRoleCare" checked onchange="resetPageAndRender()" class="accent-orange-500"><span>介護</span></label>
+            <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" id="filterRoleNurse" checked onchange="resetPageAndRender()" class="accent-orange-500"><span>看護</span></label>
+            <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" id="filterRoleOther" onchange="resetPageAndRender()" class="accent-orange-500"><span>その他</span></label>
+          </div>
+          <label class="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-sky-200 bg-sky-50/70 text-xs font-bold text-gray-800 cursor-pointer select-none">
+            <input type="checkbox" id="hideContactWaitMidRange" checked onchange="resetPageAndRender()" class="accent-sky-600 w-4 h-4 rounded" />
+            <span>接触待ち：応募8〜44日を非表示</span>
+          </label>
           <label class="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-orange-200 bg-orange-50/70 text-xs font-bold text-gray-800 cursor-pointer select-none">
             <input type="checkbox" id="filterUnactedOnly" checked onchange="resetPageAndRender()" class="accent-orange-500 w-4 h-4 rounded" />
             <span>未対応のみ表示</span>
@@ -1418,7 +1436,8 @@
     var t = getRawColumnValue(c, 'T');
     var w = getRawColumnValue(c, 'W');
     var x = getRawColumnValue(c, 'X');
-    return !t || t === 'NG（不通）' || (t === 'OK' && w === 'NG' && x !== '応募除外');
+    var u = getRawColumnValue(c, 'U');
+    return !t || (t === 'NG' && !!u) || (t === 'OK' && w === 'NG' && x !== '応募除外');
   }
 
   function classifyCandidateTab(c) {
@@ -1776,11 +1795,41 @@
     return diffDays >= 0 && diffDays <= 7.0;
   }
 
+  function getApplyAgeDays(c) {
+    var applyD = parseDateSafe(c && c.applyDate);
+    if (!applyD) return null;
+    var now = new Date();
+    var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    var applied = new Date(applyD.getFullYear(), applyD.getMonth(), applyD.getDate());
+    return Math.floor((today.getTime() - applied.getTime()) / 86400000);
+  }
+
+  function getCandidateAge(c) {
+    var age = Number(c && c.age);
+    if (Number.isFinite(age) && age > 0) return age;
+    var dob = parseDateSafe(c && c.dob);
+    if (!dob) return NaN;
+    var now = new Date();
+    var years = now.getFullYear() - dob.getFullYear();
+    if (now.getMonth() < dob.getMonth() || (now.getMonth() === dob.getMonth() && now.getDate() < dob.getDate())) years--;
+    return years;
+  }
+
+  function getRoleGroup(c) {
+    var roleText = String(c.jobType || '') + ' ' + String(c.qualification || '');
+    var isNurse = /(看護|正看|准看|保健師|助産師)/.test(roleText);
+    var isCare = /(介護|ヘルパー|初任者|実務者|福祉士|ケアマネ)/.test(roleText);
+    if (isNurse) return 'nurse';
+    if (isCare) return 'care';
+    return 'other';
+  }
+
   function buildMessageForCandidate(c, reasonOverride, modeOverride, nightOverride) {
     var sal = extractSafeSalutation(c);
     var jobs = getMatchedJobs(c, nightOverride);
     var log = state.actionLogs[c.personKey];
     var tab = c.assignedTab;
+    if (tab === 'contactWait' && state.currentTab === 'contactWait7') tab = 'contactWait7';
     var mode = modeOverride || 'normal';
     var withinOneWeek = isApplyWithinOneWeek(c);
 
@@ -1805,6 +1854,31 @@
       : '';
     var shortJobs = (shortLines || '・ご自宅近隣の新着求人を確保しております。') + shortDirect;
     var shortRateNote = getHourlyRateNote(c);
+
+    if (tab === 'contactWait7') {
+      return [
+        'お世話になっております。',
+        '株式会社ビースタイルと申します。',
+        '',
+        '今回応募いただいた求人のエントリーに伴いご連絡になります。',
+        '一部重複してると思いますが確認も兼ねて、ご回答お願いします',
+        '',
+        '①保持資格：',
+        '②お住まいの郵便番号：',
+        '③就業開始希望日（いつから働けるか）：',
+        '④就業可能日数：',
+        '⑤勤務形態（早、日、遅、夜勤、時短※時短の場合は時間について記載お願いします）',
+        '⑥休み希望曜日（なければ基本シフト制なので不問で問題ありません）：',
+        '⑦通勤方法（公共の場合最寄り駅）：',
+        '⑧電話連絡NGな時間帯や曜日：',
+        '⑨経験年数と直近2つの職歴：',
+        '※例：経験15年、特養1年、有料2年',
+        '',
+        '以上、9点回答いただけると幸いです',
+        '',
+        '宜しくお願いします'
+      ].join(LF);
+    }
 
     if (tab === 'contactWait') {
       var contactJobLines = jobs.dispatch.slice(0, 2).map(function(j, idx) {
@@ -2077,6 +2151,10 @@
     var prefVal = options.ignoreFilters ? '' : document.getElementById('filterPref').value;
     var staffVal = options.ignoreFilters ? '' : document.getElementById('filterStaff').value;
     var branchVal = options.ignoreFilters ? '' : document.getElementById('filterBranch').value;
+    var roleCare = options.ignoreFilters ? true : document.getElementById('filterRoleCare').checked;
+    var roleNurse = options.ignoreFilters ? true : document.getElementById('filterRoleNurse').checked;
+    var roleOther = options.ignoreFilters ? true : document.getElementById('filterRoleOther').checked;
+    var hideMidRange = options.ignoreFilters ? false : document.getElementById('hideContactWaitMidRange').checked;
     var q = options.ignoreFilters ? '' : normalizeText(document.getElementById('searchInput').value).toLowerCase();
 
     var isSearching = q.length > 0;
@@ -2086,18 +2164,24 @@
       if (targetArea === 'kanto' && !isKantoCandidate(c)) return false;
 
       if (targetTab) {
-        if (c.assignedTab !== targetTab) return false;
+        if (['contactWait7', 'contactWait45'].indexOf(targetTab) !== -1) {
+          if (c.assignedTab !== 'contactWait') return false;
+        } else if (c.assignedTab !== targetTab) return false;
       } else {
         if (['within3days', 'unfixed', 'hot', 'future', 'contactWait'].indexOf(c.assignedTab) === -1) return false;
       }
-      if (targetTab === 'contactWait') {
-        var age = Number(c.age);
+      var globalRoleGroup = getRoleGroup(c);
+      if ((globalRoleGroup === 'care' && !roleCare) || (globalRoleGroup === 'nurse' && !roleNurse) || (globalRoleGroup === 'other' && !roleOther)) return false;
+      if (['contactWait', 'contactWait7', 'contactWait45'].indexOf(targetTab) !== -1) {
+        var age = getCandidateAge(c);
         if (!c.phone || !normalizePhone(c.phone)) return false;
         if (!Number.isFinite(age) || age > 65) return false;
-        var roleText = String(c.jobType || '') + ' ' + String(c.qualification || '');
-        if (!/(介護|看護|正看|准看|ヘルパー|初任者|実務者|福祉士|ケアマネ)/.test(roleText)) return false;
         var wValue = getRawColumnValue(c, 'W');
         if (wValue.indexOf('適応条件') !== -1) return false;
+        var applyAgeDays = getApplyAgeDays(c);
+        if (targetTab === 'contactWait7' && (applyAgeDays === null || applyAgeDays < 0 || applyAgeDays > 7)) return false;
+        if (targetTab === 'contactWait45' && (applyAgeDays === null || applyAgeDays < 45)) return false;
+        if (targetTab === 'contactWait' && hideMidRange && applyAgeDays !== null && applyAgeDays >= 8 && applyAgeDays <= 44) return false;
       }
 
       var act = getActionState(c);
@@ -2119,7 +2203,7 @@
   }
 
   function updateTabBadges() {
-    var tabs = ['within3days', 'unfixed', 'hot', 'future', 'contactWait'];
+    var tabs = ['within3days', 'unfixed', 'hot', 'future', 'contactWait', 'contactWait7', 'contactWait45'];
     tabs.forEach(function(t) {
       var list = getFilteredCandidates({ tab: t, unactedOnly: true, ignoreFilters: true });
       var badge = document.getElementById('badge-' + t);
@@ -2164,7 +2248,7 @@
   window.switchTab = function(tabId) {
     state.currentTab = tabId;
     state.displayLimit = PAGE_SIZE;
-    ['within3days', 'unfixed', 'hot', 'future', 'contactWait'].forEach(function(t) {
+    ['within3days', 'unfixed', 'hot', 'future', 'contactWait', 'contactWait7', 'contactWait45'].forEach(function(t) {
       var btn = document.getElementById('tab-' + t);
       var badge = document.getElementById('badge-' + t);
       if (t === tabId) {
@@ -2213,10 +2297,9 @@
         title: '【未来人材】の表示ルールを見る',
         desc: '④判定：就業開始希望日が本日から30日以上先の対象者（FIX待ち含む）、またはB列・ステータスが未来人材の対象者を抽出します。'
       },
-      contactWait: {
-        title: '【接触待ち】の表示ルール',
-        desc: '電話番号が登録され、接触状況・条件確認が未完了の方を表示します。年齢65歳以下、職種は介護・看護を初期対象とします。'
-      }
+      contactWait: { title: '【接触待ち】の表示ルール', desc: '接触待ち対象者を応募日で分けずに表示します。初期状態では応募日8〜44日経過の方を非表示にできます。' },
+      contactWait7: { title: '【接触待ち（7日以内）】の表示ルール', desc: '応募日から7日以内の接触待ち対象者を表示します。SMSは確認事項9点の専用文面です。' },
+      contactWait45: { title: '【接触待ち（45日以上）】の表示ルール', desc: '応募日から45日以上経過した接触待ち対象者を表示します。' }
     };
     var info = map[state.currentTab] || map.within3days;
     document.getElementById('guideTitle').textContent = info.title;
@@ -2584,7 +2667,7 @@
 
     setMsgMode(defaultMode, true);
 
-    var tabLabelMap = { within3days: '3日以内未FIX', unfixed: '未FIX人材', hot: '激熱掘起', future: '未来人材', contactWait: '接触待ち' };
+    var tabLabelMap = { within3days: '3日以内未FIX', unfixed: '未FIX人材', hot: '激熱掘起', future: '未来人材', contactWait: '接触待ち', contactWait7: '接触待ち7日以内', contactWait45: '接触待ち45日以上' };
     var tabBadgeEl = document.getElementById('modalTabBadge');
     if (tabBadgeEl) tabBadgeEl.textContent = tabLabelMap[c.assignedTab] || '追客';
     document.getElementById('modalCandidateName').textContent = c.name + '（' + (c.branch || '-') + '）';
@@ -2813,7 +2896,7 @@
     var list = getExportTargetList();
     document.getElementById('exportTargetCountBadge').textContent = '対象: ' + list.length + '件';
     var tbody = document.getElementById('exportPreviewBody');
-    var tabNames = { within3days: '3日以内未FIX', unfixed: '未FIX人材', hot: '激熱掘起', future: '未来人材', contactWait: '接触待ち' };
+    var tabNames = { within3days: '3日以内未FIX', unfixed: '未FIX人材', hot: '激熱掘起', future: '未来人材', contactWait: '接触待ち', contactWait7: '接触待ち（7日以内）', contactWait45: '接触待ち（45日以上）' };
     tbody.innerHTML = list.slice(0, 3).map(function(c) {
       var sal = extractSafeSalutation(c);
       var act = getActionState(c);
@@ -2846,7 +2929,7 @@
 
   function downloadCsvFromList(list, includeRaw, smsSlimOnly, customLabel) {
     if (!list || list.length === 0) { alert('出力対象のデータが0件です。'); return; }
-    var tabNames = { within3days: '3日以内未FIX', unfixed: '未FIX人材', hot: '激熱掘起', future: '未来人材', contactWait: '接触待ち' };
+    var tabNames = { within3days: '3日以内未FIX', unfixed: '未FIX人材', hot: '激熱掘起', future: '未来人材', contactWait: '接触待ち', contactWait7: '接触待ち（7日以内）', contactWait45: '接触待ち（45日以上）' };
     var dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
     var areaLabel = state.currentArea === 'kanto' ? '関東' : '全エリア';
     var tabLabel = customLabel || tabNames[state.currentTab] || '追客';
