@@ -589,6 +589,7 @@
     dictReady: false,
     searchOrderJobs: [],
     jobsReady: false,
+    searchOrderFromCache: false,
     gsiCache: {},
     gsiQueueRunning: false,
     actionLogs: {},
@@ -875,6 +876,20 @@
         renderList();
       }
 
+      // 起動時（showAlert=false）は、jobs/dict 両方のIDBキャッシュが24時間以内なら
+      // ネットワーク取得をせず、キャッシュのみで連携済みにする。
+      // 手動再同期（showAlert=true）は従来どおり常時取得する。
+      if (!showAlert) {
+        var SO_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
+        var soJobsFresh = !!(cachedJobs && Array.isArray(cachedJobs.jobs) && cachedJobs.jobs.length > 0 && cachedJobs.ts && (Date.now() - cachedJobs.ts) < SO_CACHE_TTL_MS);
+        var soDictFresh = !!(cachedDict && cachedDict.data && cachedDict.ts && (Date.now() - cachedDict.ts) < SO_CACHE_TTL_MS);
+        if (soJobsFresh && soDictFresh) {
+          state.searchOrderFromCache = true;
+          renderList();
+          return;
+        }
+      }
+
       var jobsUrl = state.settings.jobMasterUrl || SEARCH_ORDER_JOBS_URL;
       var results = await Promise.all([
         fetch(SEARCH_ORDER_DICT_URL, { cache: 'no-cache' }).then(function(r) { return r.ok ? r.json() : null; }).catch(function() { return null; }),
@@ -919,6 +934,13 @@
         state.jobsReady = true;
         await idbSet('searchOrder_jobs_v1', { ts: Date.now(), jobs: normalizedJobs });
       }
+
+      // リモート取得できていれば最新データ表示、両方とも取得できなかった場合は
+      // キャッシュ由来のデータが残っているのでキャッシュ表示のままにする。
+      state.searchOrderFromCache = !(
+        (remoteDict && typeof remoteDict === 'object' && Object.keys(remoteDict).length > 0) ||
+        (Array.isArray(remoteJobs) && remoteJobs.length > 0)
+      );
 
       recomputeAllCandidateCoords();
       renderList();
@@ -2619,7 +2641,7 @@
 
     document.getElementById('resultCountText').textContent = '該当: ' + fullList.length + '件（表示中: ' + visibleList.length + '件）';
     if (state.jobsReady) {
-      document.getElementById('jobMasterSummary').textContent = '✅ searchOrder連携済：全' + state.searchOrderJobs.length.toLocaleString() + '件';
+      document.getElementById('jobMasterSummary').textContent = '✅ searchOrder連携済：全' + state.searchOrderJobs.length.toLocaleString() + '件' + (state.searchOrderFromCache ? '（キャッシュ）' : '');
     } else {
       document.getElementById('jobMasterSummary').textContent = '⏳ searchOrder案件データ取得中...';
     }
