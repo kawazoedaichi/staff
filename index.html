@@ -2810,6 +2810,7 @@
     if (!c) return;
     if (detailStateForCandidate(c) === 'ready') {
       el.textContent = c.conditions || '把握済条件の記載なし';
+      attachExternalSummary(el, c);
       return;
     }
     el.textContent = '⏳ 詳細を読み込み中…';
@@ -2818,6 +2819,7 @@
       if (!el2) return;
       if (ok) {
         el2.textContent = c.conditions || '把握済条件の記載なし';
+        attachExternalSummary(el2, c);
       } else {
         el2.innerHTML = '⚠️ 詳細の読み込みに失敗しました。<button type="button" class="underline font-bold text-sky-700 ml-1" onclick="retryCandidateConditions(' + SQ + id + SQ + ', ' + SQ + personKey + SQ + ')">再試行</button>';
       }
@@ -2832,7 +2834,7 @@
     ensureDetailForCandidate(c).then(function(ok) {
       var el2 = document.getElementById(id);
       if (!el2) return;
-      if (ok) el2.textContent = c.conditions || '把握済条件の記載なし';
+      if (ok) { el2.textContent = c.conditions || '把握済条件の記載なし'; attachExternalSummary(el2, c); }
       else el2.textContent = '⚠️ 詳細の読み込みに失敗しました。通信環境を確認して、もう一度開き直してください。';
     });
   };
@@ -3334,14 +3336,33 @@
         var phoneIdx = externalHeaderIndex(headers, [/電話番号/, /^tel$/, /携帯電話/, /mobile/, /phone/, /電話$/]);
         var dateIdx = externalHeaderIndex(headers, [/応募日時/, /^応募日$/, /応募年月日/, /申込日/, /エントリー日/, /applicationdate/, /appliedat/, /^date$/]);
         var companyIdx = externalHeaderIndex(headers, [/会社名/, /企業名/, /応募元/, /媒体名/, /company/, /source/]);
+        var statusIdx = externalHeaderIndex(headers, [/^ステータス$/]);
         if (phoneIdx < 0 || dateIdx < 0) throw new Error('電話番号・応募日（応募日時）の列が見つかりません。共通CSVの見出しを確認してください。');
         var imported = [];
+        var summaryPhones = {};
+        (state.rawCandidates || []).concat(state.mergedCandidates || []).forEach(function(c) {
+          var p = normalizePhone(c && c.phone);
+          if (p.length >= 9) summaryPhones[p] = true;
+        });
+        var summaryRecs = [];
+        var detectedCompany = '';
         for (var r = 1; r < rows.length; r++) {
           var cells = rows[r];
           var phone = normalizePhone(cells[phoneIdx] || '');
           var appliedAt = String(cells[dateIdx] || '').trim();
           if (phone.length < 9 || !parseDateSafe(appliedAt)) continue;
-          imported.push({ phone: phone, applyDate: appliedAt, company: companyIdx >= 0 ? String(cells[companyIdx] || '').trim() : '', sourceFile: file.name });
+          var rowCompany = companyIdx >= 0 ? String(cells[companyIdx] || '').trim() : '';
+          if (!detectedCompany && rowCompany) detectedCompany = rowCompany;
+          imported.push({ phone: phone, applyDate: appliedAt, company: rowCompany, sourceFile: file.name });
+          if (summaryPhones[phone]) {
+            summaryRecs.push({
+              phone: phone,
+              applyDate: appliedAt,
+              status: statusIdx >= 0 ? String(cells[statusIdx] || '').trim() : '',
+              company: extResolveCompany(file.name, rowCompany),
+              cond: extCondText(extCondValuesFromRow(headers, cells))
+            });
+          }
         }
         if (!imported.length) throw new Error('有効な応募データがありません。電話番号と応募日を確認してください。');
         var merged = Array.isArray(state.externalApplications) ? state.externalApplications.slice() : [];
@@ -3363,6 +3384,7 @@
           if (statusEl) statusEl.textContent = '他社応募データ：' + imported.length + '件追加（保存合計 ' + merged.length + '件）';
           showPopup('他社応募CSVを読み込みました', imported.length + '件を照合データとして追加しました。自社応募一覧には追加していません。');
           pushExternalDataToGithub();
+          updateExternalDetailForFile(extResolveCompany(file.name, detectedCompany) || ('file:' + file.name), extSummarizeRecs(summaryRecs));
         });
       } catch (err) {
         if (statusEl) statusEl.textContent = '読込エラー：' + err.message;
@@ -3380,6 +3402,9 @@
     externalGeneratedAt = new Date().toISOString();
     saveExternalLocal();
     pushExternalDataToGithub();
+    externalDetailData = { generatedAt: new Date().toISOString(), entries: {}, byCompany: {} };
+    saveExternalDetailLocal();
+    pushExternalDetailToGithub();
     try { localStorage.removeItem(EXTERNAL_APPLICATIONS_KEY); } catch (e) {}
     var statusEl = document.getElementById('externalCsvStatus');
     if (statusEl) statusEl.textContent = '他社応募データ：未読込';
@@ -3422,6 +3447,322 @@
     if (phone.length < 9) return false;
     var days = getExternalPhoneIndex().get(phone);
     return days !== undefined && days <= 7;
+  }
+
+  // ===== 他社応募サマリー (external-detail.json) =====
+  // 他社CSV取り込み時に、自社候補者と電話番号が一致する人だけについて
+  // 「他社での応募条件・応募日」を集約したサマリーを作り、external-data.json と
+  // 同じ仕組み (GitHub共有 + IndexedDBキャッシュ、generatedAt の新しい方を採用) で
+  // 端末間共有する。表示は候補者の詳細 (把握済条件ボックス) を開いたときだけ
+  // 遅延ロードし、起動時には一切読み込まない。仕様は LIGHTENING.md §12。
+  // === EXT-DETAIL-CORE-BEGIN ===
+  // ファイル名 (NN.csv) → 会社名。他社CSV自体に会社名の列が無いため、
+  // 取り込み運用で使う連番ファイル名から引く (列に会社名があるCSVではそちらが優先)。
+  var EXT_COMPANY_BY_FILENAME = {
+    '01.csv': 'ファーストスタッフィング', '02.csv': 'リライズ', '03.csv': 'アルクススタッフィング',
+    '04.csv': 'コネクトワークス', '05.csv': 'オーバル・パートナーズ', '06.csv': 'Axis',
+    '07.csv': 'グローバルヒューマンブリッジ', '08.csv': 'サンレディース', '09.csv': 'NEXTスタッフサービス',
+    '10.csv': 'ラブキャリア', '11.csv': 'マンキャピタル', '12.csv': 'ケイエステック',
+    '13.csv': 'フライ・トップ', '14.csv': 'ALLEMIY', '15.csv': 'Attrus',
+    '16.csv': 'ユーオーエス', '17.csv': 'FIDIA SOLUTIONS', '18.csv': 'カナミックネットワーク',
+    '19.csv': 'エスケイコンサルタント', '20.csv': 'LeafNxT', '21.csv': 'グラスト',
+    '22.csv': 'ジョブコレ東日本', '23.csv': 'ジョブコレ名古屋', '24.csv': 'ジョブコレ東京',
+    '25.csv': 'エスツー・ラボ', '26.csv': 'ジョブコレ大阪', '27.csv': '朝日エンジニアリング',
+    '28.csv': 'キャリアリンク', '29.csv': 'start me', '30.csv': 'グロース', '31.csv': 'キャストウェル'
+  };
+  // 「一番進んでる」順位。大きい方が進んでいる。同順位は応募日の新しい方。
+  // NG系 (対象外・応募除外・不通・登録辞退・接触NG) は最下位で、他に何も無い場合のみ使う。
+  // 未知のステータスは 3 (未来人材より下・NG系より上)、空は 0。
+  var EXT_STATUS_RANK = {
+    '稼働中': 17, '終了待ち': 16, '退職済み': 15, '入職待ち': 14, '他社決定': 13,
+    '内定待ち': 12, '職見待ち': 11, 'FIX待ち': 10, 'アテンド待ち': 9, '誘致待ち': 8,
+    '接触待ち': 7, '未対応': 6, '未来人材': 5,
+    '対象外': 0, '応募除外': 0, '不通': 0, '登録辞退': 0, '接触NG': 0
+  };
+  function extTrim(v) { return String(v == null ? '' : v).trim(); }
+  function extParseTs(s) {
+    if (!s) return null;
+    var d = new Date(String(s).trim().replace(/\//g, '-'));
+    return isNaN(d.getTime()) ? null : d.getTime();
+  }
+  function extStatusRank(status) {
+    var s = extTrim(status);
+    if (Object.prototype.hasOwnProperty.call(EXT_STATUS_RANK, s)) return EXT_STATUS_RANK[s];
+    return s ? 3 : 0;
+  }
+  function extShiftOn(v) {
+    var s = extTrim(v);
+    return s === '○' || s === '◯' || s === '可' || s === '1';
+  }
+  function extFormatDows(raw) {
+    var s = extTrim(raw);
+    if (!s) return '';
+    var days = ['月', '火', '水', '木', '金', '土', '日', '祝'];
+    var on = [], maybe = [], seen = {};
+    s.split(/[\s　]+/).forEach(function(tk) {
+      if (!tk) return;
+      var d = tk.charAt(0);
+      if (days.indexOf(d) === -1 || seen[d]) return;
+      var mark = tk.slice(1);
+      if (mark.indexOf('○') !== -1 || mark.indexOf('◯') !== -1) { on.push(d); seen[d] = true; }
+      else if (mark.indexOf('△') !== -1) { maybe.push(d); seen[d] = true; }
+      else if (mark.indexOf('×') !== -1) { seen[d] = true; }
+    });
+    if (!Object.keys(seen).length) {
+      days.forEach(function(d) { if (s.indexOf(d) !== -1) on.push(d); });
+    }
+    if (!on.length && !maybe.length) return '';
+    var out = on.join('・');
+    if (maybe.length) out += (out ? '（△：' + maybe.join('・') + '）' : '△：' + maybe.join('・'));
+    return out;
+  }
+  // 条件テキストの整形。v は extCondValuesFromRow の戻り値。空欄は省き、
+  // 「ラベル：値」を '／' でつないだ簡潔な1行にする (アプリ・生成スクリプト共通)。
+  function extCondText(v) {
+    var parts = [];
+    var start = extTrim(v.start);
+    if (start && start !== '0') parts.push('開始：' + start);
+    var wd = extTrim(v.weekDays);
+    if (wd && wd !== '0') parts.push('週' + wd + '日');
+    var dow = extFormatDows(v.weekDows);
+    if (dow) parts.push('曜日：' + dow);
+    var shifts = [];
+    if (extShiftOn(v.shiftHayaban)) shifts.push('早番');
+    if (extShiftOn(v.shiftNikkin)) shifts.push('日勤');
+    if (extShiftOn(v.shiftOsoban)) shifts.push('遅番');
+    if (extShiftOn(v.shiftYakin)) shifts.push('夜勤');
+    if (extShiftOn(v.shiftJitan)) shifts.push('時短');
+    if (shifts.length) parts.push('シフト：' + shifts.join('・'));
+    var fac = extTrim(v.facility);
+    if (fac) {
+      var items = fac.split(',').map(extTrim).filter(function(x) { return !!x; });
+      if (items.length > 6) fac = items.slice(0, 6).join('、') + ' ほか';
+      else fac = items.join('、');
+      if (fac) parts.push('施設：' + fac);
+    }
+    var wage = extTrim(v.wage);
+    if (wage && wage !== '0') parts.push('時給：' + wage + '円');
+    var qual = extTrim(v.qual);
+    if (qual) parts.push('資格：' + qual);
+    var job = extTrim(v.job);
+    if (job) parts.push('職種：' + job);
+    var station = extTrim(v.station);
+    if (station) parts.push('最寄り駅：' + station);
+    var transport = extTrim(v.transport);
+    if (transport) parts.push('通勤：' + transport);
+    var commuteTime = extTrim(v.commuteTime);
+    if (commuteTime) parts.push('通勤時間：' + commuteTime);
+    var exp = extTrim(v.exp);
+    if (exp) parts.push('経験：' + exp);
+    var emp = extTrim(v.emp);
+    if (emp) parts.push('就業：' + emp);
+    return parts.join('／');
+  }
+  function extGetByHeader(headers, cells, name) {
+    var i = headers.indexOf(name);
+    if (i >= 0) return extTrim(cells[i]);
+    for (var j = 0; j < headers.length; j++) {
+      if (headers[j] && headers[j].indexOf(name) !== -1) return extTrim(cells[j]);
+    }
+    return '';
+  }
+  function extCondValuesFromRow(headers, cells) {
+    function g(n) { return extGetByHeader(headers, cells, n); }
+    return {
+      start: g('即日か就業可能時期'), weekDays: g('週勤務可能日数'), weekDows: g('週勤務可能曜日'),
+      shiftHayaban: g('勤務可能シフト(早番)'), shiftNikkin: g('勤務可能シフト(日勤)'),
+      shiftOsoban: g('勤務可能シフト(遅番)'), shiftYakin: g('勤務可能シフト(夜勤)'),
+      shiftJitan: g('勤務可能シフト(時短)'),
+      facility: g('希望する施設形態'), wage: g('希望時給'), qual: g('資格'), job: g('職種詳細'),
+      station: g('最寄り駅'), transport: g('通勤手段'), commuteTime: g('通勤可能時間'),
+      exp: g('総経験年数'), emp: g('就業状況')
+    };
+  }
+  function extResolveCompany(fileName, columnCompany) {
+    var c = extTrim(columnCompany);
+    if (c) return c;
+    var base = String(fileName || '').split('/').pop().toLowerCase();
+    return EXT_COMPANY_BY_FILENAME[base] || '';
+  }
+  // 1ファイル分の応募レコード群を電話番号ごとに集約する。
+  // recs: [{phone (正規化済み), applyDate, status, company, cond}]
+  // 戻り値: { phone: {n, d (最新応募日), cs: [会社名], b: {c, s, d, t} (一番進んでる応募)} }
+  function extSummarizeRecs(recs) {
+    var tmp = {};
+    (recs || []).forEach(function(r) {
+      if (!r || !r.phone) return;
+      var cur = tmp[r.phone];
+      if (!cur) cur = tmp[r.phone] = { n: 0, d: '', dts: null, cs: [], b: null, brank: -1, bts: 0 };
+      cur.n += 1;
+      var ts = extParseTs(r.applyDate);
+      if (ts !== null && (cur.dts === null || ts > cur.dts)) { cur.d = String(r.applyDate || ''); cur.dts = ts; }
+      else if (cur.dts === null && !cur.d && r.applyDate) { cur.d = String(r.applyDate || ''); }
+      var comp = extTrim(r.company);
+      if (comp && cur.cs.indexOf(comp) === -1) cur.cs.push(comp);
+      var rank = extStatusRank(r.status);
+      var bts = ts || 0;
+      if (!cur.b || rank > cur.brank || (rank === cur.brank && bts > cur.bts)) {
+        cur.b = { c: comp, s: extTrim(r.status), d: String(r.applyDate || ''), t: String(r.cond || '') };
+        cur.brank = rank; cur.bts = bts;
+      }
+    });
+    var out = {};
+    Object.keys(tmp).forEach(function(p) {
+      var c = tmp[p];
+      out[p] = { n: c.n, d: c.d, cs: c.cs, b: c.b };
+    });
+    return out;
+  }
+  // 会社別サマリー (byCompany) を表示用 entries に統合する。
+  // phoneSet (真値マップ) があればその電話番号だけに絞る。
+  // 戻り値: { phone: {latestDate, count, companies, best: {company, status, applyDate, conditions}} }
+  function extMergeSummaries(byCompany, phoneSet) {
+    var acc = {};
+    Object.keys(byCompany || {}).forEach(function(key) {
+      var perPhone = byCompany[key] || {};
+      Object.keys(perPhone).forEach(function(phone) {
+        if (phoneSet && !phoneSet[phone]) return;
+        var fs = perPhone[phone];
+        if (!fs) return;
+        var e = acc[phone];
+        if (!e) e = acc[phone] = { latestDate: '', latestTs: null, count: 0, companies: [], best: null, brank: -1, bts: 0 };
+        e.count += fs.n || 0;
+        var fts = extParseTs(fs.d);
+        if (fts !== null && (e.latestTs === null || fts > e.latestTs)) { e.latestDate = fs.d || ''; e.latestTs = fts; }
+        else if (e.latestTs === null && !e.latestDate && fs.d) { e.latestDate = fs.d; }
+        (fs.cs || []).forEach(function(cn) { if (cn && e.companies.indexOf(cn) === -1) e.companies.push(cn); });
+        if (fs.b) {
+          var rank = extStatusRank(fs.b.s);
+          var bts = extParseTs(fs.b.d) || 0;
+          if (!e.best || rank > e.brank || (rank === e.brank && bts > e.bts)) {
+            e.best = { company: fs.b.c || '', status: fs.b.s || '', applyDate: fs.b.d || '', conditions: fs.b.t || '' };
+            e.brank = rank; e.bts = bts;
+          }
+        }
+      });
+    });
+    var out = {};
+    Object.keys(acc).forEach(function(phone) {
+      var e = acc[phone];
+      out[phone] = { latestDate: e.latestDate, count: e.count, companies: e.companies, best: e.best };
+    });
+    return out;
+  }
+  // === EXT-DETAIL-CORE-END ===
+
+  var EXTERNAL_DETAIL_PATH = 'external-detail.json';
+  var EXTERNAL_DETAIL_KEY = 'bstyle_external_detail_v1';
+  var externalDetailData = null;
+  var externalDetailPromise = null;
+  var externalDetailBusy = false;
+  function normalizeExternalDetail(d) {
+    if (!d || typeof d !== 'object') return null;
+    return { generatedAt: d.generatedAt || null, entries: d.entries || {}, byCompany: d.byCompany || {} };
+  }
+  function saveExternalDetailLocal() {
+    if (!externalDetailData) return Promise.resolve(false);
+    return idbSet(EXTERNAL_DETAIL_KEY, externalDetailData);
+  }
+  // 詳細を開いたとき・他社取り込み時のみ呼ぶ。起動時には呼ばない。
+  function ensureExternalDetail() {
+    if (externalDetailData) return Promise.resolve(externalDetailData);
+    if (externalDetailPromise) return externalDetailPromise;
+    externalDetailPromise = idbGet(EXTERNAL_DETAIL_KEY).then(function(saved) {
+      var local = normalizeExternalDetail(saved);
+      if (local) externalDetailData = local;
+      return fetch(EXTERNAL_DETAIL_PATH + '?t=' + Date.now(), { cache: 'no-store' }).then(function(res) {
+        if (!res.ok) throw new Error('no remote');
+        return res.json();
+      }).then(function(json) {
+        var remote = normalizeExternalDetail(json);
+        if (remote && (!externalDetailData || (remote.generatedAt && remote.generatedAt > (externalDetailData.generatedAt || '')))) {
+          externalDetailData = remote;
+          saveExternalDetailLocal();
+        }
+        return externalDetailData;
+      }).catch(function() { return externalDetailData; });
+    }).catch(function() { return externalDetailData; });
+    return externalDetailPromise;
+  }
+  function externalDetailJson() {
+    var d = externalDetailData || { generatedAt: null, entries: {}, byCompany: {} };
+    return JSON.stringify({ generatedAt: d.generatedAt || new Date().toISOString(), count: Object.keys(d.entries || {}).length, entries: d.entries || {}, byCompany: d.byCompany || {} });
+  }
+  function pushExternalDetailToGithub() {
+    var ghRepo = state.settings && state.settings.ghRepo, ghBranch = (state.settings && state.settings.ghBranch) || 'main', ghToken = state.settings && state.settings.ghToken;
+    if (!ghRepo || !ghToken || externalDetailBusy || !externalDetailData) return Promise.resolve(false);
+    externalDetailBusy = true;
+    externalDetailData.generatedAt = new Date().toISOString();
+    var headers = { 'Authorization': 'Bearer ' + ghToken, 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json' };
+    var baseApi = 'https://api.github.com/repos/' + ghRepo;
+    var contentStr = externalDetailJson();
+    var entryCount = Object.keys(externalDetailData.entries || {}).length;
+    var latestCommitSha = null;
+    return saveExternalDetailLocal().then(function() {
+      return fetch(baseApi + '/git/ref/heads/' + encodeURIComponent(ghBranch), { headers: headers });
+    }).then(function(refRes) {
+      if (!refRes.ok) throw new Error('ref ' + refRes.status);
+      return refRes.json();
+    }).then(function(refData) {
+      latestCommitSha = refData.object.sha;
+      return fetch(baseApi + '/git/commits/' + latestCommitSha, { headers: headers });
+    }).then(function(r) { return r.json(); }).then(function(commitData) {
+      return fetch(baseApi + '/git/blobs', { method: 'POST', headers: headers, body: JSON.stringify({ content: utf8ToBase64(contentStr), encoding: 'base64' }) }).then(function(r) { if (!r.ok) throw new Error('blob ' + r.status); return r.json(); }).then(function(blobData) {
+        return fetch(baseApi + '/git/trees', { method: 'POST', headers: headers, body: JSON.stringify({ base_tree: commitData.tree.sha, tree: [{ path: EXTERNAL_DETAIL_PATH, mode: '100644', type: 'blob', sha: blobData.sha }] }) });
+      });
+    }).then(function(r) { return r.json(); }).then(function(treeData) {
+      return fetch(baseApi + '/git/commits', { method: 'POST', headers: headers, body: JSON.stringify({ message: 'Update external-detail.json (' + entryCount + ' entries)', tree: treeData.sha, parents: [latestCommitSha] }) });
+    }).then(function(r) { return r.json(); }).then(function(newCommitData) {
+      return fetch(baseApi + '/git/refs/heads/' + encodeURIComponent(ghBranch), { method: 'PATCH', headers: headers, body: JSON.stringify({ sha: newCommitData.sha }) });
+    }).then(function(res) {
+      externalDetailBusy = false;
+      return !!(res && res.ok);
+    }).catch(function(e) {
+      externalDetailBusy = false;
+      return false;
+    });
+  }
+  // 他社CSV取り込み時に、そのファイル分 (companyKey) のサマリーを差し替えて
+  // 現在の自社候補者の電話番号集合で entries を再計算し、保存・共有する。
+  function updateExternalDetailForFile(companyKey, perPhone) {
+    return ensureExternalDetail().then(function() {
+      if (!externalDetailData) externalDetailData = { generatedAt: null, entries: {}, byCompany: {} };
+      if (!externalDetailData.byCompany) externalDetailData.byCompany = {};
+      externalDetailData.byCompany[companyKey] = perPhone || {};
+      var phoneSet = {};
+      (state.rawCandidates || []).concat(state.mergedCandidates || []).forEach(function(c) {
+        var p = normalizePhone(c && c.phone);
+        if (p.length >= 9) phoneSet[p] = true;
+      });
+      externalDetailData.entries = extMergeSummaries(externalDetailData.byCompany, phoneSet);
+      externalDetailData.generatedAt = new Date().toISOString();
+      return saveExternalDetailLocal().then(function() { return pushExternalDetailToGithub(); });
+    }).catch(function() { return false; });
+  }
+  // 把握済条件ボックスに「他社での応募」ブロックを付ける (サマリーがある人だけ)。
+  function attachExternalSummary(el, c) {
+    var phone = normalizePhone(c && c.phone);
+    if (!el || phone.length < 9) return;
+    ensureExternalDetail().then(function(data) {
+      if (!data || !data.entries) return;
+      var s = data.entries[phone];
+      if (!s) return;
+      if (!document.body.contains(el)) return;
+      if (el.querySelector('[data-ext-summary="1"]')) return;
+      var lines = [];
+      var compText = (s.companies || []).filter(function(x) { return !!x; }).join('・');
+      lines.push('🏢 他社での応募（' + s.count + '件' + (compText ? '：' + compText : '') + '）');
+      if (s.latestDate) lines.push('最新応募日：' + s.latestDate);
+      if (s.best) {
+        lines.push('一番進んでる応募：' + (s.best.company ? s.best.company + '／' : '') + (s.best.status || '') + (s.best.applyDate ? '（' + s.best.applyDate + '応募）' : ''));
+        if (s.best.conditions) lines.push('条件：' + s.best.conditions);
+      }
+      var div = document.createElement('div');
+      div.setAttribute('data-ext-summary', '1');
+      div.className = 'mt-2 rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-2 text-[11px] leading-relaxed text-amber-900 whitespace-pre-wrap';
+      div.textContent = lines.join('\n');
+      el.appendChild(div);
+    }).catch(function() {});
   }
 
 
