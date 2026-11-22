@@ -2745,6 +2745,31 @@
       if (rows.length < 2) { alert('CSVデータが正しく読み込めませんでした。'); return; }
 
       var headers = rows[0].map(function(h) { return String(h || '').trim(); });
+
+      // 自社FM取込時のみ、CSV内の会社名を確認して他社データの誤取込を防止する。
+      var ownCompanyColumn = externalHeaderIndex(headers, [/会社名/, /企業名/, /法人名/, /所属会社/, /運営会社/, /応募企業/, /company/]);
+      if (ownCompanyColumn < 0) {
+        alert('自社FMデータとして取り込めません。\nCSV内に会社名を確認できる列がありません。会社名の列があるFM CSVを選択してください。');
+        return;
+      }
+      var foundCompanyNames = [];
+      for (var companyRowIndex = 1; companyRowIndex < rows.length; companyRowIndex++) {
+        var companyValue = String(rows[companyRowIndex][ownCompanyColumn] || '').trim();
+        if (companyValue && foundCompanyNames.indexOf(companyValue) === -1) foundCompanyNames.push(companyValue);
+      }
+      var normalizeCompanyName = function(value) {
+        return String(value || '').normalize('NFKC').toUpperCase().replace(/[\s　・.,，。株式会社（）()]/g, '');
+      };
+      var expectedCompanyToken = 'ビースタイル'.toUpperCase();
+      var wrongCompanyNames = foundCompanyNames.filter(function(value) {
+        return normalizeCompanyName(value).indexOf(expectedCompanyToken) === -1;
+      });
+      if (!foundCompanyNames.length || wrongCompanyNames.length) {
+        var detectedNames = foundCompanyNames.length ? foundCompanyNames.join('、') : '会社名を確認できません';
+        alert('【自社FMデータの会社名確認】\nこのCSVは株式会社ビースタイルのデータではない可能性があります。\n\nCSV内の会社名：' + detectedNames + '\n\n誤取込防止のため、読み込みを中止しました。正しい自社FM CSVを選択してください。');
+        return;
+      }
+
       state.csvHeaders = headers;
 
       var candidates = rows.slice(1).filter(function(r) {
