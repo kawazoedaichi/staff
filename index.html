@@ -2823,6 +2823,84 @@
   // 保存先はIndexedDB（localStorageは容量上限が小さく全社分が入らないため、2026-11-22に移行）。
   var EXTERNAL_APPLICATIONS_KEY = 'bstyle_external_applications_v1';
   var externalStatusAtStart = document.getElementById('externalCsvStatus');
+  // 他社応募データを端末間で揃えるため、GitHub上の共有ファイル external-data.json と同期する。
+  var EXTERNAL_DATA_PATH = 'external-data.json';
+  var externalGeneratedAt = null;
+  var externalSyncBusy = false;
+  function externalDatasetJson() {
+    var files = [];
+    var fileIndex = {};
+    var recs = (state.externalApplications || []).map(function(x) {
+      var f = String(x.sourceFile || '');
+      if (!(f in fileIndex)) { fileIndex[f] = files.length; files.push(f); }
+      return [x.phone, String(x.applyDate), String(x.company || ''), fileIndex[f]];
+    });
+    return JSON.stringify({ generatedAt: externalGeneratedAt || new Date().toISOString(), count: recs.length, files: files, records: recs });
+  }
+  function parseExternalDataset(json) {
+    if (!json || !Array.isArray(json.records)) return null;
+    var files = Array.isArray(json.files) ? json.files : [];
+    var records = json.records.map(function(r) {
+      if (Array.isArray(r)) return { phone: r[0], applyDate: r[1], company: r[2] || '', sourceFile: files[r[3]] || '' };
+      return r;
+    });
+    return { records: records, generatedAt: json.generatedAt || null };
+  }
+  function saveExternalLocal() {
+    return idbSet(EXTERNAL_APPLICATIONS_KEY, { records: state.externalApplications, generatedAt: externalGeneratedAt });
+  }
+  function pushExternalDataToGithub() {
+    var ghRepo = state.settings && state.settings.ghRepo, ghBranch = (state.settings && state.settings.ghBranch) || 'main', ghToken = state.settings && state.settings.ghToken;
+    if (!ghRepo || !ghToken || externalSyncBusy) return Promise.resolve(false);
+    externalSyncBusy = true;
+    externalGeneratedAt = new Date().toISOString();
+    var headers = { 'Authorization': 'Bearer ' + ghToken, 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json' };
+    var baseApi = 'https://api.github.com/repos/' + ghRepo;
+    var contentStr = externalDatasetJson();
+    var latestCommitSha = null;
+    return saveExternalLocal().then(function() {
+      return fetch(baseApi + '/git/ref/heads/' + encodeURIComponent(ghBranch), { headers: headers });
+    }).then(function(refRes) {
+      if (!refRes.ok) throw new Error('ref ' + refRes.status);
+      return refRes.json();
+    }).then(function(refData) {
+      latestCommitSha = refData.object.sha;
+      return fetch(baseApi + '/git/commits/' + latestCommitSha, { headers: headers });
+    }).then(function(r) { return r.json(); }).then(function(commitData) {
+      return fetch(baseApi + '/git/blobs', { method: 'POST', headers: headers, body: JSON.stringify({ content: utf8ToBase64(contentStr), encoding: 'base64' }) }).then(function(r) { if (!r.ok) throw new Error('blob ' + r.status); return r.json(); }).then(function(blobData) {
+        return fetch(baseApi + '/git/trees', { method: 'POST', headers: headers, body: JSON.stringify({ base_tree: commitData.tree.sha, tree: [{ path: EXTERNAL_DATA_PATH, mode: '100644', type: 'blob', sha: blobData.sha }] }) });
+      });
+    }).then(function(r) { return r.json(); }).then(function(treeData) {
+      return fetch(baseApi + '/git/commits', { method: 'POST', headers: headers, body: JSON.stringify({ message: 'Update external-data.json (' + state.externalApplications.length + ' records)', tree: treeData.sha, parents: [latestCommitSha] }) });
+    }).then(function(r) { return r.json(); }).then(function(newCommitData) {
+      return fetch(baseApi + '/git/refs/heads/' + encodeURIComponent(ghBranch), { method: 'PATCH', headers: headers, body: JSON.stringify({ sha: newCommitData.sha }) });
+    }).then(function(res) {
+      externalSyncBusy = false;
+      return !!(res && res.ok);
+    }).catch(function(e) {
+      externalSyncBusy = false;
+      return false;
+    });
+  }
+  function syncExternalApplicationsFromGithub() {
+    fetch(EXTERNAL_DATA_PATH + '?t=' + Date.now(), { cache: 'no-store' }).then(function(res) {
+      if (!res.ok) throw new Error('no remote');
+      return res.json();
+    }).then(function(json) {
+      var remote = parseExternalDataset(json);
+      if (!remote) return;
+      if (!externalGeneratedAt || (remote.generatedAt && remote.generatedAt > externalGeneratedAt)) {
+        externalGeneratedAt = remote.generatedAt;
+        applyExternalApplications(remote.records);
+        saveExternalLocal();
+      } else if (remote.generatedAt && externalGeneratedAt && remote.generatedAt < externalGeneratedAt) {
+        pushExternalDataToGithub();
+      }
+    }).catch(function() {
+      if (state.externalApplications && state.externalApplications.length) pushExternalDataToGithub();
+    });
+  }
+
   function applyExternalApplications(apps) {
     state.externalApplications = Array.isArray(apps) ? apps : [];
     if (externalStatusAtStart && state.externalApplications.length) externalStatusAtStart.textContent = '他社応募データ：保存済み ' + state.externalApplications.length + '件';
@@ -2832,15 +2910,19 @@
     }
   }
   idbGet(EXTERNAL_APPLICATIONS_KEY).then(function(savedExternalApps) {
-    if (Array.isArray(savedExternalApps) && savedExternalApps.length) { applyExternalApplications(savedExternalApps); return; }
+    var savedRecords = null;
+    if (savedExternalApps && !Array.isArray(savedExternalApps) && Array.isArray(savedExternalApps.records)) { savedRecords = savedExternalApps.records; externalGeneratedAt = savedExternalApps.generatedAt || null; }
+    else if (Array.isArray(savedExternalApps)) { savedRecords = savedExternalApps; }
+    if (savedRecords && savedRecords.length) { applyExternalApplications(savedRecords); syncExternalApplicationsFromGithub(); return; }
     // 旧localStorage保存分が残っていればIndexedDBへ移行する
     try {
       var legacyExternalApps = JSON.parse(localStorage.getItem(EXTERNAL_APPLICATIONS_KEY) || '[]');
       if (Array.isArray(legacyExternalApps) && legacyExternalApps.length) {
         applyExternalApplications(legacyExternalApps);
-        idbSet(EXTERNAL_APPLICATIONS_KEY, legacyExternalApps).then(function(migratedOk) { if (migratedOk) { try { localStorage.removeItem(EXTERNAL_APPLICATIONS_KEY); } catch (e) {} } });
+        saveExternalLocal().then(function(migratedOk) { if (migratedOk) { try { localStorage.removeItem(EXTERNAL_APPLICATIONS_KEY); } catch (e) {} } });
       }
     } catch (e) {}
+    syncExternalApplicationsFromGithub();
   });
 
   function externalHeaderIndex(headers, patterns) {
@@ -2892,7 +2974,8 @@
         state.externalApplications = merged;
         state.mergedCandidates.forEach(function(c) { c.assignedTab = classifyCandidateTab(c); });
         updateTabBadges(); renderList();
-        idbSet(EXTERNAL_APPLICATIONS_KEY, merged).then(function(savedOk) {
+        externalGeneratedAt = new Date().toISOString();
+        saveExternalLocal().then(function(savedOk) {
           if (!savedOk) {
             if (statusEl) statusEl.textContent = '他社応募データの保存に失敗しました';
             alert('他社応募データの保存に失敗しました。再度お試しください。');
@@ -2900,6 +2983,7 @@
           }
           if (statusEl) statusEl.textContent = '他社応募データ：' + imported.length + '件追加（保存合計 ' + merged.length + '件）';
           showPopup('他社応募CSVを読み込みました', imported.length + '件を照合データとして追加しました。自社応募一覧には追加していません。');
+          pushExternalDataToGithub();
         });
       } catch (err) {
         if (statusEl) statusEl.textContent = '読込エラー：' + err.message;
@@ -2914,7 +2998,9 @@
   window.clearExternalApplications = function() {
     if (!confirm('保存している他社応募データをすべて削除しますか？')) return;
     state.externalApplications = [];
-    idbSet(EXTERNAL_APPLICATIONS_KEY, null);
+    externalGeneratedAt = new Date().toISOString();
+    saveExternalLocal();
+    pushExternalDataToGithub();
     try { localStorage.removeItem(EXTERNAL_APPLICATIONS_KEY); } catch (e) {}
     var statusEl = document.getElementById('externalCsvStatus');
     if (statusEl) statusEl.textContent = '他社応募データ：未読込';
