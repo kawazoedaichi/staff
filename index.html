@@ -87,36 +87,14 @@
       <span id="mobileDataBadge" class="w-full text-[10px] text-orange-400 pt-0.5"></span>
     </div>
 
-    <!-- 横スクロールタブ（スリム化） -->
+    <!-- 横スクロールタブ：6タブ統一 -->
     <nav class="max-w-7xl mx-auto px-2 sm:px-6 flex overflow-x-auto scrollbar-hide gap-1 sm:gap-4 text-xs sm:text-sm">
-      <button type="button" onclick="switchTab('within3days')" id="tab-within3days" class="tab-active py-2 px-2 whitespace-nowrap flex items-center gap-1 transition">
-        <span>3日以内 未FIX</span>
-        <span id="badge-within3days" class="px-1.5 py-0.2 text-[10px] rounded-full bg-orange-500 text-zinc-950 font-black">0</span>
-      </button>
-      <button type="button" onclick="switchTab('unfixed')" id="tab-unfixed" class="tab-inactive py-2 px-2 whitespace-nowrap flex items-center gap-1 transition">
-        <span>未FIX人材</span>
-        <span id="badge-unfixed" class="px-1.5 py-0.2 text-[10px] rounded-full bg-zinc-800 text-zinc-300 font-bold">0</span>
-      </button>
-      <button type="button" onclick="switchTab('hot')" id="tab-hot" class="tab-inactive py-2 px-2 whitespace-nowrap flex items-center gap-1 transition">
-        <span>激熱掘起</span>
-        <span id="badge-hot" class="px-1.5 py-0.2 text-[10px] rounded-full bg-zinc-800 text-zinc-300 font-bold">0</span>
-      </button>
-      <button type="button" onclick="switchTab('future')" id="tab-future" class="tab-inactive py-2 px-2 whitespace-nowrap flex items-center gap-1 transition">
-        <span>未来人材</span>
-        <span id="badge-future" class="px-1.5 py-0.2 text-[10px] rounded-full bg-zinc-800 text-zinc-300 font-bold">0</span>
-      </button>
-      <button type="button" onclick="switchTab('contactWait')" id="tab-contactWait" class="tab-inactive py-2 px-2 whitespace-nowrap flex items-center gap-1 transition">
-        <span>接触待ち</span>
-        <span id="badge-contactWait" class="px-1.5 py-0.2 text-[10px] rounded-full bg-zinc-800 text-zinc-300 font-bold">0</span>
-      </button>
-      <button type="button" onclick="switchTab('contactWait7')" id="tab-contactWait7" class="tab-inactive py-2 px-2 whitespace-nowrap flex items-center gap-1 transition">
-        <span>接触待ち（7日以内）</span>
-        <span id="badge-contactWait7" class="px-1.5 py-0.2 text-[10px] rounded-full bg-zinc-800 text-zinc-300 font-bold">0</span>
-      </button>
-      <button type="button" onclick="switchTab('contactWait45')" id="tab-contactWait45" class="tab-inactive py-2 px-2 whitespace-nowrap flex items-center gap-1 transition">
-        <span>接触待ち（45日以上）</span>
-        <span id="badge-contactWait45" class="px-1.5 py-0.2 text-[10px] rounded-full bg-zinc-800 text-zinc-300 font-bold">0</span>
-      </button>
+      <button type="button" onclick="switchTab('contactWait7')" id="tab-contactWait7" class="tab-active py-2 px-2 whitespace-nowrap flex items-center gap-1 transition"><span>7日以内応募・未接触</span><span id="badge-contactWait7" class="px-1.5 py-0.2 text-[10px] rounded-full bg-orange-500 text-zinc-950 font-black">0</span></button>
+      <button type="button" onclick="switchTab('within3days')" id="tab-within3days" class="tab-inactive py-2 px-2 whitespace-nowrap flex items-center gap-1 transition"><span>3日以内・未FIX</span><span id="badge-within3days" class="px-1.5 py-0.2 text-[10px] rounded-full bg-zinc-800 text-zinc-300 font-bold">0</span></button>
+      <button type="button" onclick="switchTab('unfixed')" id="tab-unfixed" class="tab-inactive py-2 px-2 whitespace-nowrap flex items-center gap-1 transition"><span>未FIX人材</span><span id="badge-unfixed" class="px-1.5 py-0.2 text-[10px] rounded-full bg-zinc-800 text-zinc-300 font-bold">0</span></button>
+      <button type="button" onclick="switchTab('externalHot')" id="tab-externalHot" class="tab-inactive py-2 px-2 whitespace-nowrap flex items-center gap-1 transition"><span>激アツ再アプローチ</span><span id="badge-externalHot" class="px-1.5 py-0.2 text-[10px] rounded-full bg-zinc-800 text-zinc-300 font-bold">0</span></button>
+      <button type="button" onclick="switchTab('contactWaitLong')" id="tab-contactWaitLong" class="tab-inactive py-2 px-2 whitespace-nowrap flex items-center gap-1 transition"><span>未接触人材</span><span id="badge-contactWaitLong" class="px-1.5 py-0.2 text-[10px] rounded-full bg-zinc-800 text-zinc-300 font-bold">0</span></button>
+      <button type="button" onclick="switchTab('hot')" id="tab-hot" class="tab-inactive py-2 px-2 whitespace-nowrap flex items-center gap-1 transition"><span>掘り起こし</span><span id="badge-hot" class="px-1.5 py-0.2 text-[10px] rounded-full bg-zinc-800 text-zinc-300 font-bold">0</span></button>
     </nav>
   </header>
 
@@ -296,6 +274,17 @@
           <p class="text-gray-500">またはここにCSVファイルをドラッグ＆ドロップ（UTF-8 / Shift-JIS自動判定）</p>
           <input type="file" id="csvFileInput" accept=".csv" class="hidden" onchange="handleCsvFileSelect(event)" />
         </div>
+
+        <div class="mt-3 rounded-xl border border-orange-200 bg-orange-50 p-3 space-y-2">
+          <div class="font-black text-sm text-orange-900">他社FMデータ（激アツ再アプローチ判定用）</div>
+          <p class="text-[11px] text-orange-900">他社のFM CSVを読み込み、電話番号で自社応募者と照合します。他社のアテンドOK実績と自社の状況を比較して判定します。他社だけの応募者は自社一覧に追加しません。</p>
+          <label class="flex items-center justify-center gap-2 rounded-lg border-2 border-dashed border-orange-300 bg-white p-3 cursor-pointer text-xs font-bold text-orange-900">
+            他社FM CSVを追加・更新する
+            <input type="file" id="externalCsvFileInput" accept=".csv,text/csv" class="hidden" onchange="handleExternalCsvFileSelect(event)" />
+          </label>
+          <div id="externalCsvStatus" class="text-[11px] text-gray-700">他社応募データ：未読込</div>
+          <button type="button" onclick="clearExternalApplications()" class="text-[11px] underline text-gray-600">他社応募データを削除</button>
+        </div>
         <label class="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 font-bold cursor-pointer">
           <input type="checkbox" id="autoPushOnCsvCheck" checked class="accent-emerald-600 w-4 h-4" />
           <span>🚀 CSV読込と同時に自動で GitHub（data.js）へ反映してスマホと即同期する</span>
@@ -332,7 +321,7 @@
               ① 今の表示条件を即DL
             </button>
             <button type="button" onclick="quickPresetExport('allTabs', false)" class="py-2.5 px-3 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-orange-400 font-black shadow-sm transition text-center">
-              ② 全5タブ一括（未対応）即DL
+              ② 全6タブ一括（未対応）即DL
             </button>
             <button type="button" onclick="quickPresetExport('current', true)" class="py-2.5 px-3 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-black shadow-sm transition text-center">
               📱 SMS配信用（TEL＋文面のみ）
@@ -353,7 +342,7 @@
             </label>
             <label class="border border-gray-200 rounded-xl p-3 cursor-pointer hover:border-orange-500 flex items-start gap-2">
               <input type="radio" name="exportScope" value="allTabs" onchange="updateExportPreview()" class="mt-0.5 accent-orange-500" />
-              <div><p class="font-bold text-gray-900">③ 全5タブ一括出力</p><p class="text-[11px] text-gray-500">全追客対象をまとめて1ファイル化</p></div>
+              <div><p class="font-bold text-gray-900">③ 全6タブ一括出力</p><p class="text-[11px] text-gray-500">全追客対象をまとめて1ファイル化</p></div>
             </label>
           </div>
           <div class="flex flex-wrap items-center gap-4 bg-gray-50 p-3 rounded-xl border border-gray-200">
@@ -584,11 +573,12 @@
   var PAGE_SIZE = 50;
 
   var state = {
-    currentTab: 'within3days',
+    currentTab: 'contactWait7',
     currentArea: 'kanto',
     displayLimit: PAGE_SIZE,
     rawCandidates: [],
     mergedCandidates: [],
+    externalApplications: [],
     activePhonesSet: new Set(),
     activePersonsList: [],
     autoExcludedCount: 0,
@@ -1448,37 +1438,44 @@
     var attendD = parseDateSafe(c.attendDate || c.contactDate);
     var applyD = parseDateSafe(c.applyDate);
     var startD = parseDateSafe(c.startDate);
-
     var daysFromTodayToStart = null;
     if (startD) {
       var startDayOnly = new Date(startD.getFullYear(), startD.getMonth(), startD.getDate());
-      daysFromTodayToStart = Math.round((startDayOnly.getTime() - todayStart.getTime()) / (1000 * 60 * 60 * 24));
-      if (daysFromTodayToStart >= 0) {
-        c.daysUntilStart = daysFromTodayToStart;
-      }
+      daysFromTodayToStart = Math.round((startDayOnly.getTime() - todayStart.getTime()) / 86400000);
+      if (daysFromTodayToStart >= 0) c.daysUntilStart = daysFromTodayToStart;
     }
 
-    if (isContactWaitRecord(c)) return 'contactWait';
+    var isUncontacted = isContactWaitRecord(c);
+    var applyAge = getApplyAgeDays(c);
+    var isFixWait = finalSt.indexOf('FIX待ち') !== -1;
 
-    var isFixWait = (finalSt.indexOf('FIX待ち') !== -1);
+    // 激アツ再アプローチ：
+    // 自社が未接触（7日以内・8日目以降の両タブ共通）なら、他社のアテンドOK実績は古くても対象。
+    // 自社がアテンドNGなら、他社のアテンドOK実績が自社のアテンド日より後の場合のみ対象。
+    if (isOwnAttendNg(c)) {
+      if (hasExternalAttendOk(c, true)) return 'externalHot';
+    } else if (isUncontacted && hasExternalAttendOk(c, false)) {
+      return 'externalHot';
+    }
+
+    if (isUncontacted) {
+      if (applyAge !== null && applyAge >= 0 && applyAge <= 7) return 'contactWait7';
+      if (applyAge !== null && applyAge >= 8) return 'contactWaitLong';
+      return 'excluded_other';
+    }
+
     var isStartUnder30OrEmpty = (daysFromTodayToStart === null || daysFromTodayToStart <= 29);
-    var isStart30OrMore = (daysFromTodayToStart !== null && daysFromTodayToStart >= 30);
-
     if (isFixWait && isStartUnder30OrEmpty && attendD) {
-      var diffHours = (now.getTime() - attendD.getTime()) / (1000 * 60 * 60);
+      var diffHours = (now.getTime() - attendD.getTime()) / 3600000;
       if (diffHours >= 12 && diffHours <= 72) return 'within3days';
       if (diffHours >= 73 && diffHours <= 240) return 'unfixed';
     }
 
+    // 旧「激熱掘起」の抽出条件は「掘り起こし」として維持。
     if (isFixWait && isStartUnder30OrEmpty && applyD) {
-      var applyDaysForHot = (now.getTime() - applyD.getTime()) / (1000 * 60 * 60 * 24);
-      if (applyDaysForHot >= 60) return 'hot';
+      var applyDaysForRevisit = (now.getTime() - applyD.getTime()) / 86400000;
+      if (applyDaysForRevisit >= 60) return 'hot';
     }
-
-    if (isStart30OrMore || finalSt.indexOf('未来') !== -1 || st.indexOf('未来') !== -1) {
-      return 'future';
-    }
-
     return 'excluded_other';
   }
 
@@ -1880,7 +1877,7 @@
       ].join(LF);
     }
 
-    if (tab === 'contactWait') {
+    if (tab === 'contactWait' || tab === 'contactWaitLong') {
       var contactJobLines = jobs.dispatch.slice(0, 2).map(function(j, idx) {
         var cat = (j.facilityCat && j.facilityCat !== 'その他') ? '【' + j.facilityCat + '】' : '';
         return '【候補' + (idx + 1) + '】' + cat + j.name + LF + '・住所：' + (j.address || '詳細はお問い合わせください') + '（ご自宅から約' + j.distKm + 'km）' + LF + '・シフト：' + (j.shifts || '日勤など');
@@ -2164,15 +2161,11 @@
       if (targetArea === 'kanto' && !isKantoCandidate(c)) return false;
 
       if (targetTab) {
-        if (['contactWait7', 'contactWait45'].indexOf(targetTab) !== -1) {
-          if (c.assignedTab !== 'contactWait') return false;
-        } else if (c.assignedTab !== targetTab) return false;
-      } else {
-        if (['within3days', 'unfixed', 'hot', 'future', 'contactWait'].indexOf(c.assignedTab) === -1) return false;
-      }
+        if (c.assignedTab !== targetTab) return false;
+      } else if (['contactWait7', 'within3days', 'unfixed', 'externalHot', 'contactWaitLong', 'hot'].indexOf(c.assignedTab) === -1) return false;
       var globalRoleGroup = getRoleGroup(c);
       if ((globalRoleGroup === 'care' && !roleCare) || (globalRoleGroup === 'nurse' && !roleNurse) || (globalRoleGroup === 'other' && !roleOther)) return false;
-      if (['contactWait', 'contactWait7', 'contactWait45'].indexOf(targetTab) !== -1) {
+      if (['contactWait7', 'contactWaitLong'].indexOf(targetTab) !== -1) {
         var age = getCandidateAge(c);
         if (!c.phone || !normalizePhone(c.phone)) return false;
         if (!Number.isFinite(age) || age > 65) return false;
@@ -2180,8 +2173,7 @@
         if (wValue.indexOf('適応条件') !== -1) return false;
         var applyAgeDays = getApplyAgeDays(c);
         if (targetTab === 'contactWait7' && (applyAgeDays === null || applyAgeDays < 0 || applyAgeDays > 7)) return false;
-        if (targetTab === 'contactWait45' && (applyAgeDays === null || applyAgeDays < 45)) return false;
-        if (targetTab === 'contactWait' && hideMidRange && applyAgeDays !== null && applyAgeDays >= 8 && applyAgeDays <= 44) return false;
+        if (targetTab === 'contactWaitLong' && (applyAgeDays === null || applyAgeDays < 8)) return false;
       }
 
       var act = getActionState(c);
@@ -2203,7 +2195,7 @@
   }
 
   function updateTabBadges() {
-    var tabs = ['within3days', 'unfixed', 'hot', 'future', 'contactWait', 'contactWait7', 'contactWait45'];
+    var tabs = ['contactWait7', 'within3days', 'unfixed', 'externalHot', 'contactWaitLong', 'hot'];
     tabs.forEach(function(t) {
       var list = getFilteredCandidates({ tab: t, unactedOnly: true, ignoreFilters: true });
       var badge = document.getElementById('badge-' + t);
@@ -2248,7 +2240,7 @@
   window.switchTab = function(tabId) {
     state.currentTab = tabId;
     state.displayLimit = PAGE_SIZE;
-    ['within3days', 'unfixed', 'hot', 'future', 'contactWait', 'contactWait7', 'contactWait45'].forEach(function(t) {
+    ['contactWait7', 'within3days', 'unfixed', 'externalHot', 'contactWaitLong', 'hot'].forEach(function(t) {
       var btn = document.getElementById('tab-' + t);
       var badge = document.getElementById('badge-' + t);
       if (t === tabId) {
@@ -2281,27 +2273,14 @@
 
   function updateGuideText() {
     var map = {
-      within3days: {
-        title: '【3日以内 未FIX】の表示ルールを見る',
-        desc: '①最優先判定：CSVのB列（最終ステータス）＝「FIX待ち」＋ 就業開始希望日が「本日から29日以内（または空欄・即日）」＋ アテンド・接触から12時間〜72時間以内の対象者のみを抽出します。'
-      },
-      unfixed: {
-        title: '【未FIX人材】の表示ルールを見る',
-        desc: '②判定：CSVのB列（最終ステータス）＝「FIX待ち」＋ 就業開始希望日が「本日から29日以内（または空欄・即日）」＋ アテンド・接触から73時間〜10日以内の対象者のみを抽出します。'
-      },
-      hot: {
-        title: '【激熱掘起】の表示ルールを見る',
-        desc: '③判定：CSVのB列（最終ステータス）＝「FIX待ち」＋ 就業開始希望日が「本日から29日以内（または空欄・即日）」＋ 応募日から2カ月（60日）以上経過した対象者を抽出します。'
-      },
-      future: {
-        title: '【未来人材】の表示ルールを見る',
-        desc: '④判定：就業開始希望日が本日から30日以上先の対象者（FIX待ち含む）、またはB列・ステータスが未来人材の対象者を抽出します。'
-      },
-      contactWait: { title: '【接触待ち】の表示ルール', desc: '接触待ち対象者を応募日で分けずに表示します。初期状態では応募日8〜44日経過の方を非表示にできます。' },
-      contactWait7: { title: '【接触待ち（7日以内）】の表示ルール', desc: '応募日から7日以内の接触待ち対象者を表示します。SMSは確認事項9点の専用文面です。' },
-      contactWait45: { title: '【接触待ち（45日以上）】の表示ルール', desc: '応募日から45日以上経過した接触待ち対象者を表示します。' }
+      contactWait7: { title: '【7日以内応募・未接触】の表示ルール', desc: '自社応募があり、接触ステータスが未接触対象で、応募日から7日以内の方を表示します。' },
+      within3days: { title: '【3日以内・未FIX】の表示ルール', desc: '最終ステータスがFIX待ち、就業開始希望日が29日以内または空欄で、アテンド・接触から12〜72時間の方を表示します。' },
+      unfixed: { title: '【未FIX人材】の表示ルール', desc: '最終ステータスがFIX待ち、就業開始希望日が29日以内または空欄で、アテンド・接触から73〜240時間の方を表示します。' },
+      externalHot: { title: '【激アツ再アプローチ】の表示ルール', desc: '電話番号で自社・他社FMを照合。自社が未接触（7日以内・8日目以降）の場合は、他社に過去のアテンドOK実績があれば対象。自社がアテンドNGの場合は、他社のアテンドOK日が自社のアテンドNG日より後なら対象。他社だけの人は表示しません。' },
+      contactWaitLong: { title: '【未接触人材】の表示ルール', desc: '自社応募があり、接触ステータスが未接触対象で、応募日から8日目以降の方を表示します。' },
+      hot: { title: '【掘り起こし】の表示ルール', desc: '従来の「激熱掘起」タブで使用していた抽出条件を引き継ぎ、FIX待ちかつ応募から60日以上経過した方を表示します。' }
     };
-    var info = map[state.currentTab] || map.within3days;
+    var info = map[state.currentTab] || map.contactWait7;
     document.getElementById('guideTitle').textContent = info.title;
     document.getElementById('guideDesc').textContent = info.desc;
   }
@@ -2667,7 +2646,7 @@
 
     setMsgMode(defaultMode, true);
 
-    var tabLabelMap = { within3days: '3日以内未FIX', unfixed: '未FIX人材', hot: '激熱掘起', future: '未来人材', contactWait: '接触待ち', contactWait7: '接触待ち7日以内', contactWait45: '接触待ち45日以上' };
+    var tabLabelMap = { contactWait7: '7日以内応募・未接触', within3days: '3日以内・未FIX', unfixed: '未FIX人材', externalHot: '激アツ再アプローチ', contactWaitLong: '未接触人材', hot: '掘り起こし' };
     var tabBadgeEl = document.getElementById('modalTabBadge');
     if (tabBadgeEl) tabBadgeEl.textContent = tabLabelMap[c.assignedTab] || '追客';
     document.getElementById('modalCandidateName').textContent = c.name + '（' + (c.branch || '-') + '）';
@@ -2839,6 +2818,129 @@
     reader.readAsArrayBuffer(file);
   }
 
+
+  // 他社応募データは自社応募データと完全に分離して保存する。
+  var EXTERNAL_APPLICATIONS_KEY = 'bstyle_external_applications_v1';
+  try {
+    var savedExternalApps = JSON.parse(localStorage.getItem(EXTERNAL_APPLICATIONS_KEY) || '[]');
+    if (Array.isArray(savedExternalApps)) state.externalApplications = savedExternalApps;
+  } catch (e) { state.externalApplications = []; }
+  var externalStatusAtStart = document.getElementById('externalCsvStatus');
+  if (externalStatusAtStart && state.externalApplications.length) externalStatusAtStart.textContent = '他社応募データ：保存済み ' + state.externalApplications.length + '件';
+
+  function externalHeaderIndex(headers, patterns) {
+    for (var i = 0; i < headers.length; i++) {
+      var h = String(headers[i] || '').normalize('NFKC').toLowerCase().replace(/[\s　_\-]/g, '');
+      for (var j = 0; j < patterns.length; j++) if (patterns[j].test(h)) return i;
+    }
+    return -1;
+  }
+
+  window.handleExternalCsvFileSelect = function(event) {
+    var file = event && event.target && event.target.files && event.target.files[0];
+    if (!file) return;
+    var statusEl = document.getElementById('externalCsvStatus');
+    if (statusEl) statusEl.textContent = '他社応募CSVを読み込み中...';
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        var buffer = e.target.result;
+        var bytes = new Uint8Array(buffer);
+        var decoder;
+        if (bytes.length >= 3 && bytes[0] === 0xEF && bytes[1] === 0xBB && bytes[2] === 0xBF) decoder = new TextDecoder('utf-8');
+        else {
+          try { decoder = new TextDecoder('shift-jis'); } catch (err) { decoder = new TextDecoder('utf-8'); }
+        }
+        var csvText = decoder.decode(bytes).replace(/^\uFEFF/, '');
+        var rows = parseCsvRows(csvText);
+        if (rows.length < 2) throw new Error('データ行がありません');
+        var headers = rows[0].map(function(v) { return String(v || '').trim(); });
+        var phoneIdx = externalHeaderIndex(headers, [/電話番号/, /^tel$/, /携帯電話/, /mobile/, /phone/, /電話$/]);
+        var dateIdx = externalHeaderIndex(headers, [/^応募日$/, /応募日時/, /応募年月日/]);
+        var attendStatusIdx = externalHeaderIndex(headers, [/^アテンドステータス$/, /アテンド.*ステータス/]);
+        var attendDateIdx = externalHeaderIndex(headers, [/^アテンド日$/, /アテンド日時/, /面談日/]);
+        var statusIdx = externalHeaderIndex(headers, [/^ステータス$/, /^最終ステータス$/]);
+        var companyIdx = externalHeaderIndex(headers, [/会社名/, /企業名/, /応募元/, /媒体名/, /company/, /source/]);
+        if (phoneIdx < 0 || attendStatusIdx < 0 || attendDateIdx < 0) {
+          throw new Error('FM CSVの「電話番号」「アテンドステータス」「アテンド日」列が必要です。FMから出力したCSVを選択してください。');
+        }
+        var imported = [];
+        for (var r = 1; r < rows.length; r++) {
+          var cells = rows[r];
+          var phone = normalizePhone(cells[phoneIdx] || '');
+          var appliedAt = dateIdx >= 0 ? String(cells[dateIdx] || '').trim() : '';
+          var attendStatus = String(cells[attendStatusIdx] || '').trim().toUpperCase();
+          var attendDate = String(cells[attendDateIdx] || '').trim();
+          var overallStatus = statusIdx >= 0 ? String(cells[statusIdx] || '').trim() : '';
+          if (phone.length < 9 || attendStatus !== 'OK' || !parseDateSafe(attendDate)) continue;
+          imported.push({ phone: phone, applyDate: appliedAt, attendStatus: attendStatus, attendDate: attendDate, status: overallStatus,
+            company: companyIdx >= 0 ? String(cells[companyIdx] || '').trim() : '', sourceFile: file.name });
+        }
+        if (!imported.length) throw new Error('アテンドOKかつアテンド日がある有効なデータがありません。');
+        var merged = Array.isArray(state.externalApplications) ? state.externalApplications.slice() : [];
+        var seen = new Set(merged.map(function(x) { return x.phone + '|' + String(x.applyDate) + '|' + String(x.company || ''); }));
+        imported.forEach(function(x) {
+          var k = x.phone + '|' + String(x.applyDate) + '|' + String(x.company || '');
+          if (!seen.has(k)) { seen.add(k); merged.push(x); }
+        });
+        state.externalApplications = merged;
+        state.mergedCandidates.forEach(function(c) { c.assignedTab = classifyCandidateTab(c); });
+        localStorage.setItem(EXTERNAL_APPLICATIONS_KEY, JSON.stringify(merged));
+        if (statusEl) statusEl.textContent = '他社応募データ：' + imported.length + '件追加（保存合計 ' + merged.length + '件）';
+        updateTabBadges(); renderList();
+        showPopup('他社応募CSVを読み込みました', imported.length + '件を照合データとして追加しました。自社応募一覧には追加していません。');
+      } catch (err) {
+        if (statusEl) statusEl.textContent = '読込エラー：' + err.message;
+        alert('他社応募CSVを読み込めませんでした。\n' + err.message);
+      }
+      event.target.value = '';
+    };
+    reader.onerror = function() { if (statusEl) statusEl.textContent = 'CSV読込に失敗しました'; };
+    reader.readAsArrayBuffer(file);
+  };
+
+  window.clearExternalApplications = function() {
+    if (!confirm('保存している他社応募データをすべて削除しますか？')) return;
+    state.externalApplications = [];
+    try { localStorage.removeItem(EXTERNAL_APPLICATIONS_KEY); } catch (e) {}
+    var statusEl = document.getElementById('externalCsvStatus');
+    if (statusEl) statusEl.textContent = '他社応募データ：未読込';
+    updateTabBadges(); renderList();
+  };
+
+  function getOwnAttendStatus(candidate) {
+    if (!candidate || !candidate.rawRow) return '';
+    var keys = Object.keys(candidate.rawRow);
+    var key = keys.find(function(k) {
+      var n = String(k).normalize('NFKC').replace(/[\s　]/g, '');
+      return n === 'アテンドステータス';
+    });
+    return key ? String(candidate.rawRow[key] || '').trim().toUpperCase() : '';
+  }
+
+  function isOwnAttendNg(candidate) {
+    return getOwnAttendStatus(candidate) === 'NG';
+  }
+
+  function hasExternalAttendOk(candidate, mustBeLaterThanOwn) {
+    var phone = normalizePhone(candidate && candidate.phone);
+    if (phone.length < 9) return false;
+    var ownAttend = parseDateSafe(candidate && (candidate.attendDate || candidate.contactDate));
+    var ownApply = parseDateSafe(candidate && candidate.applyDate);
+    var ownReference = ownAttend || ownApply;
+    var apps = state.externalApplications || [];
+    for (var i = 0; i < apps.length; i++) {
+      if (normalizePhone(apps[i].phone) !== phone) continue;
+      if (String(apps[i].attendStatus || '').toUpperCase() !== 'OK') continue;
+      var externalAttend = parseDateSafe(apps[i].attendDate);
+      if (!externalAttend) continue;
+      if (!mustBeLaterThanOwn) return true;
+      if (ownReference && externalAttend.getTime() > ownReference.getTime()) return true;
+    }
+    return false;
+  }
+
+
   function parseCsvRows(text) {
     var rows = [], row = [], cell = '', inQuotes = false;
     for (var i = 0; i < text.length; i++) {
@@ -2896,7 +2998,7 @@
     var list = getExportTargetList();
     document.getElementById('exportTargetCountBadge').textContent = '対象: ' + list.length + '件';
     var tbody = document.getElementById('exportPreviewBody');
-    var tabNames = { within3days: '3日以内未FIX', unfixed: '未FIX人材', hot: '激熱掘起', future: '未来人材', contactWait: '接触待ち', contactWait7: '接触待ち（7日以内）', contactWait45: '接触待ち（45日以上）' };
+    var tabNames = { contactWait7: '7日以内応募・未接触', within3days: '3日以内・未FIX', unfixed: '未FIX人材', externalHot: '激アツ再アプローチ', contactWaitLong: '未接触人材', hot: '掘り起こし' };
     tbody.innerHTML = list.slice(0, 3).map(function(c) {
       var sal = extractSafeSalutation(c);
       var act = getActionState(c);
@@ -2915,7 +3017,7 @@
       ? getFilteredCandidates({ tab: '', unactedOnly: true, ignoreFilters: true })
       : getFilteredCandidates();
     closeModal('exportModal');
-    downloadCsvFromList(list, false, smsSlimOnly, scope === 'allTabs' ? '全5タブ一括' : null);
+    downloadCsvFromList(list, false, smsSlimOnly, scope === 'allTabs' ? '全6タブ一括' : null);
   };
 
   window.executeCsvExport = function() {
@@ -2929,7 +3031,7 @@
 
   function downloadCsvFromList(list, includeRaw, smsSlimOnly, customLabel) {
     if (!list || list.length === 0) { alert('出力対象のデータが0件です。'); return; }
-    var tabNames = { within3days: '3日以内未FIX', unfixed: '未FIX人材', hot: '激熱掘起', future: '未来人材', contactWait: '接触待ち', contactWait7: '接触待ち（7日以内）', contactWait45: '接触待ち（45日以上）' };
+    var tabNames = { contactWait7: '7日以内応募・未接触', within3days: '3日以内・未FIX', unfixed: '未FIX人材', externalHot: '激アツ再アプローチ', contactWaitLong: '未接触人材', hot: '掘り起こし' };
     var dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
     var areaLabel = state.currentArea === 'kanto' ? '関東' : '全エリア';
     var tabLabel = customLabel || tabNames[state.currentTab] || '追客';
