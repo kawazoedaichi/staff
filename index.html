@@ -2783,7 +2783,7 @@
       contactWait7: { title: '【7日以内応募・未接触】の表示ルール', desc: '自社応募があり、接触ステータスが未接触対象で、応募日から7日以内の方を表示します。' },
       within3days: { title: '【3日以内・未FIX】の表示ルール', desc: '最終ステータスがFIX待ち、就業開始希望日が29日以内または空欄で、アテンド・接触から12〜72時間の方を表示します。' },
       unfixed: { title: '【未FIX人材】の表示ルール', desc: '最終ステータスがFIX待ち、就業開始希望日が29日以内または空欄で、アテンド・接触から73〜240時間の方を表示します。' },
-      externalHot: { title: '【激アツ再アプローチ】の表示ルール', desc: '自社応募が存在し、自社応募から10日以上経過していて、自社側が掘り起こし対象ステータス（FIX待ち・FIX除外・FIX辞退・辞退・不通・他社決定）または未接触で、他社応募CSVにも電話番号が一致する直近7日以内の応募がある方だけを表示します。他社応募だけの方は自社一覧に追加しません。' },
+      externalHot: { title: '【激アツ再アプローチ】の表示ルール', desc: '自社応募が存在し、自社応募から10日以上経過していて、自社側が掘り起こし対象ステータス（FIX待ち・FIX除外・FIX辞退・辞退・不通・他社決定）または未接触で、他社応募CSVにも電話番号が一致する直近7日以内の応募があり、その応募の就業開始時期が空白または45日以内の方だけを表示します。他社応募だけの方は自社一覧に追加しません。' },
       contactWaitLong: { title: '【未接触人材】の表示ルール', desc: '自社応募があり、接触ステータスが未接触対象で、応募日から8日目以降の方を表示します。' },
       hot: { title: '【掘り起こし】の表示ルール', desc: 'FIX待ち・FIX除外・FIX辞退・辞退・不通・他社決定（自社で内定したことがない方）で、応募から60日以上経過した方を表示します（誘致・アテンドでNGの方、NG理由に懸念がある方、稼働・内定等が決まった方は除きます）。' }
     };
@@ -3409,7 +3409,7 @@
     var recs = (state.externalApplications || []).map(function(x) {
       var f = String(x.sourceFile || '');
       if (!(f in fileIndex)) { fileIndex[f] = files.length; files.push(f); }
-      return [x.phone, String(x.applyDate), String(x.company || ''), fileIndex[f]];
+      return [x.phone, String(x.applyDate), String(x.company || ''), fileIndex[f], String(x.startText || '')];
     });
     return JSON.stringify({ generatedAt: externalGeneratedAt || new Date().toISOString(), count: recs.length, files: files, records: recs });
   }
@@ -3417,7 +3417,7 @@
     if (!json || !Array.isArray(json.records)) return null;
     var files = Array.isArray(json.files) ? json.files : [];
     var records = json.records.map(function(r) {
-      if (Array.isArray(r)) return { phone: r[0], applyDate: r[1], company: r[2] || '', sourceFile: files[r[3]] || '' };
+      if (Array.isArray(r)) return { phone: r[0], applyDate: r[1], company: r[2] || '', sourceFile: files[r[3]] || '', startText: r[4] || '' };
       return r;
     });
     return { records: records, generatedAt: json.generatedAt || null };
@@ -3534,6 +3534,7 @@
         var phoneIdx = externalHeaderIndex(headers, [/電話番号/, /^tel$/, /携帯電話/, /mobile/, /phone/, /電話$/]);
         var dateIdx = externalHeaderIndex(headers, [/応募日時/, /^応募日$/, /応募年月日/, /申込日/, /エントリー日/, /applicationdate/, /appliedat/, /^date$/]);
         var companyIdx = externalHeaderIndex(headers, [/会社名/, /企業名/, /応募元/, /媒体名/, /company/, /source/]);
+        var startIdx = externalHeaderIndex(headers, [/就業可能時期/]);
         var statusIdx = externalHeaderIndex(headers, [/^ステータス$/]);
         if (phoneIdx < 0 || dateIdx < 0) throw new Error('電話番号・応募日（応募日時）の列が見つかりません。共通CSVの見出しを確認してください。');
         var imported = [];
@@ -3551,7 +3552,7 @@
           if (phone.length < 9 || !parseDateSafe(appliedAt)) continue;
           var rowCompany = companyIdx >= 0 ? String(cells[companyIdx] || '').trim() : '';
           if (!detectedCompany && rowCompany) detectedCompany = rowCompany;
-          imported.push({ phone: phone, applyDate: appliedAt, company: rowCompany, sourceFile: file.name });
+          imported.push({ phone: phone, applyDate: appliedAt, company: rowCompany, sourceFile: file.name, startText: startIdx >= 0 ? String(cells[startIdx] || '').trim() : '' });
           if (summaryPhones[phone]) {
             var condVals = extCondValuesFromRow(headers, cells);
             var shiftFlags = extShiftFlagsFromValues(condVals);
@@ -3618,9 +3619,13 @@
   // 従来 hasRecentExternalApplication は他社全件 (12万件超) を毎回線形スキャンし、
   // 起動時処理の大半を占めていた。state.externalApplications は代入でのみ
   // 更新されるため、配列参照 (または日付) が変わったときだけ再構築する。
-  // インデックス値 = その電話番号の応募のうち経過日数0以上の最小値。
-  // 元の判定「経過日数が 0〜7 の応募が1件でもある」と等価 (未来日付の
-  // 負の日数を最小値計算から除くことで、負値に埋もれて取りこぼさない)。
+  // インデックス値 = { d, t, s }。
+  //   d = その電話番号の応募のうち経過日数0以上の最小値。
+  //       元の判定「経過日数が 0〜7 の応募が1件でもある」と等価 (未来日付の
+  //       負の日数を最小値計算から除くことで、負値に埋もれて取りこぼさない)。
+  //   t/s = 直近7日以内の応募のうち最新の1件の応募日時 (ms) と、その応募の
+  //       就業開始時期 (「即日か就業可能時期」列の生文字列 startText)。
+  //       激アツの開始時期ゲート (LIGHTENING.md §17) で使う。
   var externalPhoneIndex = null;
   var externalPhoneIndexSrc = null;
   var externalPhoneIndexDay = '';
@@ -3637,7 +3642,13 @@
       var days = getApplyAgeDays({ applyDate: rec.applyDate });
       if (days === null || days < 0) continue;
       var prev = idx.get(ph);
-      if (prev === undefined || days < prev) idx.set(ph, days);
+      if (prev === undefined) { prev = { d: days, t: null, s: '' }; idx.set(ph, prev); }
+      else if (days < prev.d) prev.d = days;
+      if (days <= 7) {
+        var tsDate = parseDateSafe(rec.applyDate);
+        var tsMs = tsDate ? tsDate.getTime() : null;
+        if (tsMs !== null && (prev.t === null || tsMs > prev.t)) { prev.t = tsMs; prev.s = String(rec.startText || ''); }
+      }
     }
     externalPhoneIndex = idx;
     externalPhoneIndexSrc = apps;
@@ -3645,11 +3656,31 @@
     return idx;
   }
 
+  // 他社応募の就業開始時期 (生文字列) が「空白または45日以内」かどうか。
+  // 空白・「即日」・'0' (未設定相当) は OK。年月のみの場合はその月の1日として
+  // 判定する。日付として解釈できないテキストは未来と断定できないため OK 扱い。
+  function extStartWithin45Days(startText) {
+    var s = String(startText == null ? '' : startText).trim();
+    if (!s || s === '即日' || s === '0') return true;
+    var y, mo, d;
+    var m = s.match(/^(\d{4})[\/\-年](\d{1,2})(?:[\/\-月](\d{1,2})日?)?/);
+    if (m) { y = +m[1]; mo = +m[2]; d = m[3] ? +m[3] : 1; }
+    else if (/^\d{4}$/.test(s)) { y = +s; mo = 1; d = 1; }
+    else return true;
+    if (mo < 1 || mo > 12 || d < 1 || d > 31) return true;
+    var target = new Date(y, mo - 1, d);
+    if (isNaN(target.getTime())) return true;
+    var now = new Date();
+    var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    return Math.floor((target.getTime() - today.getTime()) / 86400000) <= 45;
+  }
+
   function hasRecentExternalApplication(candidate) {
     var phone = normalizePhone(candidate && candidate.phone);
     if (phone.length < 9) return false;
-    var days = getExternalPhoneIndex().get(phone);
-    return days !== undefined && days <= 7;
+    var e = getExternalPhoneIndex().get(phone);
+    if (!e || e.d > 7) return false;
+    return extStartWithin45Days(e.s);
   }
 
   // ===== 他社応募サマリー (external-detail.json) =====
