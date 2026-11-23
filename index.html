@@ -584,6 +584,7 @@
     activePhonesSet: new Set(),
     activePersonsList: [],
     autoExcludedCount: 0,
+    autoExcludedRevivedCount: 0,
     mergedDupCount: 0,
     csvHeaders: [],
     townCoordsDict: {},
@@ -1159,7 +1160,7 @@
   //         isNightShiftCandidate (勤務可能シフト(夜勤)), extractSafeSalutation (姓),
   //         getFilteredCandidates の W列チェック。conditions は詳細表示専用なので詳細側。
   var V2_CHUNK_SIZE = 1500;
-  var V2_SLIM_RAW_COLUMNS = ['ステータス', '最終ステータス', '接触ステータス', '接触NG理由', '誘致ステータス', '誘致NG理由', '姓'];
+  var V2_SLIM_RAW_COLUMNS = ['ステータス', '最終ステータス', '接触ステータス', '接触NG理由', '誘致ステータス', '誘致NG理由', 'アテンドステータス', '姓'];
   var v2State = {
     active: false, loading: false, allChunksLoaded: false,
     detailsLoaded: false, detailsPromise: null,
@@ -1173,7 +1174,7 @@
     var set = {};
     V2_SLIM_RAW_COLUMNS.forEach(function(n) { set[n] = true; });
     if (Array.isArray(headers)) {
-      [1, 19, 20, 22, 23].forEach(function(idx) { if (headers[idx]) set[headers[idx]] = true; });
+      [1, 19, 20, 22, 23, 37].forEach(function(idx) { if (headers[idx]) set[headers[idx]] = true; });
       headers.forEach(function(h) {
         if (h && h.indexOf('勤務可能シフト') !== -1 && h.indexOf('夜勤') !== -1) set[h] = true;
       });
@@ -1714,9 +1715,13 @@
 
     var map = new Map();
     var dupCount = 0;
+    // 人物ごとの全レコード（自動除外された人の掘り起こし復活判定に使う）
+    var recordsByKey = new Map();
 
     rawList.forEach(function(item) {
       var key = getPersonKey(item);
+      if (!recordsByKey.has(key)) recordsByKey.set(key, []);
+      recordsByKey.get(key).push(item);
       if (!map.has(key)) {
         map.set(key, Object.assign({}, item, {
           personKey: key,
@@ -1749,13 +1754,22 @@
     state.mergedDupCount = dupCount;
 
     var autoExc = 0;
+    var revivedCount = 0;
     var finalMerged = [];
 
     map.forEach(function(c) {
       var ph = normalizePhone(c.phone);
       if (ph.length >= 9 && activePhones.has(ph)) {
-        autoExc++;
-        return;
+        // 自動除外の人でも、本人のいずれかのレコードが掘り起こし条件を満たせば
+        // 掘り起こしタブにだけ表示する（河添の指示 2026-11-23 v2。他タブでは従来どおり非表示）。
+        var ownRecords = recordsByKey.get(c.personKey) || [];
+        var canRevive = false;
+        for (var ri = 0; ri < ownRecords.length; ri++) {
+          if (isHotEligibleRecord(ownRecords[ri])) { canRevive = true; break; }
+        }
+        if (!canRevive) { autoExc++; return; }
+        c.hotRevival = true;
+        revivedCount++;
       }
 
       var nName = normalizeText(c.name);
@@ -1788,6 +1802,7 @@
     });
 
     state.autoExcludedCount = autoExc;
+    state.autoExcludedRevivedCount = revivedCount;
     state.mergedCandidates = finalMerged;
 
     populateFilterOptions();
@@ -1835,6 +1850,43 @@
     return !t || (t === 'NG' && !!u) || (t === 'OK' && w === 'NG' && x !== '応募除外');
   }
 
+  // 掘り起こし（hot）の対象条件をレコード単体で判定する（河添の定義 2026-11-23 v2）。
+  // classifyCandidateTab の hot 判定と、自動除外された人の復活判定（processCandidates）で共用する。
+  // 対象ステータス: FIX待ち・FIX除外・FIX辞退・辞退・不通・他社決定（「登録辞退」は対象にしない）。
+  // 除外: 決まった系ステータス（稼働中・内定待ち・入職待ち・職見待ち・終了待ち・退職済み）、
+  //       誘致ステータス（列W）・アテンドステータス（列AL）が NG、
+  //       接触NG理由（列U）・誘致NG理由（列X）に「懸念」を含む。
+  // 条件: 就業開始希望日が未設定または29日以内（過去日付は可）、応募から60日以上。
+  // 理由列 U・X は軽量レコードの SLIM 列に既に含まれるため、分類時点（起動直後）でも読める。
+  function isHotEligibleRecord(c) {
+    if (!c) return false;
+    var finalSt = getColBFinalStatus(c);
+    if (!finalSt) return false;
+    if (finalSt.indexOf('登録辞退') !== -1) return false;
+    var isTarget = finalSt.indexOf('FIX待ち') !== -1 || finalSt.indexOf('FIX除外') !== -1 ||
+      finalSt.indexOf('辞退') !== -1 || finalSt.indexOf('不通') !== -1 || finalSt.indexOf('他社決定') !== -1;
+    if (!isTarget) return false;
+    var decidedKeywords = ['稼働中', '内定待ち', '入職待ち', '職見待ち', '終了待ち', '退職済み'];
+    for (var di = 0; di < decidedKeywords.length; di++) {
+      if (finalSt.indexOf(decidedKeywords[di]) !== -1) return false;
+    }
+    if (getRawColumnValue(c, 'W') === 'NG') return false;
+    if (getRawColumnValue(c, 'AL') === 'NG') return false;
+    if (getRawColumnValue(c, 'U').indexOf('懸念') !== -1) return false;
+    if (getRawColumnValue(c, 'X').indexOf('懸念') !== -1) return false;
+    var now = new Date();
+    var startD = parseDateSafe(c.startDate);
+    if (startD) {
+      var todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      var startDayOnly = new Date(startD.getFullYear(), startD.getMonth(), startD.getDate());
+      var daysFromTodayToStart = Math.round((startDayOnly.getTime() - todayStart.getTime()) / 86400000);
+      if (daysFromTodayToStart > 29) return false;
+    }
+    var applyD = parseDateSafe(c.applyDate);
+    if (!applyD) return false;
+    return (now.getTime() - applyD.getTime()) / 86400000 >= 60;
+  }
+
   function classifyCandidateTab(c) {
     var now = new Date();
     var todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -1853,10 +1905,22 @@
     var isUncontacted = isContactWaitRecord(c);
     var applyAge = getApplyAgeDays(c);
     var isFixWait = finalSt.indexOf('FIX待ち') !== -1;
+    var isFixExcluded = finalSt.indexOf('FIX除外') !== -1;
+    // 辞退系（FIX辞退・辞退）。ただし「登録辞退」は対象にしない（河添の指示 2026-11-23 v2）。
+    var isResigned = finalSt.indexOf('辞退') !== -1 && finalSt.indexOf('登録辞退') === -1;
+    var isUnreachable = finalSt.indexOf('不通') !== -1;
+    var isOtherCompanyDecided = finalSt.indexOf('他社決定') !== -1;
+    // 掘り起こし・激アツの入口になるステータス（河添の定義 2026-11-23 v2）。
+    var isHotStatus = isFixWait || isFixExcluded || isResigned || isUnreachable || isOtherCompanyDecided;
 
-    // 他社で直近7日以内に応募し、自社側がFIX待ちまたは未接触の人だけを最優先抽出。
+    // 自動除外から掘り起こしへ復活した人は、他のタブには出さず掘り起こしに固定する。
+    if (c.hotRevival) return 'hot';
+
+    // 他社で直近7日以内に応募し、自社側が掘り起こし対象ステータスまたは未接触の人を抽出。
+    // ただし自社応募から10日以上経過した人だけを対象にする（河添の指示 2026-11-23 v2）。
+    // 応募直後（0〜9日）の人は未接触などの通常パイプラインに残し、他タブと被らせない。
     // 他社CSV単独の人は自社候補データに追加されないため、ここには入らない。
-    if ((isFixWait || isUncontacted) && hasRecentExternalApplication(c)) return 'externalHot';
+    if ((isHotStatus || isUncontacted) && applyAge !== null && applyAge >= 10 && hasRecentExternalApplication(c)) return 'externalHot';
 
     if (isUncontacted) {
       if (applyAge !== null && applyAge >= 0 && applyAge <= 7) return 'contactWait7';
@@ -1871,11 +1935,10 @@
       if (diffHours >= 73 && diffHours <= 240) return 'unfixed';
     }
 
-    // 旧「激熱掘起」の抽出条件は「掘り起こし」として維持。
-    if (isFixWait && isStartUnder30OrEmpty && applyD) {
-      var applyDaysForRevisit = (now.getTime() - applyD.getTime()) / 86400000;
-      if (applyDaysForRevisit >= 60) return 'hot';
-    }
+    // 掘り起こし＝自社で内定が決まったことがない人へのアプローチ（河添の定義 2026-11-23 v2）。
+    // 対象・除外・日数条件の実体は isHotEligibleRecord に一本化
+    // （自動除外された人の復活判定と同一条件にするため）。
+    if (isHotEligibleRecord(c)) return 'hot';
     return 'excluded_other';
   }
 
@@ -2720,9 +2783,9 @@
       contactWait7: { title: '【7日以内応募・未接触】の表示ルール', desc: '自社応募があり、接触ステータスが未接触対象で、応募日から7日以内の方を表示します。' },
       within3days: { title: '【3日以内・未FIX】の表示ルール', desc: '最終ステータスがFIX待ち、就業開始希望日が29日以内または空欄で、アテンド・接触から12〜72時間の方を表示します。' },
       unfixed: { title: '【未FIX人材】の表示ルール', desc: '最終ステータスがFIX待ち、就業開始希望日が29日以内または空欄で、アテンド・接触から73〜240時間の方を表示します。' },
-      externalHot: { title: '【激アツ再アプローチ】の表示ルール', desc: '自社応募が存在し、自社側がFIX待ちまたは未接触で、他社応募CSVにも電話番号が一致する直近7日以内の応募がある方だけを表示します。他社応募だけの方は自社一覧に追加しません。' },
+      externalHot: { title: '【激アツ再アプローチ】の表示ルール', desc: '自社応募が存在し、自社応募から10日以上経過していて、自社側が掘り起こし対象ステータス（FIX待ち・FIX除外・FIX辞退・辞退・不通・他社決定）または未接触で、他社応募CSVにも電話番号が一致する直近7日以内の応募がある方だけを表示します。他社応募だけの方は自社一覧に追加しません。' },
       contactWaitLong: { title: '【未接触人材】の表示ルール', desc: '自社応募があり、接触ステータスが未接触対象で、応募日から8日目以降の方を表示します。' },
-      hot: { title: '【掘り起こし】の表示ルール', desc: '従来の「激熱掘起」タブで使用していた抽出条件を引き継ぎ、FIX待ちかつ応募から60日以上経過した方を表示します。' }
+      hot: { title: '【掘り起こし】の表示ルール', desc: 'FIX待ち・FIX除外・FIX辞退・辞退・不通・他社決定（自社で内定したことがない方）で、応募から60日以上経過した方を表示します（誘致・アテンドでNGの方、NG理由に懸念がある方、稼働・内定等が決まった方は除きます）。' }
     };
     var info = map[state.currentTab] || map.contactWait7;
     document.getElementById('guideTitle').textContent = info.title;
@@ -2765,7 +2828,7 @@
     } else {
       document.getElementById('jobMasterSummary').textContent = '⏳ searchOrder案件データ取得中...';
     }
-    document.getElementById('autoExcludedSummary').textContent = state.autoExcludedCount > 0 ? '（稼働/職見/内定待ち自動除外: ' + state.autoExcludedCount + '件）' : '';
+    document.getElementById('autoExcludedSummary').textContent = (state.autoExcludedCount > 0 || state.autoExcludedRevivedCount > 0) ? '（稼働/職見/内定待ち自動除外: ' + state.autoExcludedCount + '件' + (state.autoExcludedRevivedCount > 0 ? '、うち掘り起こし表示: ' + state.autoExcludedRevivedCount + '件' : '') + '）' : '';
 
     var pageBox = document.getElementById('paginationBox');
     var loadBtn = document.getElementById('loadMoreBtn');
@@ -4401,7 +4464,7 @@
     var body = document.getElementById('mergeInfoBody');
     var logCount = Object.keys(state.actionLogs).length;
     var excCount = Object.keys(state.excludedMap).length;
-    body.innerHTML = '<div class="bg-gray-50 rounded-xl p-3.5 border border-gray-200 space-y-1.5"><p>・元CSV総行数：<strong>' + state.rawCandidates.length + ' 件</strong></p><p>・重複名寄せ統合（同一人物合体）：<strong>' + state.mergedDupCount + ' 件</strong></p><p>・稼働中／職見待ち／内定待ち 電話番号一致の自動除外：<strong>' + state.autoExcludedCount + ' 件</strong></p><p>・チェックボックス永続除外（全端末共有）：<strong>' + excCount + ' 件</strong></p><p>・GitHub同期中の送信／クールダウン履歴：<strong>' + logCount + ' 件</strong></p><p>・searchOrder 連携済案件数：<strong>' + state.searchOrderJobs.length.toLocaleString() + ' 件</strong></p></div>';
+    body.innerHTML = '<div class="bg-gray-50 rounded-xl p-3.5 border border-gray-200 space-y-1.5"><p>・元CSV総行数：<strong>' + state.rawCandidates.length + ' 件</strong></p><p>・重複名寄せ統合（同一人物合体）：<strong>' + state.mergedDupCount + ' 件</strong></p><p>・稼働中／職見待ち／内定待ち 電話番号一致の自動除外：<strong>' + state.autoExcludedCount + ' 件</strong>' + (state.autoExcludedRevivedCount > 0 ? '（うち掘り起こし表示：' + state.autoExcludedRevivedCount + ' 件）' : '') + '</p><p>・チェックボックス永続除外（全端末共有）：<strong>' + excCount + ' 件</strong></p><p>・GitHub同期中の送信／クールダウン履歴：<strong>' + logCount + ' 件</strong></p><p>・searchOrder 連携済案件数：<strong>' + state.searchOrderJobs.length.toLocaleString() + ' 件</strong></p></div>';
   }
 
   window.openRawRowModal = function(personKey) {
