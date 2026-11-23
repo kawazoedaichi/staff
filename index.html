@@ -1011,6 +1011,13 @@
             if (!lItem || (rItem.lastSentAt || 0) >= (lItem.lastSentAt || 0)) {
               mergedLogs[k] = rItem;
             }
+            // アプローチ回数は巻き戻さない（両側にある場合は大きい方を残す）
+            if (lItem && mergedLogs[k]) {
+              var maxCount = Math.max(getApproachCount(rItem), getApproachCount(lItem));
+              if (getApproachCount(mergedLogs[k]) !== maxCount) {
+                mergedLogs[k] = Object.assign({}, mergedLogs[k], { count: maxCount });
+              }
+            }
           });
         }
         state.actionLogs = mergedLogs;
@@ -1065,7 +1072,12 @@
           var remoteJson = JSON.parse(decoded);
           if (remoteJson.actionLogs) {
             Object.keys(remoteJson.actionLogs).forEach(function(k) {
-              if (!state.actionLogs[k]) state.actionLogs[k] = remoteJson.actionLogs[k];
+              if (!state.actionLogs[k]) {
+                state.actionLogs[k] = remoteJson.actionLogs[k];
+              } else if (getApproachCount(remoteJson.actionLogs[k]) > getApproachCount(state.actionLogs[k])) {
+                // アプローチ回数は巻き戻さない
+                state.actionLogs[k].count = getApproachCount(remoteJson.actionLogs[k]);
+              }
             });
           }
           if (remoteJson.excludedMap) {
@@ -2383,6 +2395,24 @@
       ].join(LF);
     }
 
+    // ⑤ 激アツ再アプローチ（2026-11-23 文面フォーマット改定）
+    if (tab === 'externalHot') {
+      return [
+        '以前ご応募いただきました',
+        '株式会社ビースタイルです。',
+        '',
+        '以前伺っていた、ご希望条件にぴったりの新着案件が入りましたので、優先的にご連絡いたしました！',
+        '',
+        bodyJobs,
+        '',
+        rateNote,
+        '',
+        '今すぐのご転職でなくても情報収集だけでも大歓迎ですので、ぜひお気軽にご返信ください！',
+        '',
+        replyFmStandard
+      ].join(LF);
+    }
+
     // ④ 激熱掘起（1通目）
     if (tab === 'hot') {
       return [
@@ -2447,14 +2477,40 @@
     return false;
   }
 
+  // クールダウン期間（2026-11-23 河添決定）: 激アツ/7日以内/3日以内/未FIX は5時間、それ以外（未接触・掘り起こし等）は30日
+  function cooldownMsForTab(tab) {
+    if (tab === 'externalHot' || tab === 'contactWait7' || tab === 'within3days' || tab === 'unfixed') return 5 * 60 * 60 * 1000;
+    return 30 * 24 * 60 * 60 * 1000;
+  }
+
+  // アプローチ回数（2026-11-23 追加）: 既存エントリ（count無し）は1回として扱う
+  function getApproachCount(log) {
+    if (!log) return 0;
+    return (typeof log.count === 'number' && log.count > 0) ? log.count : 1;
+  }
+
+  function formatApproachLabel(c, withDate) {
+    var log = state.actionLogs[c.personKey];
+    if (!log) return '';
+    var s = 'アプローチ' + getApproachCount(log) + '回';
+    if (withDate) {
+      var ts = log.lastSentAt || log.firstSentAt;
+      if (ts) s += '（最終：' + new Date(ts).toLocaleString('ja-JP', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) + '）';
+    }
+    return s;
+  }
+
   function getActionState(c) {
     var log = state.actionLogs[c.personKey];
     if (!log) return { isHidden: false, isActed: false, label: '未対応' };
 
     var now = Date.now();
     if (log.cooldownUntil && now < log.cooldownUntil) {
-      var remDays = Math.ceil((log.cooldownUntil - now) / (1000 * 60 * 60 * 24));
-      return { isHidden: true, isActed: true, label: '30日クールダウン中（残' + remDays + '日）' };
+      var remMs = log.cooldownUntil - now;
+      var remLabel = remMs >= 24 * 60 * 60 * 1000
+        ? '残' + Math.ceil(remMs / (1000 * 60 * 60 * 24)) + '日'
+        : (remMs >= 60 * 60 * 1000 ? '残' + Math.ceil(remMs / (1000 * 60 * 60)) + '時間' : '残' + Math.max(1, Math.ceil(remMs / (1000 * 60))) + '分');
+      return { isHidden: true, isActed: true, label: 'クールダウン中（' + remLabel + '）' };
     }
 
     if (log.status === 'wait_remind' || log.status === 'reminded') {
@@ -2462,7 +2518,7 @@
       log.status = 'cooldown';
       log.cooldownUntil = log.cooldownUntil || (legacySentAt + 30 * 24 * 60 * 60 * 1000);
       saveActionLogs();
-      if (now < log.cooldownUntil) return { isHidden: true, isActed: true, label: '30日クールダウン中' };
+      if (now < log.cooldownUntil) return { isHidden: true, isActed: true, label: 'クールダウン中' };
     }
 
     if (log.status === 'done') {
@@ -2726,6 +2782,7 @@
         '<div id="' + jobsBoxId + '" class="hidden px-2.5 pb-2.5 pt-2 border-t border-orange-200/70 space-y-1.5 bg-white">' + directHtml + dispHtml + '</div>' +
       '</div>';
 
+      var approachLabelText = formatApproachLabel(c, false);
       var warnHtml = c.activeWarning ? (
         '<div class="bg-amber-50 border border-amber-300 rounded-xl px-3 py-2 flex flex-wrap items-center justify-between gap-2 text-xs">' +
         '<span class="font-black text-amber-900">' + escapeHtml(c.activeWarning) + '</span>' +
@@ -2740,6 +2797,7 @@
             '<span class="px-2 py-0.5 rounded bg-zinc-100 text-zinc-700 font-bold">' + escapeHtml(c.jobType || (resolveCandidateRoleCategory(c) === 'nurse' ? '看護(資格判定)' : '介護(資格判定)')) + '</span>' +
             shiftBadge +
             '<span class="px-2 py-0.5 rounded border font-bold ' + statusBadgeClass + '">' + escapeHtml(act.label) + '</span>' +
+            (approachLabelText ? '<span class="px-2 py-0.5 rounded bg-sky-50 text-sky-700 border border-sky-200 font-bold">' + escapeHtml(approachLabelText) + '</span>' : '') +
             (bSt ? '<span class="px-2 py-0.5 rounded bg-orange-50 text-orange-700 border border-orange-200 font-bold">B列: ' + escapeHtml(bSt) + '</span>' : '') +
             (typeof c.daysUntilStart === 'number' ? '<span class="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold">開始まであと' + c.daysUntilStart + '日</span>' : '') +
             (c.mergedCount > 1 ? '<span class="px-2 py-0.5 rounded bg-purple-50 text-purple-700 border border-purple-200 font-bold">名寄せ: ' + c.mergedCount + '件</span>' : '') +
@@ -2912,8 +2970,8 @@
     state.lastUndoKey = personKey;
     state.lastUndoPrevLog = prev ? Object.assign({}, prev) : null;
 
-    var thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
-    state.actionLogs[personKey] = { status: 'cooldown', firstSentAt: (prev && prev.firstSentAt) || now, lastSentAt: now, cooldownUntil: now + thirtyDaysMs, tab: c.assignedTab };
+    var prevCount = prev ? getApproachCount(prev) : 0;
+    state.actionLogs[personKey] = { status: 'cooldown', firstSentAt: (prev && prev.firstSentAt) || now, lastSentAt: now, cooldownUntil: now + cooldownMsForTab(c.assignedTab), tab: c.assignedTab, count: prevCount + 1 };
     saveActionLogs();
     renderList(true);
     showUndoToastBar(c);
@@ -3022,7 +3080,7 @@
     var tabBadgeEl = document.getElementById('modalTabBadge');
     if (tabBadgeEl) tabBadgeEl.textContent = tabLabelMap[c.assignedTab] || '追客';
     document.getElementById('modalCandidateName').textContent = c.name + '（' + (c.branch || '-') + '）';
-    document.getElementById('modalSalutationInfo').textContent = '';
+    document.getElementById('modalSalutationInfo').textContent = formatApproachLabel(c, true);
 
     var shuffleBox = document.getElementById('shuffleReasonBox');
     if (c.assignedTab === 'within3days') {
