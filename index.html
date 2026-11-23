@@ -223,6 +223,7 @@
         </div>
 
         <div id="modalShiftSource" class="hidden text-[11px] font-bold text-indigo-800 bg-indigo-50 border border-indigo-200 rounded-xl px-3 py-2"></div>
+        <div id="modalAddressSource" class="hidden text-[11px] font-bold text-indigo-800 bg-indigo-50 border border-indigo-200 rounded-xl px-3 py-2"></div>
         <div id="shuffleReasonBox" class="hidden bg-orange-50 border border-orange-200 rounded-xl p-3 flex flex-wrap items-center justify-between gap-2">
           <div class="flex-1 min-w-[200px]">
             <span class="font-bold text-orange-800 block mb-0.5">選択中の先方連絡理由（4パターン）：</span>
@@ -2086,7 +2087,20 @@
     if (!state.searchOrderJobs || state.searchOrderJobs.length === 0) {
       return { dispatch: [], direct: [], isFarFallback: false, status: 'loading' };
     }
-    if (c.lat == null || c.lng == null) {
+    var effLat = c.lat, effLng = c.lng;
+    if (effLat == null || effLng == null) {
+      // 自社住所が無く座標も無い人は、他社サマリーの住所で補完する
+      // (緯度経度があればそれを、無ければ住所文字列を座標辞書で引く)。
+      var eaPos = effectiveAddressFor(c);
+      if (eaPos) {
+        if (eaPos.lat != null && eaPos.lng != null) { effLat = eaPos.lat; effLng = eaPos.lng; }
+        else {
+          var foundPos = lookupCoordsFromDict('', eaPos.address);
+          if (foundPos) { effLat = foundPos.lat; effLng = foundPos.lng; }
+        }
+      }
+    }
+    if (effLat == null || effLng == null) {
       return { dispatch: [], direct: [], isFarFallback: false, status: 'no_coord' };
     }
 
@@ -2136,7 +2150,7 @@
 
       if (!matchShiftRule(j.shifts, nightMode)) continue;
 
-      var dKm = calcDistanceKm(c.lat, c.lng, j.lat, j.lng);
+      var dKm = calcDistanceKm(effLat, effLng, j.lat, j.lng);
       if (dKm === null || dKm > 30.0) continue;
 
       var empList = j.empTypes || [j.empType || '派遣'];
@@ -2284,6 +2298,53 @@
     return 'other';
   }
 
+  // 他社サマリーに載っている住所 (entries[].addr)。external-detail 読込済みのときだけ返る。
+  function extAddressEntryFor(c) {
+    var phone = normalizePhone(c && c.phone);
+    if (phone.length < 9 || !externalDetailData || !externalDetailData.entries) return null;
+    var entry = externalDetailData.entries[phone];
+    if (!entry || !entry.addr || !entry.addr.address) return null;
+    return entry.addr;
+  }
+  // 自社住所が空の人について、他社住所があればそれを返す (出典表示・候補マッチング用)。
+  // 自社住所がある人には他社住所を使わないため null。
+  function effectiveAddressFor(c) {
+    if (c && c.address && String(c.address).trim()) return null;
+    return extAddressEntryFor(c);
+  }
+  // 自社にも他社にも住所が無い人かどうか。他社サマリー未読込のときは
+  // 「自社住所が無く座標も無い」ことをもって住所不明とみなす
+  // (モーダル経路では他社サマリー読込後に文面を作り直すため、最終文面は他社住所の有無で決まる)。
+  function isNoAddressAnywhere(c) {
+    if (c && c.address && String(c.address).trim()) return false;
+    if (extAddressEntryFor(c)) return false;
+    if (externalDetailData && externalDetailData.entries) return true;
+    return !c || c.lat == null || c.lng == null;
+  }
+  // 住所不明の人への文面 (2026-11-23 河添指定文)。候補は付けず、詳細の回答を求める。
+  function buildNoAddressMessage() {
+    return [
+      'お世話になっております。',
+      '株式会社ビースタイルと申します。',
+      '',
+      '以前応募いただいた求人のエントリーの件でご連絡になります。直近、再エントリー希望の施設が増えているためお声掛けさせていただきました。',
+      '一部重複してると思いますが確認も兼ねて、ご回答お願いします',
+      '',
+      '①保持資格：',
+      '②お住まいの郵便番号：',
+      '③就業開始希望日：',
+      '④就業可能日数：',
+      '⑤勤務形態：',
+      '⑥休み希望曜日：',
+      '⑦通勤方法：',
+      '⑧電話連絡NGな時間帯や曜日：',
+      '⑨経験年数と直近2つの職歴：',
+      '',
+      '以上、9点回答いただけると幸いです',
+      '宜しくお願いします'
+    ].join(LF);
+  }
+
   function buildMessageForCandidate(c, reasonOverride, modeOverride, nightOverride) {
     var sal = extractSafeSalutation(c);
     var jobs = getMatchedJobs(c, nightOverride);
@@ -2338,6 +2399,12 @@
         '',
         '宜しくお願いします'
       ].join(LF);
+    }
+
+    // 自社にも他社にも住所が無い人は、候補入りの文面を作らず河添指定の確認文面にする (2026-11-23)。
+    // contactWait7 の9点質問テンプレートは従来どおり (この分岐より前で return する)。
+    if (isNoAddressAnywhere(c)) {
+      return buildNoAddressMessage();
     }
 
     if (tab === 'contactWait' || tab === 'contactWaitLong') {
@@ -3212,6 +3279,7 @@
     refreshModalTextarea();
     openModal('msgModal');
     applyEffectiveNightShiftToModal(c);
+    applyExtAddressToModal(c);
   };
 
   // 詳細 (自社シフト5列) と他社サマリーが揃ったら、実効シフト判定をモーダルへ反映する。
@@ -3229,6 +3297,28 @@
       if (noteEl) {
         noteEl.textContent = 'シフト判定: ' + (eff.source === 'ext-adopt' ? '他社の応募' : '応募日の新しい他社') +
           '（' + (eff.ext && eff.ext.applyDate ? eff.ext.applyDate : '日付不明') + '・' + (eff.night ? '夜勤' : '日勤') + '）を採用';
+        noteEl.classList.remove('hidden');
+      }
+      refreshModalTextarea();
+    }).catch(function() {});
+  }
+
+  // 他社サマリー読込後、自社住所が空で他社住所がある人には住所の出典をモーダルに表示し、
+  // 文面を作り直す (他社住所で候補マッチングした文面にするため)。
+  // 他社住所が無いことが確定した人も、住所不明の確認文面に切り替えるため作り直す。
+  function applyExtAddressToModal(c) {
+    var noteEl = document.getElementById('modalAddressSource');
+    if (noteEl) { noteEl.textContent = ''; noteEl.classList.add('hidden'); }
+    if (!c) return;
+    ensureExternalDetail().then(function() {
+      if (state.modalTarget !== c) return;
+      var ea = effectiveAddressFor(c);
+      if (!ea) {
+        if (isNoAddressAnywhere(c)) refreshModalTextarea();
+        return;
+      }
+      if (noteEl) {
+        noteEl.textContent = '住所: 他社の応募' + (ea.company ? '（' + ea.company + (ea.applyDate ? '・' + ea.applyDate + '応募' : '') + '）' : '') + 'の住所で候補を検索しています：' + ea.address;
         noteEl.classList.remove('hidden');
       }
       refreshModalTextarea();
@@ -3564,7 +3654,8 @@
               cond: extCondText(condVals),
               night: shiftFlags.night,
               heard: shiftFlags.heard,
-              filled: extFilledCountFromValues(condVals)
+              filled: extFilledCountFromValues(condVals),
+              addr: extAddressFromRow(headers, cells)
             });
           }
         }
@@ -3857,6 +3948,32 @@
       exp: g('総経験年数'), emp: g('就業状況')
     };
   }
+  // 座標文字列を数値化する。日本国内の範囲 (緯度 20〜46.5 / 経度 122〜154.5) で
+  // 解釈できる場合のみ採用し、それ以外は null。
+  function extParseCoord(v, min, max) {
+    var s = extTrim(v).replace(/,/g, '');
+    if (!s) return null;
+    var n = Number(s);
+    if (!isFinite(n) || n < min || n > max) return null;
+    return n;
+  }
+  // 他社レコードの住所情報 (住所・郵便番号・緯度・経度)。
+  // 住所は '住所' 列 (完全一致) を優先し、空なら分割列
+  // 住所(都道府県)+住所(市区町村)+住所(町名番地)+住所(マンション名) を連結する。
+  // 住所・郵便番号・緯度のいずれも無い行は null。
+  function extAddressFromRow(headers, cells) {
+    function g(n) { return extGetByHeader(headers, cells, n); }
+    var ai = headers.indexOf('住所');
+    var address = ai >= 0 ? extTrim(cells[ai]) : '';
+    if (!address) {
+      address = [g('住所(都道府県)'), g('住所(市区町村)'), g('住所(町名番地)'), g('住所(マンション名)')].join('');
+    }
+    var zip = g('郵便番号');
+    var lat = extParseCoord(g('緯度'), 20, 46.5);
+    var lng = extParseCoord(g('経度'), 122, 154.5);
+    if (!address && !zip && lat === null) return null;
+    return { address: address, zip: zip, lat: lat, lng: lng };
+  }
   function extResolveCompany(fileName, columnCompany) {
     var c = extTrim(columnCompany);
     if (c) return c;
@@ -3864,14 +3981,14 @@
     return EXT_COMPANY_BY_FILENAME[base] || '';
   }
   // 1ファイル分の応募レコード群を電話番号ごとに集約する。
-  // recs: [{phone (正規化済み), applyDate, status, company, cond, night, heard, filled}]
+  // recs: [{phone (正規化済み), applyDate, status, company, cond, night, heard, filled, addr}]
   // 戻り値: { phone: {n, d (最新応募日), cs: [会社名], b: {c, s, d, t} (一番進んでる応募)} }
   function extSummarizeRecs(recs) {
     var tmp = {};
     (recs || []).forEach(function(r) {
       if (!r || !r.phone) return;
       var cur = tmp[r.phone];
-      if (!cur) cur = tmp[r.phone] = { n: 0, d: '', dts: null, cs: [], b: null, brank: -1, bts: 0, f: null };
+      if (!cur) cur = tmp[r.phone] = { n: 0, d: '', dts: null, cs: [], b: null, brank: -1, bts: 0, f: null, a: null, ats: null };
       cur.n += 1;
       if (typeof r.filled === 'number') cur.f = (cur.f === null ? r.filled : Math.max(cur.f, r.filled));
       var ts = extParseTs(r.applyDate);
@@ -3879,6 +3996,13 @@
       else if (cur.dts === null && !cur.d && r.applyDate) { cur.d = String(r.applyDate || ''); }
       var comp = extTrim(r.company);
       if (comp && cur.cs.indexOf(comp) === -1) cur.cs.push(comp);
+      // 住所は「住所が入っているレコードのうち最新応募日」のものを採用する (同日は先勝ち)。
+      if (r.addr && r.addr.address) {
+        if (!cur.a || (ts !== null && (cur.ats === null || ts > cur.ats))) {
+          cur.a = { address: r.addr.address, zip: r.addr.zip || '', lat: (typeof r.addr.lat === 'number' ? r.addr.lat : null), lng: (typeof r.addr.lng === 'number' ? r.addr.lng : null), d: String(r.applyDate || ''), c: comp };
+          cur.ats = ts;
+        }
+      }
       var rank = extStatusRank(r.status);
       var bts = ts || 0;
       if (!cur.b || rank > cur.brank || (rank === cur.brank && bts > cur.bts)) {
@@ -3889,7 +4013,7 @@
     var out = {};
     Object.keys(tmp).forEach(function(p) {
       var c = tmp[p];
-      out[p] = { n: c.n, d: c.d, cs: c.cs, b: c.b, f: c.f };
+      out[p] = { n: c.n, d: c.d, cs: c.cs, b: c.b, f: c.f, a: c.a };
     });
     return out;
   }
@@ -3905,12 +4029,20 @@
         var fs = perPhone[phone];
         if (!fs) return;
         var e = acc[phone];
-        if (!e) e = acc[phone] = { latestDate: '', latestTs: null, count: 0, companies: [], best: null, brank: -1, bts: 0, filledBy: {} };
+        if (!e) e = acc[phone] = { latestDate: '', latestTs: null, count: 0, companies: [], best: null, brank: -1, bts: 0, filledBy: {}, addr: null, addrTs: null };
         e.count += fs.n || 0;
         var fts = extParseTs(fs.d);
         if (fts !== null && (e.latestTs === null || fts > e.latestTs)) { e.latestDate = fs.d || ''; e.latestTs = fts; }
         else if (e.latestTs === null && !e.latestDate && fs.d) { e.latestDate = fs.d; }
         (fs.cs || []).forEach(function(cn) { if (cn && e.companies.indexOf(cn) === -1) e.companies.push(cn); });
+        // 住所は会社をまたいで「最新応募日」のものを採用する (同日は先勝ち)。
+        if (fs.a && fs.a.address) {
+          var aTs = extParseTs(fs.a.d);
+          if (!e.addr || (aTs !== null && (e.addrTs === null || aTs > e.addrTs))) {
+            e.addr = { address: fs.a.address, zip: fs.a.zip || '', lat: (typeof fs.a.lat === 'number' ? fs.a.lat : null), lng: (typeof fs.a.lng === 'number' ? fs.a.lng : null), applyDate: fs.a.d || '', company: fs.a.c || '' };
+            e.addrTs = aTs;
+          }
+        }
         if (typeof fs.f === 'number') {
           var attrs = (fs.cs && fs.cs.length) ? fs.cs : [key];
           attrs.forEach(function(cn) {
@@ -3939,7 +4071,7 @@
           e.filledBy[e.best.company] === richest.filled && e.best.company !== richest.company) {
         richest = { company: e.best.company, filled: e.filledBy[e.best.company] };
       }
-      out[phone] = { latestDate: e.latestDate, count: e.count, companies: e.companies, best: e.best, filledByCompany: e.filledBy, richest: richest };
+      out[phone] = { latestDate: e.latestDate, count: e.count, companies: e.companies, best: e.best, filledByCompany: e.filledBy, richest: richest, addr: e.addr };
     });
     return out;
   }
@@ -4088,6 +4220,7 @@
       var compText = (s.companies || []).filter(function(x) { return !!x; }).join('・');
       lines.push('🏢 他社での応募（' + s.count + '件' + (compText ? '：' + compText : '') + '）');
       if (s.latestDate) lines.push('最新応募日：' + s.latestDate);
+      if (s.addr && s.addr.address) lines.push('住所（他社情報より）：' + s.addr.address + (s.addr.zip ? '（〒' + s.addr.zip + '）' : '') + (s.addr.company ? '／' + s.addr.company + (s.addr.applyDate ? '・' + s.addr.applyDate + '応募分' : '') : ''));
       if (s.best) {
         lines.push('一番進んでる応募：' + (s.best.company ? s.best.company + '／' : '') + (s.best.status || '') + (s.best.applyDate ? '（' + s.best.applyDate + '応募）' : ''));
         if (s.best.conditions) lines.push('条件：' + s.best.conditions);
