@@ -222,6 +222,7 @@
           </label>
         </div>
 
+        <div id="modalShiftSource" class="hidden text-[11px] font-bold text-indigo-800 bg-indigo-50 border border-indigo-200 rounded-xl px-3 py-2"></div>
         <div id="shuffleReasonBox" class="hidden bg-orange-50 border border-orange-200 rounded-xl p-3 flex flex-wrap items-center justify-between gap-2">
           <div class="flex-1 min-w-[200px]">
             <span class="font-bold text-orange-800 block mb-0.5">選択中の先方連絡理由（4パターン）：</span>
@@ -1630,6 +1631,60 @@
     var sp = String(c.shiftPref || '').trim();
     if (sp === '夜勤' || sp.indexOf('夜勤') !== -1) return true;
     return false;
+  }
+
+  // 自社の勤務可能シフト5列の聴取状況。詳細マージ後の rawRow で判定する
+  // (軽量 rawRow には夜勤列しか無いため、モーダル経路では詳細マージ後に呼ぶこと)。
+  // night は従来判定 (isNightShiftCandidate + 統合レコードの夜勤フラグ) と一致させる。
+  var SELF_SHIFT_COLUMNS = ['勤務可能シフト(早番)', '勤務可能シフト(日勤)', '勤務可能シフト(遅番)', '勤務可能シフト(夜勤)', '勤務可能シフト(時短)'];
+  function selfShiftInfo(c) {
+    var heard = false;
+    if (c && c.rawRow) {
+      for (var i = 0; i < SELF_SHIFT_COLUMNS.length; i++) {
+        if (isCircleOrTruthyMark(c.rawRow[SELF_SHIFT_COLUMNS[i]])) { heard = true; break; }
+      }
+    }
+    var night = isNightShiftCandidate(c) || !!(c && c.isNightDefault);
+    if (night) heard = true; // 夜勤可が分かっている = シフトは聴取済み
+    return { heard: heard, night: night };
+  }
+
+  // 他社のシフト情報を加味した実効の夜勤可否 (河添ルール 2026-11-23)。
+  //  1. 自社が未聴取で他社 best にシフト情報があれば、他社の夜勤可否を採用 (source: 'ext-adopt')
+  //  2. 自社と他社で夜勤可否が食い違い、他社 best の応募日が自社より新しければ他社を採用 (source: 'ext-newer')。
+  //     同日・他社日付不明・自社が新しければ自社を採用 (source: 'self-newer')
+  //  3. それ以外は自社の夜勤可否 (source: 'self')。自社で夜勤可なら常に夜勤で、他社情報で夜勤を外すことはしない
+  // 他社サマリー未読込・対象外・best にシフト情報が無い場合は従来判定にフォールバックする。
+  // ext は採用根拠の表示用 (best レコード)。詳細マージ + 他社サマリー読込後に使うこと。
+  function effectiveNightShift(c) {
+    var self = selfShiftInfo(c);
+    var result = { night: self.night, source: 'self', ext: null };
+    var phone = normalizePhone(c && c.phone);
+    if (phone.length < 9 || !externalDetailData || !externalDetailData.entries) return result;
+    var entry = externalDetailData.entries[phone];
+    if (!entry || !entry.best || entry.best.heard !== true) return result;
+    var extNight = entry.best.night === true;
+    if (self.night) return result; // 自社で夜勤可なら常に夜勤 (他社情報では覆さない)
+    if (!self.heard) {
+      result.night = extNight;
+      result.source = 'ext-adopt';
+      result.ext = entry.best;
+      return result;
+    }
+    if (self.night !== extNight) {
+      var selfDate = parseDateSafe(c.applyDate);
+      var selfTs = selfDate ? selfDate.getTime() : null;
+      var extTs = extParseTs(entry.best.applyDate);
+      if (extTs !== null && selfTs !== null && extTs > selfTs) {
+        result.night = extNight;
+        result.source = 'ext-newer';
+        result.ext = entry.best;
+      } else {
+        result.source = 'self-newer';
+      }
+      return result;
+    }
+    return result;
   }
 
   function processCandidates(rawList, badgeLabel) {
@@ -3093,7 +3148,29 @@
 
     refreshModalTextarea();
     openModal('msgModal');
+    applyEffectiveNightShiftToModal(c);
   };
+
+  // 詳細 (自社シフト5列) と他社サマリーが揃ったら、実効シフト判定をモーダルへ反映する。
+  // 他社情報で判定が決まった場合だけ、夜勤チェック・出典表示・文面を更新する。
+  function applyEffectiveNightShiftToModal(c) {
+    var noteEl = document.getElementById('modalShiftSource');
+    if (noteEl) { noteEl.textContent = ''; noteEl.classList.add('hidden'); }
+    if (!c || c.isNightDefault) return; // 自社の夜勤固定がある人は従来どおり
+    Promise.all([ensureDetailForCandidate(c), ensureExternalDetail()]).then(function() {
+      if (state.modalTarget !== c) return;
+      var eff = effectiveNightShift(c);
+      if (eff.source !== 'ext-adopt' && eff.source !== 'ext-newer') return;
+      var nightCheck = document.getElementById('modalNightShiftCheck');
+      if (nightCheck) nightCheck.checked = eff.night;
+      if (noteEl) {
+        noteEl.textContent = 'シフト判定: ' + (eff.source === 'ext-adopt' ? '他社の応募' : '応募日の新しい他社') +
+          '（' + (eff.ext && eff.ext.applyDate ? eff.ext.applyDate : '日付不明') + '・' + (eff.night ? '夜勤' : '日勤') + '）を採用';
+        noteEl.classList.remove('hidden');
+      }
+      refreshModalTextarea();
+    }).catch(function() {});
+  }
 
   window.setMsgMode = function(mode, skipRefresh) {
     state.modalMode = mode;
@@ -3413,12 +3490,17 @@
           if (!detectedCompany && rowCompany) detectedCompany = rowCompany;
           imported.push({ phone: phone, applyDate: appliedAt, company: rowCompany, sourceFile: file.name });
           if (summaryPhones[phone]) {
+            var condVals = extCondValuesFromRow(headers, cells);
+            var shiftFlags = extShiftFlagsFromValues(condVals);
             summaryRecs.push({
               phone: phone,
               applyDate: appliedAt,
               status: statusIdx >= 0 ? String(cells[statusIdx] || '').trim() : '',
               company: extResolveCompany(file.name, rowCompany),
-              cond: extCondText(extCondValuesFromRow(headers, cells))
+              cond: extCondText(condVals),
+              night: shiftFlags.night,
+              heard: shiftFlags.heard,
+              filled: extFilledCountFromValues(condVals)
             });
           }
         }
@@ -3552,6 +3634,51 @@
     var s = extTrim(v);
     return s === '○' || s === '◯' || s === '可' || s === '1';
   }
+  // 勤務可能シフト5列のマーク判定 (アプリ本体の isCircleOrTruthyMark と同じ基準)。
+  // 否定値 (×・不可・なし・無・0 等) だけの文字列はマークなし、それ以外の非空値はマークあり。
+  function extShiftMarkOn(v) {
+    var s = String(v == null ? '' : v).normalize('NFKC').trim();
+    if (!s) return false;
+    if (/^[-－ー―×✕✖✗✘不可なし無0falseFALSE]+$/i.test(s)) return false;
+    return true;
+  }
+  // 条件値 (extCondValuesFromRow の戻り値) から、best 応募の夜勤可否と聴取有無を構造化する。
+  function extShiftFlagsFromValues(v) {
+    var night = extShiftMarkOn(v.shiftYakin);
+    var heard = night || extShiftMarkOn(v.shiftHayaban) || extShiftMarkOn(v.shiftNikkin) ||
+      extShiftMarkOn(v.shiftOsoban) || extShiftMarkOn(v.shiftJitan);
+    return { night: night, heard: heard };
+  }
+  function extShiftFlagsFromRow(headers, cells) {
+    return extShiftFlagsFromValues(extCondValuesFromRow(headers, cells));
+  }
+  // 情報量: 条件項目のうち「入っている」項目の数。数え方は extCondText に現れる基準と揃える
+  // (開始・週日数・時給の '0' は未入力扱い、曜日は ○/△ が付いた場合のみ、シフトは5列を個別に数える)。
+  // 母集団は extCondValuesFromRow の17項目。
+  function extFilledCountFromValues(v) {
+    var n = 0;
+    var start = extTrim(v.start); if (start && start !== '0') n++;
+    var wd = extTrim(v.weekDays); if (wd && wd !== '0') n++;
+    if (extFormatDows(v.weekDows)) n++;
+    if (extShiftOn(v.shiftHayaban)) n++;
+    if (extShiftOn(v.shiftNikkin)) n++;
+    if (extShiftOn(v.shiftOsoban)) n++;
+    if (extShiftOn(v.shiftYakin)) n++;
+    if (extShiftOn(v.shiftJitan)) n++;
+    if (extTrim(v.facility)) n++;
+    var wage = extTrim(v.wage); if (wage && wage !== '0') n++;
+    if (extTrim(v.qual)) n++;
+    if (extTrim(v.job)) n++;
+    if (extTrim(v.station)) n++;
+    if (extTrim(v.transport)) n++;
+    if (extTrim(v.commuteTime)) n++;
+    if (extTrim(v.exp)) n++;
+    if (extTrim(v.emp)) n++;
+    return n;
+  }
+  function extFilledCountFromRow(headers, cells) {
+    return extFilledCountFromValues(extCondValuesFromRow(headers, cells));
+  }
   function extFormatDows(raw) {
     var s = extTrim(raw);
     if (!s) return '';
@@ -3643,15 +3770,16 @@
     return EXT_COMPANY_BY_FILENAME[base] || '';
   }
   // 1ファイル分の応募レコード群を電話番号ごとに集約する。
-  // recs: [{phone (正規化済み), applyDate, status, company, cond}]
+  // recs: [{phone (正規化済み), applyDate, status, company, cond, night, heard, filled}]
   // 戻り値: { phone: {n, d (最新応募日), cs: [会社名], b: {c, s, d, t} (一番進んでる応募)} }
   function extSummarizeRecs(recs) {
     var tmp = {};
     (recs || []).forEach(function(r) {
       if (!r || !r.phone) return;
       var cur = tmp[r.phone];
-      if (!cur) cur = tmp[r.phone] = { n: 0, d: '', dts: null, cs: [], b: null, brank: -1, bts: 0 };
+      if (!cur) cur = tmp[r.phone] = { n: 0, d: '', dts: null, cs: [], b: null, brank: -1, bts: 0, f: null };
       cur.n += 1;
+      if (typeof r.filled === 'number') cur.f = (cur.f === null ? r.filled : Math.max(cur.f, r.filled));
       var ts = extParseTs(r.applyDate);
       if (ts !== null && (cur.dts === null || ts > cur.dts)) { cur.d = String(r.applyDate || ''); cur.dts = ts; }
       else if (cur.dts === null && !cur.d && r.applyDate) { cur.d = String(r.applyDate || ''); }
@@ -3660,14 +3788,14 @@
       var rank = extStatusRank(r.status);
       var bts = ts || 0;
       if (!cur.b || rank > cur.brank || (rank === cur.brank && bts > cur.bts)) {
-        cur.b = { c: comp, s: extTrim(r.status), d: String(r.applyDate || ''), t: String(r.cond || '') };
+        cur.b = { c: comp, s: extTrim(r.status), d: String(r.applyDate || ''), t: String(r.cond || ''), night: !!r.night, heard: !!r.heard };
         cur.brank = rank; cur.bts = bts;
       }
     });
     var out = {};
     Object.keys(tmp).forEach(function(p) {
       var c = tmp[p];
-      out[p] = { n: c.n, d: c.d, cs: c.cs, b: c.b };
+      out[p] = { n: c.n, d: c.d, cs: c.cs, b: c.b, f: c.f };
     });
     return out;
   }
@@ -3683,17 +3811,23 @@
         var fs = perPhone[phone];
         if (!fs) return;
         var e = acc[phone];
-        if (!e) e = acc[phone] = { latestDate: '', latestTs: null, count: 0, companies: [], best: null, brank: -1, bts: 0 };
+        if (!e) e = acc[phone] = { latestDate: '', latestTs: null, count: 0, companies: [], best: null, brank: -1, bts: 0, filledBy: {} };
         e.count += fs.n || 0;
         var fts = extParseTs(fs.d);
         if (fts !== null && (e.latestTs === null || fts > e.latestTs)) { e.latestDate = fs.d || ''; e.latestTs = fts; }
         else if (e.latestTs === null && !e.latestDate && fs.d) { e.latestDate = fs.d; }
         (fs.cs || []).forEach(function(cn) { if (cn && e.companies.indexOf(cn) === -1) e.companies.push(cn); });
+        if (typeof fs.f === 'number') {
+          var attrs = (fs.cs && fs.cs.length) ? fs.cs : [key];
+          attrs.forEach(function(cn) {
+            if (cn && (e.filledBy[cn] === undefined || fs.f > e.filledBy[cn])) e.filledBy[cn] = fs.f;
+          });
+        }
         if (fs.b) {
           var rank = extStatusRank(fs.b.s);
           var bts = extParseTs(fs.b.d) || 0;
           if (!e.best || rank > e.brank || (rank === e.brank && bts > e.bts)) {
-            e.best = { company: fs.b.c || '', status: fs.b.s || '', applyDate: fs.b.d || '', conditions: fs.b.t || '' };
+            e.best = { company: fs.b.c || '', status: fs.b.s || '', applyDate: fs.b.d || '', conditions: fs.b.t || '', night: !!fs.b.night, heard: !!fs.b.heard };
             e.brank = rank; e.bts = bts;
           }
         }
@@ -3702,7 +3836,16 @@
     var out = {};
     Object.keys(acc).forEach(function(phone) {
       var e = acc[phone];
-      out[phone] = { latestDate: e.latestDate, count: e.count, companies: e.companies, best: e.best };
+      var richest = null;
+      Object.keys(e.filledBy).forEach(function(cn) {
+        if (!richest || e.filledBy[cn] > richest.filled) richest = { company: cn, filled: e.filledBy[cn] };
+      });
+      // 同点の場合は「一番進んでる応募」の会社を優先する
+      if (richest && e.best && e.best.company && e.filledBy[e.best.company] !== undefined &&
+          e.filledBy[e.best.company] === richest.filled && e.best.company !== richest.company) {
+        richest = { company: e.best.company, filled: e.filledBy[e.best.company] };
+      }
+      out[phone] = { latestDate: e.latestDate, count: e.count, companies: e.companies, best: e.best, filledByCompany: e.filledBy, richest: richest };
     });
     return out;
   }
@@ -3797,6 +3940,46 @@
       return saveExternalDetailLocal().then(function() { return pushExternalDetailToGithub(); });
     }).catch(function() { return false; });
   }
+  // rawRow から見出し名で値を引く (完全一致 → 部分一致)。
+  function rawRowGet(c, name) {
+    if (!c || !c.rawRow) return '';
+    if (c.rawRow[name] !== undefined) return String(c.rawRow[name] == null ? '' : c.rawRow[name]).trim();
+    var keys = Object.keys(c.rawRow);
+    for (var i = 0; i < keys.length; i++) {
+      if (keys[i].indexOf(name) !== -1) return String(c.rawRow[keys[i]] == null ? '' : c.rawRow[keys[i]]).trim();
+    }
+    return '';
+  }
+  // 自社の情報量: 他社と同じ母集団 (extCondValuesFromRow の17項目) で数える。詳細マージ後の rawRow 前提。
+  function selfFilledCount(c) {
+    return extFilledCountFromValues({
+      start: rawRowGet(c, '即日か就業可能時期'), weekDays: rawRowGet(c, '週勤務可能日数'), weekDows: rawRowGet(c, '週勤務可能曜日'),
+      shiftHayaban: rawRowGet(c, '勤務可能シフト(早番)'), shiftNikkin: rawRowGet(c, '勤務可能シフト(日勤)'),
+      shiftOsoban: rawRowGet(c, '勤務可能シフト(遅番)'), shiftYakin: rawRowGet(c, '勤務可能シフト(夜勤)'),
+      shiftJitan: rawRowGet(c, '勤務可能シフト(時短)'),
+      facility: rawRowGet(c, '希望する施設形態'), wage: rawRowGet(c, '希望時給'), qual: rawRowGet(c, '資格'), job: rawRowGet(c, '職種詳細'),
+      station: rawRowGet(c, '最寄り駅'), transport: rawRowGet(c, '通勤手段'), commuteTime: rawRowGet(c, '通勤可能時間'),
+      exp: rawRowGet(c, '総経験年数'), emp: rawRowGet(c, '就業状況')
+    });
+  }
+  // 「情報量トップ: ○○（N項目）」の1行を作る。他社は entry.filledByCompany、
+  // 自社は selfFilledCount で比較する。同点の優先順位: best の会社 → 自社 → filledByCompany の並び順。
+  function externalRichestLine(s, c) {
+    var filledBy = (s && s.filledByCompany) || null;
+    if (!filledBy || !Object.keys(filledBy).length) return '';
+    var topName = '', topVal = -1;
+    Object.keys(filledBy).forEach(function(cn) {
+      if (filledBy[cn] > topVal) { topVal = filledBy[cn]; topName = cn; }
+    });
+    var bestCompany = (s.best && s.best.company) || '';
+    if (bestCompany && filledBy[bestCompany] !== undefined && filledBy[bestCompany] === topVal) topName = bestCompany;
+    var selfFilled = selfFilledCount(c);
+    if (selfFilled > topVal || (selfFilled === topVal && topName !== bestCompany)) {
+      topVal = selfFilled; topName = '自社';
+    }
+    if (topVal < 0) return '';
+    return '情報量トップ: ' + topName + '（' + topVal + '項目）';
+  }
   // 把握済条件ボックスに「他社での応募」ブロックを付ける (サマリーがある人だけ)。
   function attachExternalSummary(el, c) {
     var phone = normalizePhone(c && c.phone);
@@ -3815,6 +3998,8 @@
         lines.push('一番進んでる応募：' + (s.best.company ? s.best.company + '／' : '') + (s.best.status || '') + (s.best.applyDate ? '（' + s.best.applyDate + '応募）' : ''));
         if (s.best.conditions) lines.push('条件：' + s.best.conditions);
       }
+      var topLine = externalRichestLine(s, c);
+      if (topLine) lines.push(topLine);
       var div = document.createElement('div');
       div.setAttribute('data-ext-summary', '1');
       div.className = 'mt-2 rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-2 text-[11px] leading-relaxed text-amber-900 whitespace-pre-wrap';
