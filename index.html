@@ -2997,11 +2997,13 @@
         '<div>' +
           '<div class="flex flex-wrap items-baseline gap-2">' +
             '<h3 class="text-base sm:text-lg font-black text-gray-900">' + escapeHtml(c.name || '氏名不明') + '</h3>' +
+            '<button type="button" onclick="copyPersonField(' + SQ + escapeHtml(c.personKey) + SQ + ', ' + SQ + 'name' + SQ + ')" class="px-2 py-0.5 rounded border border-gray-300 bg-white hover:bg-gray-100 text-gray-700 text-[11px] font-bold">コピー</button>' +
             '<span class="text-[11px] px-2 py-0.5 rounded bg-orange-50 text-orange-700 border border-orange-200 font-bold">宛名: ' + escapeHtml(sal.text) + '</span>' +
             '<span class="text-xs text-gray-500">' + escapeHtml(c.kana || '') + (c.age ? '（' + c.age + '歳）' : '') + ' ／ ' + escapeHtml(c.address || '住所未登録') + '</span>' +
+            (c.address ? '<button type="button" onclick="copyPersonField(' + SQ + escapeHtml(c.personKey) + SQ + ', ' + SQ + 'address' + SQ + ')" class="px-2 py-0.5 rounded border border-gray-300 bg-white hover:bg-gray-100 text-gray-700 text-[11px] font-bold">コピー</button>' : '') +
           '</div>' +
           '<div class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-600">' +
-            (c.phone ? '<a href="tel:' + normalizePhone(c.phone) + '" class="font-bold text-sky-700 underline">📞 ' + escapeHtml(c.phone) + '</a>' : '') +
+            (c.phone ? '<a href="tel:' + normalizePhone(c.phone) + '" class="font-bold text-sky-700 underline">📞 ' + escapeHtml(c.phone) + '</a>' + '<button type="button" onclick="copyPersonField(' + SQ + escapeHtml(c.personKey) + SQ + ', ' + SQ + 'phone' + SQ + ')" class="px-2 py-0.5 rounded border border-gray-300 bg-white hover:bg-gray-100 text-gray-700 text-[11px] font-bold">コピー</button>' : '') +
             '<span>応募日: ' + escapeHtml(c.applyDate || '-') + '</span>' +
             '<span>アテンド日: ' + escapeHtml(c.attendDate || '-') + '</span>' +
             '<span>資格: ' + escapeHtml(c.qualification || '-') + '</span>' +
@@ -3084,6 +3086,22 @@
 
   window.copyIdToast = function(id) {
     if (id && navigator.clipboard) navigator.clipboard.writeText(id).catch(function() {});
+  };
+
+  window.copyPersonField = function(personKey, field) {
+    var c = state.mergedCandidates.find(function(x) { return x.personKey === personKey; });
+    if (!c) return;
+    var val = '', label = '';
+    if (field === 'name') { val = c.name || ''; label = '名前'; }
+    else if (field === 'phone') { val = c.phone || ''; label = '電話番号'; }
+    else if (field === 'address') {
+      label = '住所';
+      val = c.address || '';
+      if (!val && typeof effectiveAddressFor === 'function') { var ea = effectiveAddressFor(c); if (ea && ea.address) val = ea.address; }
+    }
+    if (!val) { showPopup('コピーできません', label + 'が登録されていません。'); return; }
+    if (navigator.clipboard) navigator.clipboard.writeText(val);
+    showPopup(label + 'をコピーしました', val);
   };
 
   function showUndoToastBar(c) {
