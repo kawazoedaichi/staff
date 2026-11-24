@@ -1921,7 +1921,8 @@
     // ただし自社応募から10日以上経過した人だけを対象にする（河添の指示 2026-11-23 v2）。
     // 応募直後（0〜9日）の人は未接触などの通常パイプラインに残し、他タブと被らせない。
     // 他社CSV単独の人は自社候補データに追加されないため、ここには入らない。
-    if ((isHotStatus || isUncontacted) && applyAge !== null && applyAge >= 10 && hasRecentExternalApplication(c)) return 'externalHot';
+    var personAge = getCandidateAge(c);
+    if ((isHotStatus || isUncontacted) && applyAge !== null && applyAge >= 10 && Number.isFinite(personAge) && personAge <= 65 && hasRecentExternalApplication(c)) return 'externalHot';
 
     if (isUncontacted) {
       if (applyAge !== null && applyAge >= 0 && applyAge <= 7) return 'contactWait7';
@@ -2748,6 +2749,10 @@
         var applyAgeDays = getApplyAgeDays(c);
         if (targetTab === 'contactWait7' && (applyAgeDays === null || applyAgeDays < 0 || applyAgeDays > 7)) return false;
         if (targetTab === 'contactWaitLong' && (applyAgeDays === null || applyAgeDays < 8)) return false;
+      }
+      if (targetTab === 'externalHot') {
+        var ageHot = getCandidateAge(c);
+        if (!Number.isFinite(ageHot) || ageHot > 65) return false;
       }
 
       var act = getActionState(c);
