@@ -2770,6 +2770,11 @@
         if (hay.indexOf(q) === -1) return false;
       }
       return true;
+    }).sort(function(a, b) {
+      // デフォルト表示順: アプローチ回数が少ない順（未連絡=0回が先頭。同数は従来順を維持）
+      var ca = state.actionLogs[a.personKey] ? getApproachCount(state.actionLogs[a.personKey]) : 0;
+      var cb = state.actionLogs[b.personKey] ? getApproachCount(state.actionLogs[b.personKey]) : 0;
+      return ca - cb;
     });
   }
 
@@ -2987,7 +2992,7 @@
             '<span class="px-2 py-0.5 rounded bg-zinc-100 text-zinc-700 font-bold">' + escapeHtml(c.jobType || (resolveCandidateRoleCategory(c) === 'nurse' ? '看護(資格判定)' : '介護(資格判定)')) + '</span>' +
             shiftBadge +
             '<span class="px-2 py-0.5 rounded border font-bold ' + statusBadgeClass + '">' + escapeHtml(act.label) + '</span>' +
-            (approachLabelText ? '<span class="px-2 py-0.5 rounded bg-sky-50 text-sky-700 border border-sky-200 font-bold">' + escapeHtml(approachLabelText) + '</span>' : '') +
+            '<span class="px-2 py-0.5 rounded bg-sky-50 text-sky-700 border border-sky-200 font-bold">' + escapeHtml(approachLabelText || 'アプローチ0回') + '</span>' +
             (bSt ? '<span class="px-2 py-0.5 rounded bg-orange-50 text-orange-700 border border-orange-200 font-bold">B列: ' + escapeHtml(bSt) + '</span>' : '') +
             (typeof c.daysUntilStart === 'number' ? '<span class="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold">開始まであと' + c.daysUntilStart + '日</span>' : '') +
             (c.mergedCount > 1 ? '<span class="px-2 py-0.5 rounded bg-purple-50 text-purple-700 border border-purple-200 font-bold">名寄せ: ' + c.mergedCount + '件</span>' : '') +
