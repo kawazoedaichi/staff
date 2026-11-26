@@ -229,7 +229,7 @@
         <div class="flex flex-wrap items-center gap-1.5 bg-orange-50 p-2 rounded-xl border border-orange-200">
           <span class="text-[11px] sm:text-xs font-black text-orange-900">打診文テンプレ</span>
           <div class="inline-flex rounded-lg bg-white p-0.5 border border-orange-300 shrink-0">
-            <button type="button" onclick="setModalTemplateStep(0)" id="btnTplAuto" class="px-2.5 py-1 rounded-md text-[11px] sm:text-xs font-bold text-gray-600 hover:text-gray-900 transition whitespace-nowrap">自動生成</button>
+            <button type="button" onclick="setModalTemplateStep(0)" id="btnTplAuto" class="px-2.5 py-1 rounded-md text-[11px] sm:text-xs font-bold text-gray-600 hover:text-gray-900 transition whitespace-nowrap">案件打診</button>
             <button type="button" onclick="setModalTemplateStep(1)" id="btnTpl1" class="px-2.5 py-1 rounded-md text-[11px] sm:text-xs font-bold text-gray-600 hover:text-gray-900 transition whitespace-nowrap">1回目</button>
             <button type="button" onclick="setModalTemplateStep(2)" id="btnTpl2" class="px-2.5 py-1 rounded-md text-[11px] sm:text-xs font-bold text-gray-600 hover:text-gray-900 transition whitespace-nowrap">2回目</button>
             <button type="button" onclick="setModalTemplateStep(3)" id="btnTpl3" class="px-2.5 py-1 rounded-md text-[11px] sm:text-xs font-bold text-gray-600 hover:text-gray-900 transition whitespace-nowrap">3回目</button>
@@ -3459,7 +3459,7 @@
     var defaultMode = 'normal';
     state.modalTarget = c;
     state.modalMode = defaultMode;
-    state.modalTemplateStep = approachNextStep(c);
+    state.modalTemplateStep = (c.assignedTab === 'contactWait7') ? approachNextStep(c) : 0;
     state.currentReasonIdx = Math.floor(Math.random() * SLIDE_REASONS_3DAYS.length);
 
     var sal = extractSafeSalutation(c);
