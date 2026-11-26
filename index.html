@@ -55,10 +55,10 @@
            class="px-2.5 py-1.5 rounded-md bg-zinc-900 hover:bg-zinc-800 text-orange-400 border border-orange-500/40 font-bold transition">案件詳細 ↗</a>
         <button type="button" onclick="openModal('githubModal')"
            class="px-2.5 py-1.5 rounded-md bg-zinc-900 hover:bg-zinc-800 text-emerald-400 border border-emerald-500/40 font-bold transition">🚀 GitHub同期</button>
-        <button type="button" onclick="openTplEditor()"
-           class="px-2.5 py-1.5 rounded-md bg-zinc-900 hover:bg-zinc-800 text-sky-300 border border-sky-500/40 font-bold transition">📝 打診文テンプレ</button>
         <button type="button" onclick="openModal('exportModal')"
            class="px-3 py-1.5 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white font-black transition shadow-sm">📥 CSV出力</button>
+        <button type="button" onclick="openTplEditor()"
+           class="px-2.5 py-1.5 rounded-md bg-zinc-900 hover:bg-zinc-800 text-sky-300 border border-sky-500/40 font-bold transition">📝 打診文テンプレ</button>
         <button type="button" onclick="openModal('urlModal')"
            class="px-2.5 py-1.5 rounded-md bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-600 font-medium transition">設定</button>
         <button type="button" onclick="openModal('csvModal')"
@@ -82,10 +82,10 @@
          class="px-2.5 py-1.5 rounded bg-zinc-800 text-zinc-200 border border-zinc-700 font-medium">Refo応募一覧 ↗</a>
       <button type="button" onclick="openModal('githubModal'); toggleMobileHeaderMenu();"
          class="px-2.5 py-1.5 rounded bg-zinc-800 text-emerald-400 border border-emerald-500/40 font-bold">🚀 GitHub同期設定</button>
-      <button type="button" onclick="openTplEditor(); toggleMobileHeaderMenu();"
-         class="px-2.5 py-1.5 rounded bg-zinc-800 text-sky-300 border border-sky-500/40 font-bold">📝 打診文テンプレ</button>
       <button type="button" onclick="openModal('exportModal'); toggleMobileHeaderMenu();"
          class="px-2.5 py-1.5 rounded bg-zinc-800 text-white border border-zinc-600 font-bold">CSV出力</button>
+      <button type="button" onclick="openTplEditor(); toggleMobileHeaderMenu();"
+         class="px-2.5 py-1.5 rounded bg-zinc-800 text-sky-300 border border-sky-500/40 font-bold">📝 打診文テンプレ</button>
       <button type="button" onclick="openModal('urlModal'); toggleMobileHeaderMenu();"
          class="px-2.5 py-1.5 rounded bg-zinc-800 text-zinc-200 border border-zinc-600 font-medium">URL・案件設定</button>
       <span id="mobileDataBadge" class="w-full text-[10px] text-orange-400 pt-0.5"></span>
@@ -235,7 +235,7 @@
             <button type="button" onclick="setModalTemplateStep(3)" id="btnTpl3" class="px-2.5 py-1 rounded-md text-[11px] sm:text-xs font-bold text-gray-600 hover:text-gray-900 transition whitespace-nowrap">3回目</button>
             <button type="button" onclick="setModalTemplateStep(4)" id="btnTpl4" class="px-2.5 py-1 rounded-md text-[11px] sm:text-xs font-bold text-gray-600 hover:text-gray-900 transition whitespace-nowrap">4回目以降</button>
           </div>
-          <button type="button" onclick="openTplEditor()" class="px-2.5 py-1 rounded-lg bg-white border border-orange-300 text-[11px] sm:text-xs font-bold text-orange-800">✏️ テンプレ編集</button>
+          <button type="button" onclick="openTplEditorFromModal()" class="px-2.5 py-1 rounded-lg bg-white border border-orange-300 text-[11px] sm:text-xs font-bold text-orange-800">✏️ テンプレ編集</button>
         </div>
         <div id="modalShiftSource" class="hidden text-[11px] font-bold text-indigo-800 bg-indigo-50 border border-indigo-200 rounded-xl px-3 py-2"></div>
         <div id="modalAddressSource" class="hidden text-[11px] font-bold text-indigo-800 bg-indigo-50 border border-indigo-200 rounded-xl px-3 py-2"></div>
@@ -275,9 +275,23 @@
         <button type="button" onclick="closeModal('tplModal')" class="text-gray-400 hover:text-white text-xl font-bold px-2">×</button>
       </div>
       <div class="p-4 sm:p-5 overflow-y-auto space-y-3 text-xs">
-        <p class="text-gray-600 leading-relaxed">アプローチ回数に応じて文面が自動で切り替わります。<code>{氏名}</code> <code>{支店}</code> は開いた人の情報に自動で差し替わります。保存するとGitHub経由で全端末に共有されます（このサイト専用・他サイトとは混ざりません）。</p>
+        <div class="bg-orange-50 p-2 rounded-xl border border-orange-200 space-y-1.5">
+          <div class="flex flex-wrap items-center gap-1.5">
+            <span class="text-[11px] sm:text-xs font-black text-orange-900">対象タブ：</span>
+            <div class="inline-flex rounded-lg bg-white p-0.5 border border-orange-300 shrink-0">
+            <button type="button" onclick="setTplEditTab('contactWait7')" id="tplTabBtn_contactWait7" class="px-2.5 py-1 rounded-md text-[11px] sm:text-xs font-bold text-gray-600 hover:text-gray-900 transition whitespace-nowrap">7日以内</button>
+            <button type="button" onclick="setTplEditTab('within3days')" id="tplTabBtn_within3days" class="px-2.5 py-1 rounded-md text-[11px] sm:text-xs font-bold text-gray-600 hover:text-gray-900 transition whitespace-nowrap">3日以内</button>
+            <button type="button" onclick="setTplEditTab('unfixed')" id="tplTabBtn_unfixed" class="px-2.5 py-1 rounded-md text-[11px] sm:text-xs font-bold text-gray-600 hover:text-gray-900 transition whitespace-nowrap">未FIX</button>
+            <button type="button" onclick="setTplEditTab('externalHot')" id="tplTabBtn_externalHot" class="px-2.5 py-1 rounded-md text-[11px] sm:text-xs font-bold text-gray-600 hover:text-gray-900 transition whitespace-nowrap">激アツ</button>
+            <button type="button" onclick="setTplEditTab('contactWaitLong')" id="tplTabBtn_contactWaitLong" class="px-2.5 py-1 rounded-md text-[11px] sm:text-xs font-bold text-gray-600 hover:text-gray-900 transition whitespace-nowrap">未接触</button>
+            <button type="button" onclick="setTplEditTab('hot')" id="tplTabBtn_hot" class="px-2.5 py-1 rounded-md text-[11px] sm:text-xs font-bold text-gray-600 hover:text-gray-900 transition whitespace-nowrap">掘り起こし</button>
+            </div>
+          </div>
+          <div class="text-[11px] sm:text-xs font-bold text-orange-900">編集中のタブ：<span id="tplEditTabLabel"></span>（このタブ専用のテンプレートです）</div>
+        </div>
+        <p class="text-gray-600 leading-relaxed">テンプレートはタブごとに別々です。アプローチ回数に応じて文面が自動で切り替わります。<code>{支店}</code> は開いた人の担当支店に自動で差し替わります。保存するとGitHub経由で全端末に共有されます（このサイト専用・他サイトとは混ざりません）。</p>
         <div>
-          <label class="font-bold text-gray-700 block mb-1">1回目（初回）</label>
+          <label class="font-bold text-gray-700 block mb-1">1回目</label>
           <textarea id="tplText1" rows="7" class="w-full rounded-xl border border-gray-300 p-3 text-xs sm:text-sm leading-relaxed focus:outline-none focus:border-orange-500 font-sans"></textarea>
         </div>
         <div>
@@ -294,7 +308,7 @@
         </div>
       </div>
       <div class="bg-gray-50 px-4 sm:px-5 py-3 border-t border-gray-200 flex flex-wrap items-center justify-between gap-2">
-        <button type="button" onclick="resetTplEditor()" class="px-3 py-2 rounded-xl border border-gray-300 text-gray-700 text-xs font-bold hover:bg-gray-100">既定に戻す</button>
+        <button type="button" onclick="resetTplEditor()" class="px-3 py-2 rounded-xl border border-gray-300 text-gray-700 text-xs font-bold hover:bg-gray-100">このタブを既定に戻す</button>
         <div class="flex flex-wrap items-center justify-end gap-1.5">
           <button type="button" onclick="closeModal('tplModal')" class="px-3 py-2 rounded-xl border border-gray-300 text-gray-700 text-xs font-bold hover:bg-gray-100">閉じる</button>
           <button type="button" onclick="saveTplEditor()" class="px-3.5 py-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-orange-400 text-xs font-black shadow-sm">保存（全端末に共有）</button>
@@ -662,6 +676,8 @@
     templates: null,
     modalTemplateStep: 1,
     tplPushTimer: null,
+    tplEditTab: 'contactWait7',
+    tplDraft: null,
     currentReasonIdx: 0,
     currentRawCandidate: null,
     lastUndoKey: null,
@@ -1172,23 +1188,42 @@
     }
   }
 
-  // ===== 打診文テンプレート（回数別・サイト別・GitHub共有）2026-11-26 =====
-  // 参考パターン: CRMのシーケンス（タッチ回数で文面を切替）＋変数差し込み（{氏名}/{支店}）＋共有テンプレートライブラリ。
+  // ===== 打診文テンプレート（タブ別×回数別・サイト別・GitHub共有）2026-11-27 v2 =====
   // 保存先はこのサイト専用の templates.json（自サイトのGitHubリポジトリ）。他サイトとは混ぜない。
+  var TPL_TABS = { contactWait7: '7日以内応募・未接触', within3days: '3日以内・未FIX', unfixed: '未FIX人材', externalHot: '激アツ再アプローチ', contactWaitLong: '未接触人材', hot: '掘り起こし' };
+  var TPL_TAB_KEYS = Object.keys(TPL_TABS);
+  var TPL_STEP_KEYS = ['step1', 'step2', 'step3', 'step4'];
   var DEFAULT_TEMPLATES = {
-    step1: 'お世話になっております。\n株式会社ビースタイルと申します。\n\n以前応募いただいた求人のエントリーの件でご連絡になります。直近、再エントリー希望の施設が増えているためお声掛けさせていただきました。\n一部重複してると思いますが確認も兼ねて、ご回答お願いします\n\n①保持資格：\n②お住まいの郵便番号：\n③就業開始希望日：\n④就業可能日数：\n⑤勤務形態：\n⑥休み希望曜日：\n⑦通勤方法：\n⑧電話連絡NGな時間帯や曜日：\n⑨経験年数と直近2つの職歴：\n\n以上、9点回答いただけると幸いです\n宜しくお願いします',
-    step2: 'お世話になっております。\n株式会社ビースタイルと申します。\n\n先日ご連絡した件で、再度のご連絡です。ご紹介できる施設が増えており、{氏名}様のご希望に合う可能性があります。\nお手すきの際に、下記をご回答いただけると幸いです（分かる範囲で大丈夫です）。\n\n①保持資格：\n②お住まいの郵便番号：\n③就業開始希望日：\n④就業可能日数：\n⑤勤務形態：\n⑥休み希望曜日：\n⑦通勤方法：\n⑧電話連絡NGな時間帯や曜日：\n⑨経験年数と直近2つの職歴：\n\n宜しくお願いします',
-    step3: 'お世話になっております。\n株式会社ビースタイルです。\n\nご連絡がつかず、再度失礼します。\n就業先をお探しでしたら、条件だけでも教えてください。\n（資格・郵便番号・開始希望日・週の勤務日数だけでも大丈夫です）\n短いご返信でも構いませんので、お待ちしております。',
-    step4: 'お世話になっております。\n株式会社ビースタイルです。\n\n何度かご連絡してしまい、失礼しました。\nもし今はお仕事をお探しでなければ、その旨だけでもご返信ください。今後のご連絡は控えます。\nお探しの場合は、ご希望の条件を教えていただければご紹介します。'
+    contactWait7: { step1: 'お世話になっております。\n株式会社ビースタイルと申します。\n\n以前応募いただいた求人のエントリーの件でご連絡になります。直近、再エントリー希望の施設が増えているためお声掛けさせていただきました。\n一部重複してると思いますが確認も兼ねて、ご回答お願いします\n\n①保持資格：\n②お住まいの郵便番号：\n③就業開始希望日：\n④就業可能日数：\n⑤勤務形態：\n⑥休み希望曜日：\n⑦通勤方法：\n⑧電話連絡NGな時間帯や曜日：\n⑨経験年数と直近2つの職歴：\n\n以上、9点回答いただけると幸いです\n宜しくお願いします', step2: 'お世話になっております。\n株式会社ビースタイルと申します。\n\n先日ご連絡した件で、再度のご連絡です。ご紹介できる施設が増えており、ご希望に合う可能性があります。\nお手すきの際に、下記をご回答いただけると幸いです（分かる範囲で大丈夫です）。\n\n①保持資格：\n②お住まいの郵便番号：\n③就業開始希望日：\n④就業可能日数：\n⑤勤務形態：\n⑥休み希望曜日：\n⑦通勤方法：\n⑧電話連絡NGな時間帯や曜日：\n⑨経験年数と直近2つの職歴：\n\n宜しくお願いします', step3: 'お世話になっております。\n株式会社ビースタイルです。\n\nご連絡がつかず、再度失礼します。\n就業先をお探しでしたら、条件だけでも教えてください。\n（資格・郵便番号・開始希望日・週の勤務日数だけでも大丈夫です）\n短いご返信でも構いませんので、お待ちしております。', step4: 'お世話になっております。\n株式会社ビースタイルです。\n\n何度かご連絡してしまい、失礼しました。\nもし今はお仕事をお探しでなければ、その旨だけでもご返信ください。今後のご連絡は控えます。\nお探しの場合は、ご希望の条件を教えていただければご紹介します。' },
+    within3days: { step1: 'お世話になっております。\n株式会社ビースタイルと申します。\n\n先日はご応募ありがとうございました。\n面談の日程を調整したく、ご連絡しました。ご都合の良い日時を2〜3つ教えていただけますか。\nあわせて、保持資格とご希望の勤務日数が分かれば教えてください。', step2: 'お世話になっております。\n株式会社ビースタイルです。\n\n面談日程の件で、再度のご連絡です。\nご都合の良い日時だけでもご返信いただけると助かります。', step3: 'お世話になっております。\n株式会社ビースタイルです。\n\nご連絡がつかず失礼します。\n面談の日程だけでも決められればと思います。難しい場合は、現在のご状況だけでも教えてください。', step4: 'お世話になっております。\n株式会社ビースタイルです。\n\n何度かご連絡してしまい失礼しました。\n今回は一旦こちらで保留にします。ご希望があれば、いつでもご連絡ください。' },
+    unfixed: { step1: 'お世話になっております。\n株式会社ビースタイルと申します。\n\n以前ご応募いただいた件で、その後のご状況を確認したくご連絡しました。\n現在もお仕事をお探しでしたら、ご希望の条件（資格・勤務エリア・週の日数・開始時期）を教えていただけますか。', step2: 'お世話になっております。\n株式会社ビースタイルです。\n\n先日ご連絡した件で、再度失礼します。\nご紹介できる施設が増えています。条件だけでも教えていただければ、合う施設をご案内します。', step3: 'お世話になっております。\n株式会社ビースタイルです。\n\nご連絡がつかず失礼します。\nお探しでしたら、勤務エリアと週の日数だけでも大丈夫ですので、ご返信いただけると幸いです。', step4: 'お世話になっております。\n株式会社ビースタイルです。\n\n何度かご連絡してしまい、失礼しました。\nもし今はお仕事をお探しでなければ、その旨だけでもご返信ください。今後のご連絡は控えます。\nお探しの場合は、ご希望の条件を教えていただければご紹介します。' },
+    externalHot: { step1: 'お世話になっております。\n株式会社ビースタイルと申します。\n\n現在お仕事をお探しと伺い、ご連絡しました。\n当社でもご紹介できる施設が増えています。ご希望の条件（資格・勤務エリア・週の日数・開始時期）を教えていただければ、合う施設をご案内します。', step2: 'お世話になっております。\n株式会社ビースタイルです。\n\n先日ご連絡した件で、再度失礼します。\n条件だけでも教えていただければ、施設をお探しします。短いご返信でも大丈夫です。', step3: 'お世話になっております。\n株式会社ビースタイルです。\n\nご連絡がつかず失礼します。\n施設のご紹介が可能ですので、ご希望のエリアだけでも教えていただけると幸いです。', step4: 'お世話になっております。\n株式会社ビースタイルです。\n\n何度かご連絡してしまい、失礼しました。\nもし今はお仕事をお探しでなければ、その旨だけでもご返信ください。今後のご連絡は控えます。\nお探しの場合は、ご希望の条件を教えていただければご紹介します。' },
+    contactWaitLong: { step1: 'お世話になっております。\n株式会社ビースタイルと申します。\n\n以前応募いただいた求人のエントリーの件でご連絡になります。直近、再エントリー希望の施設が増えているためお声掛けさせていただきました。\n一部重複してると思いますが確認も兼ねて、ご回答お願いします\n\n①保持資格：\n②お住まいの郵便番号：\n③就業開始希望日：\n④就業可能日数：\n⑤勤務形態：\n⑥休み希望曜日：\n⑦通勤方法：\n⑧電話連絡NGな時間帯や曜日：\n⑨経験年数と直近2つの職歴：\n\n以上、9点回答いただけると幸いです\n宜しくお願いします', step2: 'お世話になっております。\n株式会社ビースタイルと申します。\n\n先日ご連絡した件で、再度のご連絡です。ご紹介できる施設が増えており、ご希望に合う可能性があります。\nお手すきの際に、下記をご回答いただけると幸いです（分かる範囲で大丈夫です）。\n\n①保持資格：\n②お住まいの郵便番号：\n③就業開始希望日：\n④就業可能日数：\n⑤勤務形態：\n⑥休み希望曜日：\n⑦通勤方法：\n⑧電話連絡NGな時間帯や曜日：\n⑨経験年数と直近2つの職歴：\n\n宜しくお願いします', step3: 'お世話になっております。\n株式会社ビースタイルです。\n\nご連絡がつかず、再度失礼します。\n就業先をお探しでしたら、条件だけでも教えてください。\n（資格・郵便番号・開始希望日・週の勤務日数だけでも大丈夫です）\n短いご返信でも構いませんので、お待ちしております。', step4: 'お世話になっております。\n株式会社ビースタイルです。\n\n何度かご連絡してしまい、失礼しました。\nもし今はお仕事をお探しでなければ、その旨だけでもご返信ください。今後のご連絡は控えます。\nお探しの場合は、ご希望の条件を教えていただければご紹介します。' },
+    hot: { step1: 'お世話になっております。\n株式会社ビースタイルと申します。\n\n以前ご応募いただいた件で、再エントリー希望の施設が増えているためお声掛けしました。\n現在もお仕事をお探しでしたら、ご希望の条件を教えていただけますか（資格・郵便番号・開始希望日・週の日数・勤務形態など、分かる範囲で大丈夫です）。', step2: 'お世話になっております。\n株式会社ビースタイルです。\n\n先日ご連絡した件で、再度失礼します。\nご紹介できる施設が増えています。条件だけでも教えていただければ、合う施設をご案内します。', step3: 'お世話になっております。\n株式会社ビースタイルです。\n\nご連絡がつかず失礼します。\nお探しでしたら、勤務エリアと週の日数だけでも大丈夫ですので、ご返信いただけると幸いです。', step4: 'お世話になっております。\n株式会社ビースタイルです。\n\n何度かご連絡してしまい、失礼しました。\nもし今はお仕事をお探しでなければ、その旨だけでもご返信ください。今後のご連絡は控えます。\nお探しの場合は、ご希望の条件を教えていただければご紹介します。' }
   };
 
-  function getTemplates() {
-    var t = state.templates || {};
+  // 旧形式（タブ別でない {step1..step4}）は contactWait7 のものとして引き継ぐ
+  function normalizeTemplates(raw) {
     var out = {};
-    for (var i = 1; i <= 4; i++) {
-      var k = 'step' + i;
-      out[k] = (typeof t[k] === 'string' && t[k]) ? t[k] : DEFAULT_TEMPLATES[k];
+    TPL_TAB_KEYS.forEach(function(tab) { out[tab] = Object.assign({}, DEFAULT_TEMPLATES[tab]); });
+    if (!raw || typeof raw !== 'object') return out;
+    if (raw.step1 || raw.step2 || raw.step3 || raw.step4) {
+      TPL_STEP_KEYS.forEach(function(k) { if (typeof raw[k] === 'string' && raw[k]) out.contactWait7[k] = raw[k]; });
+      return out;
     }
+    TPL_TAB_KEYS.forEach(function(tab) {
+      var t = raw[tab];
+      if (!t) return;
+      TPL_STEP_KEYS.forEach(function(k) { if (typeof t[k] === 'string' && t[k]) out[tab][k] = t[k]; });
+    });
+    return out;
+  }
+
+  function getTemplatesForTab(tab) {
+    var src = (state.templates && state.templates[tab]) || {};
+    var def = DEFAULT_TEMPLATES[tab] || DEFAULT_TEMPLATES.contactWait7;
+    var out = {};
+    TPL_STEP_KEYS.forEach(function(k) { out[k] = (typeof src[k] === 'string' && src[k]) ? src[k] : def[k]; });
     return out;
   }
 
@@ -1208,10 +1243,7 @@
   }
 
   function applyTemplatePlaceholders(text, c) {
-    return String(text || '')
-      .replace(/\{氏名\}/g, c.name || '')
-      .replace(/\{名前\}/g, c.name || '')
-      .replace(/\{支店\}/g, c.branch || '');
+    return String(text || '').replace(/\{支店\}/g, c.branch || '');
   }
 
   function highlightTplButtons() {
@@ -1232,34 +1264,70 @@
     refreshModalTextarea();
   };
 
-  window.openTplEditor = function() {
-    var t = getTemplates();
+  // --- テンプレ編集（タブ切替式） ---
+  function tplFillEditor() {
+    var tab = state.tplEditTab || 'contactWait7';
+    var label = document.getElementById('tplEditTabLabel');
+    if (label) label.textContent = TPL_TABS[tab] || tab;
+    var t = (state.tplDraft && state.tplDraft[tab]) || getTemplatesForTab(tab);
     for (var i = 1; i <= 4; i++) {
       var el = document.getElementById('tplText' + i);
-      if (el) el.value = t['step' + i];
+      if (el) el.value = t['step' + i] || '';
     }
+    TPL_TAB_KEYS.forEach(function(k) {
+      var b = document.getElementById('tplTabBtn_' + k);
+      if (!b) return;
+      b.className = (k === tab)
+        ? 'px-2.5 py-1 rounded-md text-[11px] sm:text-xs font-black bg-zinc-900 text-orange-400 transition whitespace-nowrap'
+        : 'px-2.5 py-1 rounded-md text-[11px] sm:text-xs font-bold text-gray-600 hover:text-gray-900 transition whitespace-nowrap';
+    });
+  }
+
+  function tplStashEditor() {
+    if (!state.tplDraft) return;
+    var tab = state.tplEditTab || 'contactWait7';
+    if (!state.tplDraft[tab]) state.tplDraft[tab] = {};
+    for (var i = 1; i <= 4; i++) {
+      var el = document.getElementById('tplText' + i);
+      if (el) state.tplDraft[tab]['step' + i] = el.value;
+    }
+  }
+
+  window.setTplEditTab = function(tab) {
+    tplStashEditor();
+    state.tplEditTab = tab;
+    tplFillEditor();
+  };
+
+  window.openTplEditor = function() {
+    state.tplDraft = normalizeTemplates(state.templates);
+    state.tplEditTab = 'contactWait7';
+    tplFillEditor();
+    openModal('tplModal');
+  };
+
+  window.openTplEditorFromModal = function() {
+    state.tplDraft = normalizeTemplates(state.templates);
+    state.tplEditTab = (state.modalTarget && state.modalTarget.assignedTab) || 'contactWait7';
+    tplFillEditor();
     openModal('tplModal');
   };
 
   window.resetTplEditor = function() {
-    for (var i = 1; i <= 4; i++) {
-      var el = document.getElementById('tplText' + i);
-      if (el) el.value = DEFAULT_TEMPLATES['step' + i];
-    }
+    var tab = state.tplEditTab || 'contactWait7';
+    if (state.tplDraft) state.tplDraft[tab] = Object.assign({}, DEFAULT_TEMPLATES[tab]);
+    tplFillEditor();
   };
 
   window.saveTplEditor = function() {
-    var t = {};
-    for (var i = 1; i <= 4; i++) {
-      var el = document.getElementById('tplText' + i);
-      t['step' + i] = el ? el.value : '';
-    }
-    state.templates = t;
-    try { localStorage.setItem(STORAGE_KEYS.TEMPLATES, JSON.stringify(t)); } catch (e) {}
+    tplStashEditor();
+    state.templates = normalizeTemplates(state.tplDraft);
+    try { localStorage.setItem(STORAGE_KEYS.TEMPLATES, JSON.stringify(state.templates)); } catch (e) {}
+    state.tplDraft = null;
     closeModal('tplModal');
     pushTemplatesToGithub();
     if (state.modalTarget && state.modalTemplateStep > 0) refreshModalTextarea();
-    showPopup('テンプレートを保存しました', 'このサイトのテンプレートとして保存し、GitHub経由で全端末に共有します。');
+    showPopup('テンプレートを保存しました', 'タブ別テンプレートを保存し、GitHub経由で全端末に共有します（このサイト専用）。');
   };
 
   // GitHub上の templates.json を自動同期（端末間共有・このサイト専用）
@@ -1285,7 +1353,7 @@
         if (rawRes.ok) remote = await rawRes.json();
       }
       if (remote && remote.templates) {
-        state.templates = Object.assign({}, DEFAULT_TEMPLATES, remote.templates);
+        state.templates = normalizeTemplates(remote.templates);
         try { localStorage.setItem(STORAGE_KEYS.TEMPLATES, JSON.stringify(state.templates)); } catch (e) {}
       }
     } catch (e) {}
@@ -1302,7 +1370,7 @@
       var sha = null;
       var getRes = await fetch(apiUrl + '?ref=' + encodeURIComponent(ghBranch) + '&t=' + Date.now(), { headers: headers });
       if (getRes.ok) { var ef = await getRes.json(); sha = ef.sha; }
-      var payload = { updatedAt: new Date().toISOString(), templates: getTemplates() };
+      var payload = { updatedAt: new Date().toISOString(), templates: normalizeTemplates(state.templates) };
       var bodyObj = { message: 'Update templates.json', content: utf8ToBase64(JSON.stringify(payload, null, 2)), branch: ghBranch };
       if (sha) bodyObj.sha = sha;
       await fetch(apiUrl, { method: 'PUT', headers: headers, body: JSON.stringify(bodyObj) });
@@ -1313,7 +1381,7 @@
     try { var x = localStorage.getItem(STORAGE_KEYS.EXCLUDED_LIST); if (x) state.excludedMap = JSON.parse(x); } catch (e) {}
     try { var g = localStorage.getItem(STORAGE_KEYS.GSI_CACHE); if (g) state.gsiCache = JSON.parse(g); } catch (e) {}
     try { var s = localStorage.getItem(STORAGE_KEYS.SETTINGS); if (s) state.settings = Object.assign({}, state.settings, JSON.parse(s)); } catch (e) {}
-    try { var tp = localStorage.getItem(STORAGE_KEYS.TEMPLATES); if (tp) state.templates = Object.assign({}, DEFAULT_TEMPLATES, JSON.parse(tp)); } catch (e) {}
+    try { var tp = localStorage.getItem(STORAGE_KEYS.TEMPLATES); if (tp) state.templates = normalizeTemplates(JSON.parse(tp)); } catch (e) {}
 
     var elExt = document.getElementById('externalDataUrlInput');
     if (elExt) elExt.value = state.settings.externalDataUrl || '';
@@ -3570,7 +3638,7 @@
   function refreshModalTextarea() {
     if (!state.modalTarget) return;
     if (state.modalTemplateStep > 0) {
-      var tplText = getTemplates()['step' + state.modalTemplateStep] || '';
+      var tplText = getTemplatesForTab(state.modalTarget.assignedTab)['step' + state.modalTemplateStep] || '';
       document.getElementById('modalMessageText').value = applyTemplatePlaceholders(tplText, state.modalTarget);
       return;
     }
