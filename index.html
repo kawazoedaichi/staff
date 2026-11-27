@@ -3031,13 +3031,14 @@
     return (typeof log.count === 'number' && log.count > 0) ? log.count : 1;
   }
 
-  // 打診サイクルのリセット（2026-11-27 河添）: 4回打診したらサイクル終了。30日クールダウンにはせず、
-  // 最終送信から5時間たったら未対応・0回として再浮上する（次の打診は1回目から）。
+  // 打診サイクルのリセット（2026-11-27 河添）: 4回打診したら通常のクールダウン（30日タブは30日）に入り、
+  // 次に上がってくる時は0回・未対応として再浮上する（次の打診は1回目から）。
   function isCycleReset(log) {
     if (!log || log.status === 'done') return false;
     if (getApproachCount(log) < 4) return false;
     var sentAt = log.lastSentAt || log.firstSentAt || 0;
-    return Date.now() >= sentAt + 5 * 60 * 60 * 1000;
+    var until = log.cooldownUntil || (sentAt + 30 * 24 * 60 * 60 * 1000);
+    return Date.now() >= until;
   }
   // 表示・文面判定に使う実効アプローチ回数（リセット後は0）
   function getDisplayApproachCount(log) {
@@ -3061,17 +3062,6 @@
     if (!log) return { isHidden: false, isActed: false, label: '未対応' };
 
     var now = Date.now();
-    // 4回打診済みは30日クールダウンを待たず、最終送信から5時間で未対応・0回にリセット（2026-11-27 河添）
-    if (log.status !== 'done' && getApproachCount(log) >= 4) {
-      var cycleSentAt = log.lastSentAt || log.firstSentAt || now;
-      var cycleUntil = cycleSentAt + 5 * 60 * 60 * 1000;
-      if (now < cycleUntil) {
-        var cremMs = cycleUntil - now;
-        var cremLabel = cremMs >= 60 * 60 * 1000 ? '残' + Math.ceil(cremMs / (1000 * 60 * 60)) + '時間' : '残' + Math.max(1, Math.ceil(cremMs / (1000 * 60))) + '分';
-        return { isHidden: true, isActed: true, label: 'クールダウン中（' + cremLabel + '）' };
-      }
-      return { isHidden: false, isActed: false, label: '未対応' };
-    }
     if (log.cooldownUntil && now < log.cooldownUntil) {
       var remMs = log.cooldownUntil - now;
       var remLabel = remMs >= 24 * 60 * 60 * 1000
@@ -3565,10 +3555,8 @@
     state.lastUndoPrevLog = prev ? Object.assign({}, prev) : null;
 
     var prevCount = prev ? getDisplayApproachCount(prev) : 0;
-    var newCount = prevCount + 1;
-    // 4回目の打診は30日クールダウンにせず5時間にする（過ぎたら未対応・0回にリセット。2026-11-27 河添）
-    var cdMs = newCount >= 4 ? 5 * 60 * 60 * 1000 : cooldownMsForTab(c.assignedTab);
-    state.actionLogs[personKey] = { status: 'cooldown', firstSentAt: prevCount > 0 ? ((prev && prev.firstSentAt) || now) : now, lastSentAt: now, cooldownUntil: now + cdMs, tab: c.assignedTab, count: newCount };
+    // クールダウンは従来どおりタブ別（30日タブは30日）。4回済みの人は次に上がってくる時に実効回数が0になる（2026-11-27 河添）
+    state.actionLogs[personKey] = { status: 'cooldown', firstSentAt: prevCount > 0 ? ((prev && prev.firstSentAt) || now) : now, lastSentAt: now, cooldownUntil: now + cooldownMsForTab(c.assignedTab), tab: c.assignedTab, count: prevCount + 1 };
     saveActionLogs();
     renderList(true);
     showUndoToastBar(c);
