@@ -3653,7 +3653,7 @@
     var tabLabelMap = { contactWait7: '7日以内応募・未接触', within3days: '3日以内・未FIX', unfixed: '未FIX人材', externalHot: '激アツ再アプローチ', contactWaitLong: '未接触人材', hot: '掘り起こし' };
     var tabBadgeEl = document.getElementById('modalTabBadge');
     if (tabBadgeEl) tabBadgeEl.textContent = tabLabelMap[c.assignedTab] || '追客';
-    document.getElementById('modalCandidateName').textContent = c.name + '（' + (c.branch || '-') + '）';
+    document.getElementById('modalCandidateName').textContent = c.name + '（' + (c.branch || '-') + '）｜アプローチ' + (state.actionLogs[c.personKey] ? getApproachCount(state.actionLogs[c.personKey]) : 0) + '回';
     var salApproach = formatApproachLabel(c, true);
     document.getElementById('modalSalutationInfo').textContent = (salApproach ? salApproach + '｜' : '') + (state.modalTemplateStep === 0 ? '1回目は求人打診' : '次は' + state.modalTemplateStep + '回目テンプレ');
 
