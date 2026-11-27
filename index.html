@@ -1239,14 +1239,14 @@
   // 次に使うテンプレの段（アプローチ回数+1、最大4）
   function approachNextStep(c) {
     var log = state.actionLogs[c.personKey];
-    var n = log ? getApproachCount(log) : 0;
+    var n = log ? getDisplayApproachCount(log) : 0;
     return Math.min(n + 1, 4);
   }
   // モーダルを開いたときのデフォルトの段。
   // 7日以内未接触: 回数+1の段。 他タブ: 1回目=求人打診(0)／2回目=短文(2)／3回目以降=角度変更(3,4)
   function defaultModalStep(c) {
     var log = state.actionLogs[c.personKey];
-    var n = log ? getApproachCount(log) : 0;
+    var n = log ? getDisplayApproachCount(log) : 0;
     if (c.assignedTab === 'contactWait7') return Math.min(n + 1, 4);
     if (n <= 0) return 0;
     if (n === 1) return 2;
@@ -1258,7 +1258,8 @@
   function approachStatusLabel(c) {
     var log = state.actionLogs[c.personKey];
     if (!log) return '未打診';
-    var n = getApproachCount(log);
+    var n = getDisplayApproachCount(log);
+    if (n <= 0) return '未打診';
     return n >= 4 ? '打診4回以上済' : '打診' + n + '回済';
   }
 
@@ -3030,10 +3031,24 @@
     return (typeof log.count === 'number' && log.count > 0) ? log.count : 1;
   }
 
+  // 打診サイクルのリセット（2026-11-27 河添）: 4回打診したらサイクル終了。30日クールダウンにはせず、
+  // 最終送信から5時間たったら未対応・0回として再浮上する（次の打診は1回目から）。
+  function isCycleReset(log) {
+    if (!log || log.status === 'done') return false;
+    if (getApproachCount(log) < 4) return false;
+    var sentAt = log.lastSentAt || log.firstSentAt || 0;
+    return Date.now() >= sentAt + 5 * 60 * 60 * 1000;
+  }
+  // 表示・文面判定に使う実効アプローチ回数（リセット後は0）
+  function getDisplayApproachCount(log) {
+    if (!log) return 0;
+    return isCycleReset(log) ? 0 : getApproachCount(log);
+  }
+
   function formatApproachLabel(c, withDate) {
     var log = state.actionLogs[c.personKey];
     if (!log) return '';
-    var s = 'アプローチ' + getApproachCount(log) + '回';
+    var s = 'アプローチ' + getDisplayApproachCount(log) + '回';
     if (withDate) {
       var ts = log.lastSentAt || log.firstSentAt;
       if (ts) s += '（最終：' + new Date(ts).toLocaleString('ja-JP', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) + '）';
@@ -3046,6 +3061,17 @@
     if (!log) return { isHidden: false, isActed: false, label: '未対応' };
 
     var now = Date.now();
+    // 4回打診済みは30日クールダウンを待たず、最終送信から5時間で未対応・0回にリセット（2026-11-27 河添）
+    if (log.status !== 'done' && getApproachCount(log) >= 4) {
+      var cycleSentAt = log.lastSentAt || log.firstSentAt || now;
+      var cycleUntil = cycleSentAt + 5 * 60 * 60 * 1000;
+      if (now < cycleUntil) {
+        var cremMs = cycleUntil - now;
+        var cremLabel = cremMs >= 60 * 60 * 1000 ? '残' + Math.ceil(cremMs / (1000 * 60 * 60)) + '時間' : '残' + Math.max(1, Math.ceil(cremMs / (1000 * 60))) + '分';
+        return { isHidden: true, isActed: true, label: 'クールダウン中（' + cremLabel + '）' };
+      }
+      return { isHidden: false, isActed: false, label: '未対応' };
+    }
     if (log.cooldownUntil && now < log.cooldownUntil) {
       var remMs = log.cooldownUntil - now;
       var remLabel = remMs >= 24 * 60 * 60 * 1000
@@ -3127,8 +3153,8 @@
       return true;
     }).sort(function(a, b) {
       // デフォルト表示順: アプローチ回数が少ない順（未連絡=0回が先頭。同数は従来順を維持）
-      var ca = state.actionLogs[a.personKey] ? getApproachCount(state.actionLogs[a.personKey]) : 0;
-      var cb = state.actionLogs[b.personKey] ? getApproachCount(state.actionLogs[b.personKey]) : 0;
+      var ca = state.actionLogs[a.personKey] ? getDisplayApproachCount(state.actionLogs[a.personKey]) : 0;
+      var cb = state.actionLogs[b.personKey] ? getDisplayApproachCount(state.actionLogs[b.personKey]) : 0;
       return ca - cb;
     });
   }
@@ -3538,8 +3564,11 @@
     state.lastUndoKey = personKey;
     state.lastUndoPrevLog = prev ? Object.assign({}, prev) : null;
 
-    var prevCount = prev ? getApproachCount(prev) : 0;
-    state.actionLogs[personKey] = { status: 'cooldown', firstSentAt: (prev && prev.firstSentAt) || now, lastSentAt: now, cooldownUntil: now + cooldownMsForTab(c.assignedTab), tab: c.assignedTab, count: prevCount + 1 };
+    var prevCount = prev ? getDisplayApproachCount(prev) : 0;
+    var newCount = prevCount + 1;
+    // 4回目の打診は30日クールダウンにせず5時間にする（過ぎたら未対応・0回にリセット。2026-11-27 河添）
+    var cdMs = newCount >= 4 ? 5 * 60 * 60 * 1000 : cooldownMsForTab(c.assignedTab);
+    state.actionLogs[personKey] = { status: 'cooldown', firstSentAt: prevCount > 0 ? ((prev && prev.firstSentAt) || now) : now, lastSentAt: now, cooldownUntil: now + cdMs, tab: c.assignedTab, count: newCount };
     saveActionLogs();
     renderList(true);
     showUndoToastBar(c);
@@ -3653,7 +3682,7 @@
     var tabLabelMap = { contactWait7: '7日以内応募・未接触', within3days: '3日以内・未FIX', unfixed: '未FIX人材', externalHot: '激アツ再アプローチ', contactWaitLong: '未接触人材', hot: '掘り起こし' };
     var tabBadgeEl = document.getElementById('modalTabBadge');
     if (tabBadgeEl) tabBadgeEl.textContent = tabLabelMap[c.assignedTab] || '追客';
-    document.getElementById('modalCandidateName').textContent = c.name + '（' + (c.branch || '-') + '）｜アプローチ' + (state.actionLogs[c.personKey] ? getApproachCount(state.actionLogs[c.personKey]) : 0) + '回';
+    document.getElementById('modalCandidateName').textContent = c.name + '（' + (c.branch || '-') + '）｜アプローチ' + (state.actionLogs[c.personKey] ? getDisplayApproachCount(state.actionLogs[c.personKey]) : 0) + '回';
     var salApproach = formatApproachLabel(c, true);
     document.getElementById('modalSalutationInfo').textContent = (salApproach ? salApproach + '｜' : '') + (state.modalTemplateStep === 0 ? '1回目は求人打診' : '次は' + state.modalTemplateStep + '回目テンプレ');
 
