@@ -291,6 +291,12 @@
         </div>
         <p class="text-gray-600 leading-relaxed">テンプレートはタブごとに別々です。アプローチ回数に応じて文面が自動で切り替わります。<code>{支店}</code> は開いた人の担当支店に自動で差し替わります。保存するとGitHub経由で全端末に共有されます（このサイト専用・他サイトとは混ざりません）。</p>
         <div>
+          <label class="font-bold text-gray-700 block mb-1">案件打診（自動生成の文面）</label>
+          <p class="text-gray-500 leading-relaxed mb-1">空欄なら今までどおり自動生成します。入力すると、その文面で生成します。<code>{候補求人}</code>・<code>{時給}</code>・<code>{返信FM}</code>・<code>{理由}</code>・<code>{支店}</code>・<code>{宛名}</code> はその人の情報に差し替わります（SMS短縮版では <code>{候補求人}</code> は短い候補リストになります）。住所が無い人には従来の確認文面が使われます。</p>
+          <textarea id="tplTextAuto" rows="9" class="w-full rounded-xl border border-gray-300 p-3 text-xs sm:text-sm leading-relaxed focus:outline-none focus:border-orange-500 font-sans" placeholder="空欄＝自動生成"></textarea>
+          <button type="button" onclick="insertAutoPattern()" class="mt-1 px-2.5 py-1 rounded-lg bg-white border border-orange-300 text-[11px] sm:text-xs font-bold text-orange-800">自動文面の型を入れる</button>
+        </div>
+        <div>
           <label class="font-bold text-gray-700 block mb-1">1回目</label>
           <textarea id="tplText1" rows="7" class="w-full rounded-xl border border-gray-300 p-3 text-xs sm:text-sm leading-relaxed focus:outline-none focus:border-orange-500 font-sans"></textarea>
         </div>
@@ -1195,17 +1201,18 @@
   var TPL_STEP_KEYS = ['step1', 'step2', 'step3', 'step4'];
   var DEFAULT_TEMPLATES = {
     contactWait7: { step1: 'お世話になっております。\n株式会社ビースタイルと申します。\n\n以前応募いただいた求人のエントリーの件でご連絡になります。直近、再エントリー希望の施設が増えているためお声掛けさせていただきました。\n一部重複してると思いますが確認も兼ねて、ご回答お願いします\n\n①保持資格：\n②お住まいの郵便番号：\n③就業開始希望日：\n④就業可能日数：\n⑤勤務形態：\n⑥休み希望曜日：\n⑦通勤方法：\n⑧電話連絡NGな時間帯や曜日：\n⑨経験年数と直近2つの職歴：\n\n以上、9点回答いただけると幸いです\n宜しくお願いします', step2: 'お世話になっております。\n株式会社ビースタイルと申します。\n\n先日ご連絡した件で、再度のご連絡です。ご紹介できる施設が増えており、ご希望に合う可能性があります。\nお手すきの際に、下記をご回答いただけると幸いです（分かる範囲で大丈夫です）。\n\n①保持資格：\n②お住まいの郵便番号：\n③就業開始希望日：\n④就業可能日数：\n⑤勤務形態：\n⑥休み希望曜日：\n⑦通勤方法：\n⑧電話連絡NGな時間帯や曜日：\n⑨経験年数と直近2つの職歴：\n\n宜しくお願いします', step3: 'お世話になっております。\n株式会社ビースタイルです。\n\nご連絡がつかず、再度失礼します。\n就業先をお探しでしたら、条件だけでも教えてください。\n（資格・郵便番号・開始希望日・週の勤務日数だけでも大丈夫です）\n短いご返信でも構いませんので、お待ちしております。', step4: 'お世話になっております。\n株式会社ビースタイルです。\n\n何度かご連絡してしまい、失礼しました。\nもし今はお仕事をお探しでなければ、その旨だけでもご返信ください。今後のご連絡は控えます。\nお探しの場合は、ご希望の条件を教えていただければご紹介します。' },
-    within3days: { step1: 'お世話になっております。\n株式会社ビースタイルと申します。\n\n先日はご応募ありがとうございました。\n面談の日程を調整したく、ご連絡しました。ご都合の良い日時を2〜3つ教えていただけますか。\nあわせて、保持資格とご希望の勤務日数が分かれば教えてください。', step2: 'お世話になっております。\n株式会社ビースタイルです。\n\n面談日程のご連絡、届いていますでしょうか。\nご都合の良い日時だけでもご返信いただけると助かります。', step3: 'お世話になっております。\n株式会社ビースタイルです。\n\n面談は短時間で大丈夫ですし、難しければお電話でも構いません。\nご都合の良いタイミングを教えてください。', step4: 'お世話になっております。\n株式会社ビースタイルです。\n\n何度かご連絡してしまい失礼しました。\n今回は一旦こちらで保留にします。ご希望があれば、いつでもご連絡ください。' },
-    unfixed: { step1: 'お世話になっております。\n株式会社ビースタイルと申します。\n\n以前ご応募いただいた件で、その後のご状況を確認したくご連絡しました。\n現在もお仕事をお探しでしたら、ご希望の条件（資格・勤務エリア・週の日数・開始時期）を教えていただけますか。', step2: 'お世話になっております。\n株式会社ビースタイルです。\n\n先日のご連絡、届いていますでしょうか。\n現在もお探しでしたら、条件だけでも教えていただけると幸いです。', step3: 'お世話になっております。\n株式会社ビースタイルです。\n\n施設側から再エントリー希望が増えています。\n今のご希望（エリア・週の日数）だけでも教えていただければ、合う施設をご案内します。', step4: 'お世話になっております。\n株式会社ビースタイルです。\n\n何度かご連絡してしまい、失礼しました。\nもし今はお仕事をお探しでなければ、その旨だけでもご返信ください。今後のご連絡は控えます。\nお探しの場合は、ご希望の条件を教えていただければご紹介します。' },
-    externalHot: { step1: 'お世話になっております。\n株式会社ビースタイルと申します。\n\n現在お仕事をお探しと伺い、ご連絡しました。\n当社でもご紹介できる施設が増えています。ご希望の条件（資格・勤務エリア・週の日数・開始時期）を教えていただければ、合う施設をご案内します。', step2: 'お世話になっております。\n株式会社ビースタイルです。\n\n先日のご連絡、届いていますでしょうか。\nご紹介できる施設がありますので、条件だけでも教えていただけると幸いです。', step3: 'お世話になっております。\n株式会社ビースタイルです。\n\n他でお探しの条件、そのまま教えていただければ、当社でご紹介できる施設と比較してご案内します。\nエリアと週の日数だけでも大丈夫です。', step4: 'お世話になっております。\n株式会社ビースタイルです。\n\n何度かご連絡してしまい、失礼しました。\nもし今はお仕事をお探しでなければ、その旨だけでもご返信ください。今後のご連絡は控えます。\nお探しの場合は、ご希望の条件を教えていただければご紹介します。' },
-    contactWaitLong: { step1: 'お世話になっております。\n株式会社ビースタイルと申します。\n\n以前応募いただいた求人のエントリーの件でご連絡になります。直近、再エントリー希望の施設が増えているためお声掛けさせていただきました。\n一部重複してると思いますが確認も兼ねて、ご回答お願いします\n\n①保持資格：\n②お住まいの郵便番号：\n③就業開始希望日：\n④就業可能日数：\n⑤勤務形態：\n⑥休み希望曜日：\n⑦通勤方法：\n⑧電話連絡NGな時間帯や曜日：\n⑨経験年数と直近2つの職歴：\n\n以上、9点回答いただけると幸いです\n宜しくお願いします', step2: 'お世話になっております。\n株式会社ビースタイルです。\n\n先日のご連絡、届いていますでしょうか。\nご紹介できる施設が増えていますので、ご希望だけでも教えていただけると幸いです。', step3: 'お世話になっております。\n株式会社ビースタイルです。\n\n9点すべてでなくて大丈夫です。\n資格・お住まいのエリア・週に働ける日数、この3つだけでも教えていただければご紹介できます。', step4: 'お世話になっております。\n株式会社ビースタイルです。\n\n何度かご連絡してしまい、失礼しました。\nもし今はお仕事をお探しでなければ、その旨だけでもご返信ください。今後のご連絡は控えます。\nお探しの場合は、ご希望の条件を教えていただければご紹介します。' },
-    hot: { step1: 'お世話になっております。\n株式会社ビースタイルと申します。\n\n以前ご応募いただいた件で、再エントリー希望の施設が増えているためお声掛けしました。\n現在もお仕事をお探しでしたら、ご希望の条件を教えていただけますか（資格・郵便番号・開始希望日・週の日数・勤務形態など、分かる範囲で大丈夫です）。', step2: 'お世話になっております。\n株式会社ビースタイルです。\n\n先日のご連絡、届いていますでしょうか。\n再エントリーできる施設が増えていますので、ご希望だけでも教えていただけると幸いです。', step3: 'お世話になっております。\n株式会社ビースタイルです。\n\n以前のご応募内容をもとにご紹介できますので、新しく教えていただくのは変わった点だけでも大丈夫です（勤務エリア・週の日数など）。', step4: 'お世話になっております。\n株式会社ビースタイルです。\n\n何度かご連絡してしまい、失礼しました。\nもし今はお仕事をお探しでなければ、その旨だけでもご返信ください。今後のご連絡は控えます。\nお探しの場合は、ご希望の条件を教えていただければご紹介します。' }
+    within3days: { step1: 'お世話になっております。\n株式会社ビースタイルと申します。\n\n先日はご応募ありがとうございました。\n面談の日程を調整したく、ご連絡しました。ご都合の良い日時を2〜3つ教えていただけますか。\nあわせて、保持資格とご希望の勤務日数が分かれば教えてください。', step2: 'お世話になっております。\n株式会社ビースタイルです。\n\n先日のご連絡、届いていなかったらすみません。\n面談日程のご連絡です。ご都合の良い日時だけでもご返信いただけると助かります。', step3: 'お世話になっております。\n株式会社ビースタイルです。\n\n面談は短時間で大丈夫ですし、難しければお電話でも構いません。\nご都合の良いタイミングを教えてください。', step4: 'お世話になっております。\n株式会社ビースタイルです。\n\n何度かご連絡してしまい失礼しました。\n今回は一旦こちらで保留にします。ご希望があれば、いつでもご連絡ください。' },
+    unfixed: { step1: 'お世話になっております。\n株式会社ビースタイルと申します。\n\n以前ご応募いただいた件で、その後のご状況を確認したくご連絡しました。\n現在もお仕事をお探しでしたら、ご希望の条件（資格・勤務エリア・週の日数・開始時期）を教えていただけますか。', step2: 'お世話になっております。\n株式会社ビースタイルです。\n\n先日のご連絡、届いていなかったらすみません。\n現在もお探しでしたら、条件だけでも教えていただけると幸いです。', step3: 'お世話になっております。\n株式会社ビースタイルです。\n\n施設側から再エントリー希望が増えています。\n今のご希望（エリア・週の日数）だけでも教えていただければ、合う施設をご案内します。', step4: 'お世話になっております。\n株式会社ビースタイルです。\n\n何度かご連絡してしまい、失礼しました。\nもし今はお仕事をお探しでなければ、その旨だけでもご返信ください。今後のご連絡は控えます。\nお探しの場合は、ご希望の条件を教えていただければご紹介します。' },
+    externalHot: { step1: 'お世話になっております。\n株式会社ビースタイルと申します。\n\n現在お仕事をお探しと伺い、ご連絡しました。\n当社でもご紹介できる施設が増えています。ご希望の条件（資格・勤務エリア・週の日数・開始時期）を教えていただければ、合う施設をご案内します。', step2: 'お世話になっております。\n株式会社ビースタイルです。\n\n先日のご連絡、届いていなかったらすみません。\nご紹介できる施設がありますので、条件だけでも教えていただけると幸いです。', step3: 'お世話になっております。\n株式会社ビースタイルです。\n\n他でお探しの条件、そのまま教えていただければ、当社でご紹介できる施設と比較してご案内します。\nエリアと週の日数だけでも大丈夫です。', step4: 'お世話になっております。\n株式会社ビースタイルです。\n\n何度かご連絡してしまい、失礼しました。\nもし今はお仕事をお探しでなければ、その旨だけでもご返信ください。今後のご連絡は控えます。\nお探しの場合は、ご希望の条件を教えていただければご紹介します。' },
+    contactWaitLong: { step1: 'お世話になっております。\n株式会社ビースタイルと申します。\n\n以前応募いただいた求人のエントリーの件でご連絡になります。直近、再エントリー希望の施設が増えているためお声掛けさせていただきました。\n一部重複してると思いますが確認も兼ねて、ご回答お願いします\n\n①保持資格：\n②お住まいの郵便番号：\n③就業開始希望日：\n④就業可能日数：\n⑤勤務形態：\n⑥休み希望曜日：\n⑦通勤方法：\n⑧電話連絡NGな時間帯や曜日：\n⑨経験年数と直近2つの職歴：\n\n以上、9点回答いただけると幸いです\n宜しくお願いします', step2: 'お世話になっております。\n株式会社ビースタイルです。\n\n先日のご連絡、届いていなかったらすみません。\nご紹介できる施設が増えていますので、ご希望だけでも教えていただけると幸いです。', step3: 'お世話になっております。\n株式会社ビースタイルです。\n\n9点すべてでなくて大丈夫です。\n資格・お住まいのエリア・週に働ける日数、この3つだけでも教えていただければご紹介できます。', step4: 'お世話になっております。\n株式会社ビースタイルです。\n\n何度かご連絡してしまい、失礼しました。\nもし今はお仕事をお探しでなければ、その旨だけでもご返信いただけると幸いです。\nお探しの場合は、ご希望の条件を教えていただければご紹介します。' },
+    hot: { step1: 'お世話になっております。\n株式会社ビースタイルと申します。\n\n以前ご応募いただいた件で、再エントリー希望の施設が増えているためお声掛けしました。\n現在もお仕事をお探しでしたら、ご希望の条件を教えていただけますか（資格・郵便番号・開始希望日・週の日数・勤務形態など、分かる範囲で大丈夫です）。', step2: 'お世話になっております。\n株式会社ビースタイルです。\n\n先日のご連絡、届いていなかったらすみません。\n再エントリーできる施設が増えていますので、ご希望だけでも教えていただけると幸いです。', step3: 'お世話になっております。\n株式会社ビースタイルです。\n\n以前のご応募内容をもとにご紹介できますので、新しく教えていただくのは変わった点だけでも大丈夫です（勤務エリア・週の日数など）。', step4: 'お世話になっております。\n株式会社ビースタイルです。\n\n何度かご連絡してしまい、失礼しました。\nもし今はお仕事をお探しでなければ、その旨だけでもご返信いただけると幸いです。\nお探しの場合は、ご希望の条件を教えていただければご紹介します。' }
   };
 
   // 旧形式（タブ別でない {step1..step4}）は contactWait7 のものとして引き継ぐ
   function normalizeTemplates(raw) {
     var out = {};
     TPL_TAB_KEYS.forEach(function(tab) { out[tab] = Object.assign({}, DEFAULT_TEMPLATES[tab]); });
+    TPL_TAB_KEYS.forEach(function(tab) { out[tab].auto = ''; });
     if (!raw || typeof raw !== 'object') return out;
     if (raw.step1 || raw.step2 || raw.step3 || raw.step4) {
       TPL_STEP_KEYS.forEach(function(k) { if (typeof raw[k] === 'string' && raw[k]) out.contactWait7[k] = raw[k]; });
@@ -1215,6 +1222,7 @@
       var t = raw[tab];
       if (!t) return;
       TPL_STEP_KEYS.forEach(function(k) { if (typeof t[k] === 'string' && t[k]) out[tab][k] = t[k]; });
+      if (typeof t.auto === 'string') out[tab].auto = t.auto;
     });
     return out;
   }
@@ -1224,6 +1232,7 @@
     var def = DEFAULT_TEMPLATES[tab] || DEFAULT_TEMPLATES.contactWait7;
     var out = {};
     TPL_STEP_KEYS.forEach(function(k) { out[k] = (typeof src[k] === 'string' && src[k]) ? src[k] : def[k]; });
+    out.auto = (typeof src.auto === 'string') ? src.auto : '';
     return out;
   }
 
@@ -1256,6 +1265,66 @@
   function applyTemplatePlaceholders(text, c) {
     return String(text || '').replace(/\{支店\}/g, c.branch || '');
   }
+  // ===== 案件打診（自動生成）のテンプレ化 2026-11-27 v4 =====
+  var AUTO_PATTERNS = {
+    contactWait7: 'お世話になっております。\n株式会社ビースタイルと申します。\n\n今回応募いただいた求人のエントリーに伴いご連絡になります。\n一部重複してると思いますが確認も兼ねて、ご回答お願いします\n\n①保持資格：\n②お住まいの郵便番号：\n③就業開始希望日（いつから働けるか）：\n④就業可能日数：\n⑤勤務形態（早、日、遅、夜勤、時短※時短の場合は時間について記載お願いします）\n⑥休み希望曜日（なければ基本シフト制なので不問で問題ありません）：\n⑦通勤方法（公共の場合最寄り駅）：\n⑧電話連絡NGな時間帯や曜日：\n⑨経験年数と直近2つの職歴：\n※例：経験15年、特養1年、有料2年\n\n以上、9点回答いただけると幸いです\n\n宜しくお願いします',
+    within3days: 'お世話になっております。\n\n株式会社ビースタイルです。\n{理由}\n\n力不足で大変申し訳ございません。\n代わりにご自宅から通いやすい近隣エリアで、条件に合う新着求人をピックアップいたしました。\n\n{候補求人}\n\n{時給}\n\nもし気になるものがございましたら、すぐ詳細をお送りしますのでお気軽にご返信ください！\n\n{返信FM}',
+    unfixed: 'お世話になっております。\n\n株式会社ビースタイルです。\n先日ご提案させていただきました件、その後ご状況はいかがでしょうか？\n\n現在もご自宅から近隣エリアで以下の求人が募集中となっております。\n\n{候補求人}\n\n{時給}\n\n「まずは条件だけ詳しく聞きたい」「他で決まった」など、一言だけでもご返信いただけますと幸いです！\n\n{返信FM}',
+    externalHot: '以前ご応募いただきました\n株式会社ビースタイルです。\n\n以前伺っていた、ご希望条件にぴったりの新着案件が入りましたので、優先的にご連絡いたしました！\n\n{候補求人}\n\n{時給}\n\n今すぐのご転職でなくても情報収集だけでも大歓迎ですので、ぜひお気軽にご返信ください！\n\n{返信FM}',
+    contactWaitLong: 'お世話になっております。\n以前応募いただきました、株式会社ビースタイルです。\n\n{候補求人}\n\n【時給情報】\n{時給}\n\nもし気になるものがございましたら、すぐ詳細をお送りしますのでお気軽にご返信ください！\n\n【返信項目】\n・気になる求人番号：\n・ご希望の勤務日数・シフト：\n・電話NGの時間帯：\n・勤務開始月：',
+    hot: '以前ご応募いただきました、株式会社ビースタイルです。\n以前お話しさせていただいたご希望条件にぴったりの新着案件が入りましたので、優先的にご連絡いたしました！\n\n{候補求人}\n\n{時給}\n\n今すぐのご転職でなくても情報収集だけでも大歓迎ですので、ぜひお気軽にご返信ください！\n\n{返信FM}'
+  };
+
+  window.insertAutoPattern = function() {
+    var tab = state.tplEditTab || 'contactWait7';
+    var el = document.getElementById('tplTextAuto');
+    if (el && AUTO_PATTERNS[tab]) el.value = AUTO_PATTERNS[tab];
+  };
+
+  function buildAutoFromTemplate(c, tplText, reasonOverride, modeOverride, nightOverride) {
+    var sal = extractSafeSalutation(c);
+    var jobs = getMatchedJobs(c, nightOverride);
+    var mode = modeOverride || 'normal';
+    var replyFmStandard = [
+      '▼ご返信の際は以下をコピーしてご返信ください',
+      '・気になる求人番号：',
+      '・ご希望の勤務日数・シフト：',
+      '・電話NGの時間帯：',
+      '・勤務開始月：'
+    ].join(LF);
+    var shortLines = jobs.dispatch.slice(0, 2).map(function(j, idx) {
+      return '・候補' + (idx + 1) + '：' + j.name + '（約' + j.distKm + 'km）';
+    }).join(LF);
+    var shortDirect = jobs.direct.length > 0
+      ? LF + '・直接雇用：' + jobs.direct[0].name + '（約' + jobs.direct[0].distKm + 'km）'
+      : '';
+    var shortJobs = (shortLines || '・ご自宅近隣の新着求人を確保しております。') + shortDirect;
+    var jobLines = jobs.dispatch.map(function(j, idx) {
+      var catLabel = (j.facilityCat && j.facilityCat !== 'その他') ? '【' + j.facilityCat + '】' : '';
+      return '【候補' + (idx + 1) + '】' + catLabel + j.name + LF + '・住所：' + (j.address || '詳細はお問い合わせください') + '（ご自宅から約' + j.distKm + 'km）' + (j.shifts ? LF + '・シフト：' + j.shifts : '');
+    }).join(LF + LF);
+    var directHook = '';
+    if (jobs.direct.length > 0) {
+      var d0 = jobs.direct[0];
+      var dCatLabel = (d0.facilityCat && d0.facilityCat !== 'その他') ? '【' + d0.facilityCat + '】' : '';
+      directHook = LF + LF + [
+        '【直接雇用求人】' + dCatLabel + d0.name,
+        '・住所：' + (d0.address || '詳細はお問い合わせください') + '（ご自宅から約' + d0.distKm + 'km）',
+        '・シフト：' + (d0.shifts || '日勤')
+      ].join(LF);
+    }
+    var bodyJobs = (jobLines || '・ご自宅近隣エリアの好条件求人を複数確保しております。') + directHook;
+    var reason = reasonOverride || SLIDE_REASONS_3DAYS[state.currentReasonIdx % SLIDE_REASONS_3DAYS.length];
+    var out = String(tplText || '');
+    out = out.replace(/\{候補求人\}/g, mode === 'short' ? shortJobs : bodyJobs);
+    out = out.replace(/\{時給\}/g, getHourlyRateNote(c));
+    out = out.replace(/\{返信FM\}/g, replyFmStandard);
+    out = out.replace(/\{理由\}/g, reason);
+    out = out.replace(/\{支店\}/g, c.branch || '');
+    out = out.replace(/\{宛名\}/g, sal.text || '');
+    return out;
+  }
+
 
   function highlightTplButtons() {
     var step = state.modalTemplateStep || 0;
@@ -1285,6 +1354,8 @@
       var el = document.getElementById('tplText' + i);
       if (el) el.value = t['step' + i] || '';
     }
+    var autoEl = document.getElementById('tplTextAuto');
+    if (autoEl) autoEl.value = t.auto || '';
     TPL_TAB_KEYS.forEach(function(k) {
       var b = document.getElementById('tplTabBtn_' + k);
       if (!b) return;
@@ -1302,6 +1373,8 @@
       var el = document.getElementById('tplText' + i);
       if (el) state.tplDraft[tab]['step' + i] = el.value;
     }
+    var autoEl2 = document.getElementById('tplTextAuto');
+    if (autoEl2) state.tplDraft[tab].auto = autoEl2.value;
   }
 
   window.setTplEditTab = function(tab) {
@@ -1326,7 +1399,7 @@
 
   window.resetTplEditor = function() {
     var tab = state.tplEditTab || 'contactWait7';
-    if (state.tplDraft) state.tplDraft[tab] = Object.assign({}, DEFAULT_TEMPLATES[tab]);
+    if (state.tplDraft) { state.tplDraft[tab] = Object.assign({}, DEFAULT_TEMPLATES[tab]); state.tplDraft[tab].auto = ''; }
     tplFillEditor();
   };
 
@@ -1337,7 +1410,7 @@
     state.tplDraft = null;
     closeModal('tplModal');
     pushTemplatesToGithub();
-    if (state.modalTarget && state.modalTemplateStep > 0) refreshModalTextarea();
+    if (state.modalTarget) refreshModalTextarea();
     showPopup('テンプレートを保存しました', 'タブ別テンプレートを保存し、GitHub経由で全端末に共有します（このサイト専用）。');
   };
 
@@ -3657,7 +3730,12 @@
     var nightEl = document.getElementById('modalNightShiftCheck');
     var nightVal = !!state.modalTarget.isNightDefault || (nightEl ? nightEl.checked : false);
     if (nightEl && state.modalTarget.isNightDefault) nightEl.checked = true;
-    document.getElementById('modalMessageText').value = buildMessageForCandidate(state.modalTarget, reason, state.modalMode, nightVal);
+    var autoTpl = getTemplatesForTab(state.modalTarget.assignedTab).auto || '';
+    if (autoTpl && !isNoAddressAnywhere(state.modalTarget)) {
+      document.getElementById('modalMessageText').value = buildAutoFromTemplate(state.modalTarget, autoTpl, reason, state.modalMode, nightVal);
+    } else {
+      document.getElementById('modalMessageText').value = buildMessageForCandidate(state.modalTarget, reason, state.modalMode, nightVal);
+    }
   }
 
   window.shuffleReason = function() {
