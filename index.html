@@ -291,25 +291,25 @@
         </div>
         <p class="text-gray-600 leading-relaxed">テンプレートはタブごとに別々です。アプローチ回数に応じて文面が自動で切り替わります。<code>{支店}</code> は開いた人の担当支店に自動で差し替わります。保存するとGitHub経由で全端末に共有されます（このサイト専用・他サイトとは混ざりません）。</p>
         <div>
-          <label class="font-bold text-gray-700 block mb-1">案件打診（自動生成の文面）</label>
+          <label id="tplLabelAuto" class="font-bold text-gray-700 block mb-1">案件打診（自動生成の文面）</label>
           <p class="text-gray-500 leading-relaxed mb-1">空欄なら今までどおり自動生成します。入力すると、その文面で生成します。<code>{候補求人}</code>・<code>{時給}</code>・<code>{返信FM}</code>・<code>{理由}</code>・<code>{支店}</code>・<code>{宛名}</code> はその人の情報に差し替わります（SMS短縮版では <code>{候補求人}</code> は短い候補リストになります）。住所が無い人には従来の確認文面が使われます。</p>
           <textarea id="tplTextAuto" rows="9" class="w-full rounded-xl border border-gray-300 p-3 text-xs sm:text-sm leading-relaxed focus:outline-none focus:border-orange-500 font-sans" placeholder="空欄＝自動生成"></textarea>
           <button type="button" onclick="insertAutoPattern()" class="mt-1 px-2.5 py-1 rounded-lg bg-white border border-orange-300 text-[11px] sm:text-xs font-bold text-orange-800">自動文面の型を入れる</button>
         </div>
-        <div>
-          <label class="font-bold text-gray-700 block mb-1">1回目</label>
+        <div id="tplStep1Block">
+          <label id="tplLabel1" class="font-bold text-gray-700 block mb-1">1回目</label>
           <textarea id="tplText1" rows="7" class="w-full rounded-xl border border-gray-300 p-3 text-xs sm:text-sm leading-relaxed focus:outline-none focus:border-orange-500 font-sans"></textarea>
         </div>
         <div>
-          <label class="font-bold text-gray-700 block mb-1">2回目</label>
+          <label id="tplLabel2" class="font-bold text-gray-700 block mb-1">2回目</label>
           <textarea id="tplText2" rows="7" class="w-full rounded-xl border border-gray-300 p-3 text-xs sm:text-sm leading-relaxed focus:outline-none focus:border-orange-500 font-sans"></textarea>
         </div>
         <div>
-          <label class="font-bold text-gray-700 block mb-1">3回目</label>
+          <label id="tplLabel3" class="font-bold text-gray-700 block mb-1">3回目</label>
           <textarea id="tplText3" rows="7" class="w-full rounded-xl border border-gray-300 p-3 text-xs sm:text-sm leading-relaxed focus:outline-none focus:border-orange-500 font-sans"></textarea>
         </div>
         <div>
-          <label class="font-bold text-gray-700 block mb-1">4回目以降</label>
+          <label id="tplLabel4" class="font-bold text-gray-700 block mb-1">4回目以降</label>
           <textarea id="tplText4" rows="7" class="w-full rounded-xl border border-gray-300 p-3 text-xs sm:text-sm leading-relaxed focus:outline-none focus:border-orange-500 font-sans"></textarea>
         </div>
       </div>
@@ -1349,6 +1349,17 @@
     var tab = state.tplEditTab || 'contactWait7';
     var label = document.getElementById('tplEditTabLabel');
     if (label) label.textContent = TPL_TABS[tab] || tab;
+    var isCW7 = (tab === 'contactWait7');
+    var la = document.getElementById('tplLabelAuto');
+    if (la) la.textContent = isCW7 ? '案件打診（自動生成の文面）' : '1回目（案件打診・フル）';
+    var b1 = document.getElementById('tplStep1Block');
+    if (b1) b1.style.display = isCW7 ? '' : 'none';
+    var l2 = document.getElementById('tplLabel2');
+    if (l2) l2.textContent = isCW7 ? '2回目' : '2回目（短文）';
+    var l3 = document.getElementById('tplLabel3');
+    if (l3) l3.textContent = isCW7 ? '3回目' : '3回目（別角度）';
+    var l4 = document.getElementById('tplLabel4');
+    if (l4) l4.textContent = isCW7 ? '4回目以降' : '4回目（見切り）';
     var t = (state.tplDraft && state.tplDraft[tab]) || getTemplatesForTab(tab);
     for (var i = 1; i <= 4; i++) {
       var el = document.getElementById('tplText' + i);
@@ -3612,6 +3623,11 @@
     state.modalTarget = c;
     state.modalMode = defaultMode;
     state.modalTemplateStep = defaultModalStep(c);
+    var isCW7m = (c.assignedTab === 'contactWait7');
+    var chip1 = document.getElementById('btnTpl1');
+    if (chip1) chip1.style.display = isCW7m ? '' : 'none';
+    var chipA = document.getElementById('btnTplAuto');
+    if (chipA) chipA.textContent = isCW7m ? '案件打診' : '1回目（案件打診）';
     state.currentReasonIdx = Math.floor(Math.random() * SLIDE_REASONS_3DAYS.length);
 
     var sal = extractSafeSalutation(c);
